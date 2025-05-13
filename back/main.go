@@ -22,6 +22,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("加载配置文件失败: %v", err)
 	}
+	// 本地配置文件覆盖
+	err = configs.InitConfig("config.local.yaml")
+	if err != nil {
+		log.Fatalf("加载本地配置文件失败: %v", err)
+	}
 
 	// 连接mysql
 	err = configs.InitMysqlConnection()

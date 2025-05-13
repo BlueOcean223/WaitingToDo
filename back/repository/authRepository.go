@@ -14,3 +14,10 @@ func SelectUserByEmail(email string) (models.User, error) {
 
 	return user, result.Error
 }
+
+// InsertUser 插入用户
+func InsertUser(user models.User) error {
+	db := configs.MysqlDb
+	result := db.Create(&user)
+	return result.Error
+}

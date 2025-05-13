@@ -1,7 +1,13 @@
 mysql:
-  dsn: "root:123456@tcp(192.168.163.129:3306)/WaitingToDo?charset=utf8mb4&parseTime=True&loc=Local"
+  dsn: "user:password@tcp(127.0.0.1:3306)/WaitingToDo?charset=utf8mb4&parseTime=True&loc=Local"
 
 redis:
-  addr: "192.168.163.129:6379"
-  password: "123456"
+  addr: "127.0.0.1:6379"
+  password: "password"
   db: 0
+
+mail:
+  SMTPHost: "smtp.163.com"
+  SMTPPort: 465
+  From: "your_username@163.com"
+  Password: "your_authorization_code"

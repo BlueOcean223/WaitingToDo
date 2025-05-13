@@ -10,5 +10,11 @@ func SetAuthRoutes(r *gin.Engine) {
 	{
 		// 登录
 		auth.GET("/login", controllers.Login)
+		// 注册
+		auth.POST("/register", controllers.Register)
+		// 忘记密码
+		auth.POST("/forget", controllers.Forget)
+		// 发送验证码
+		auth.GET("/captcha", controllers.Captcha)
 	}
 }
