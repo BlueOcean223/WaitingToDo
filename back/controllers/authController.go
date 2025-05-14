@@ -54,7 +54,19 @@ func Register(c *gin.Context) {
 
 // Forget /auth/forget 重置密码
 func Forget(c *gin.Context) {
+	var userVo vo.UserVo
+	if err := c.ShouldBindJSON(&userVo); err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
+		return
+	}
 
+	err := service.ForgetPassword(userVo)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Fail("", err.Error(), nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success("", "重置密码成功", nil))
 }
 
 // Captcha /auth/captcha 发送验证码

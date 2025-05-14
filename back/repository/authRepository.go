@@ -21,3 +21,10 @@ func InsertUser(user models.User) error {
 	result := db.Create(&user)
 	return result.Error
 }
+
+// UpdateUser 更新用户
+func UpdateUser(user models.User) error {
+	db := configs.MysqlDb
+	result := db.Save(&user)
+	return result.Error
+}
