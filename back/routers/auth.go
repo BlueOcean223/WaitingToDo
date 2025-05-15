@@ -9,7 +9,7 @@ func SetAuthRoutes(r *gin.Engine) {
 	auth := r.Group("/auth")
 	{
 		// 登录
-		auth.GET("/login", controllers.Login)
+		auth.POST("/login", controllers.Login)
 		// 注册
 		auth.POST("/register", controllers.Register)
 		// 忘记密码

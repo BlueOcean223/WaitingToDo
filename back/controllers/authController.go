@@ -5,14 +5,21 @@ import (
 	"back/models/dto"
 	"back/models/vo"
 	"back/service"
+	"back/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 // Login /auth/login 登录
 func Login(c *gin.Context) {
-	email := c.Query("email")
-	password := c.Query("password")
+	var userVo vo.UserVo
+	if err := c.ShouldBindJSON(&userVo); err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
+		return
+	}
+	email := userVo.Email
+	password := userVo.Password
+
 	// 校验参数
 	if email == "" || password == "" {
 		c.JSON(http.StatusBadRequest, models.Fail("", "邮箱或密码为空", nil))
@@ -25,9 +32,9 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, models.Fail("", err.Error(), nil))
 		return
 	}
-	// 密码错误
+	// 邮箱或密码错误
 	if userDto == (dto.UserDto{}) {
-		c.JSON(http.StatusUnauthorized, models.Fail("", "邮箱或密码错误", nil))
+		c.JSON(http.StatusOK, models.Fail("", "邮箱或密码错误", nil))
 		return
 	}
 	// 登陆成功
@@ -45,7 +52,13 @@ func Register(c *gin.Context) {
 
 	err := service.Register(userVo)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.Fail("", err.Error(), nil))
+		if utils.IsMyError(err) {
+			// 自定义错误，验证码错误等
+			c.JSON(http.StatusOK, models.Fail("", err.Error(), nil))
+		} else {
+			// 系统错误
+			c.JSON(http.StatusInternalServerError, models.Fail("", err.Error(), nil))
+		}
 		return
 	}
 
@@ -62,7 +75,13 @@ func Forget(c *gin.Context) {
 
 	err := service.ForgetPassword(userVo)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.Fail("", err.Error(), nil))
+		if utils.IsMyError(err) {
+			// 自定义错误
+			c.JSON(http.StatusOK, models.Fail("", err.Error(), nil))
+		} else {
+			// 系统错误
+			c.JSON(http.StatusInternalServerError, models.Fail("", err.Error(), nil))
+		}
 		return
 	}
 

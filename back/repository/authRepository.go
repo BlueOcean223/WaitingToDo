@@ -3,6 +3,8 @@ package repository
 import (
 	"back/configs"
 	"back/models"
+	"errors"
+	"gorm.io/gorm"
 )
 
 // SelectUserByEmail 根据邮箱查询用户
@@ -11,6 +13,11 @@ func SelectUserByEmail(email string) (models.User, error) {
 	// 根据邮箱查询用户
 	var user models.User
 	result := db.Where("email = ?", email).First(&user)
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		// 处理未查询到的情况
+		return models.User{}, nil
+	}
 
 	return user, result.Error
 }

@@ -8,7 +8,6 @@ import (
 	"back/repository"
 	"back/utils"
 	"context"
-	"errors"
 	"fmt"
 	"gopkg.in/gomail.v2"
 	"time"
@@ -21,6 +20,10 @@ func CheckUser(email, password string) (dto.UserDto, string, error) {
 	// 查询用户异常
 	if err != nil {
 		return dto.UserDto{}, "", err
+	}
+	// 该邮箱未注册
+	if user == (models.User{}) {
+		return dto.UserDto{}, "", nil
 	}
 
 	// 校验密码
@@ -46,28 +49,28 @@ func CheckUser(email, password string) (dto.UserDto, string, error) {
 // Register 注册
 func Register(userVo vo.UserVo) error {
 	// 验证邮箱是否已经存在，不允许已存在的邮箱重复注册
-	_, err := repository.SelectUserByEmail(userVo.Email)
-	if err == nil {
-		return errors.New("该邮箱已注册")
-	}
-
-	// 校验验证码
-	redisClient := configs.RedisClient
-	ctx := context.Background()
-	val, err := redisClient.Get(ctx, utils.CaptchaKey+userVo.Email).Result()
+	user, err := repository.SelectUserByEmail(userVo.Email)
 	if err != nil {
 		return err
 	}
-	if !utils.VerifyCaptcha(val, userVo.Captcha) {
-		return errors.New("验证码错误")
+	// 邮箱已经被注册
+	if user != (models.User{}) {
+		return utils.NewMyError("该邮箱已注册")
 	}
+
+	// 校验验证码
+	err = CheckCaptcha(userVo.Email, userVo.Captcha)
+	if err != nil {
+		return err
+	}
+
 	// 密码加密
 	hashPassword, err := utils.HashPassword(userVo.Password)
 	if err != nil {
 		return err
 	}
 	// 插入数据库
-	user := models.User{
+	user = models.User{
 		Email:    userVo.Email,
 		Name:     userVo.Name,
 		Password: hashPassword,
@@ -79,19 +82,22 @@ func Register(userVo vo.UserVo) error {
 func ForgetPassword(userVo vo.UserVo) error {
 	// 检查数据库中是否有该用户
 	user, err := repository.SelectUserByEmail(userVo.Email)
-	if err != nil {
-		return errors.New("该邮箱尚未注册，请先注册！")
-	}
-	// 校验验证码
-	redisClient := configs.RedisClient
-	ctx := context.Background()
-	val, err := redisClient.Get(ctx, utils.CaptchaKey+userVo.Email).Result()
+	// 查询发生异常
 	if err != nil {
 		return err
 	}
-	if !utils.VerifyCaptcha(val, userVo.Captcha) {
-		return errors.New("验证码错误")
+
+	// 用户不存在
+	if user == (models.User{}) {
+		return utils.NewMyError("该邮箱尚未注册，请先注册！")
 	}
+
+	// 校验验证码
+	err = CheckCaptcha(userVo.Email, userVo.Captcha)
+	if err != nil {
+		return err
+	}
+
 	// 更新密码
 	hashPassword, err := utils.HashPassword(userVo.Password)
 	if err != nil {
@@ -145,4 +151,21 @@ func Send163Mail(mail models.Mail) error {
 	)
 
 	return d.DialAndSend(m)
+}
+
+// CheckCaptcha 校验验证码
+func CheckCaptcha(email, captcha string) error {
+	// 从redis获取验证码
+	redisClient := configs.RedisClient
+	ctx := context.Background()
+	val, err := redisClient.Get(ctx, utils.CaptchaKey+email).Result()
+	if err != nil {
+		return err
+	}
+	// 校验验证码
+	if !utils.VerifyCaptcha(val, captcha) {
+		return utils.NewMyError("验证码错误")
+	}
+	// 验证码正确，删除redis中的验证码
+	return redisClient.Del(ctx, utils.CaptchaKey+email).Err()
 }

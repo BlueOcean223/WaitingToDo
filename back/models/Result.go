@@ -1,10 +1,10 @@
 package models
 
 type Result struct {
-	Token   string
-	Status  int // 0失败，1成功
-	Message string
-	Data    interface{}
+	Token   string      `json:"token"`
+	Status  int         `json:"status"` // 0失败，1成功
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
 }
 
 func Fail(token, message string, data interface{}) (result Result) {

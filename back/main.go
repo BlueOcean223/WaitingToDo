@@ -4,12 +4,20 @@ import (
 	"back/configs"
 	"back/routers"
 	"back/utils"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"log"
 )
 
 func main() {
 	r := gin.Default()
+
+	// 配置CORS
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"http://localhost:7070"},
+		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders: []string{"Content-Type", "Authorization", "Origin"},
+	}))
 
 	// 使用JWT令牌校验、拦截
 	r.Use(utils.JWTAuthMiddleware())
