@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import LoginPage from "@/views/login";
 import HomePage from "@/views/home";
 
+
 const routes = [
   { path: "/" , redirect: "/login"},//默认路由
   { path: "/login", component: LoginPage },

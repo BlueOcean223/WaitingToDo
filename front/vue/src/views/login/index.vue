@@ -417,7 +417,6 @@ export default{
           
         ElMessage.success('验证码已发送');
       } catch (error){
-        ElMessage.error(error.message);
         return;
       }
     },
@@ -493,7 +492,6 @@ export default{
         }, 1000);
         ElMessage.success('验证码已发送');
       } catch (error) {
-        ElMessage.error("验证码发送失败");
         return;
       }
     },

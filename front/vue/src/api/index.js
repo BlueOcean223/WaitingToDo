@@ -3,7 +3,7 @@
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
 
-const baseURL = process.env.VUE_APP_API_BASE_URL;
+const baseURL = import.meta.env.VITE_APP_API_BASE_URL;
 
 
 // 创建axios实例
