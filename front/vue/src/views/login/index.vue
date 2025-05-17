@@ -324,7 +324,7 @@ export default{
               ElMessage.success(res.data.message)
               // 保存token和用户信息
               localStorage.setItem('token',res.data.token)
-              localStorage.setItem('user',res.data.data)
+              localStorage.setItem('user',JSON.stringify(res.data.data))// 存放前先将对象转换为字符串
               // 跳转到首页
               this.$router.push('/home')
             }else {

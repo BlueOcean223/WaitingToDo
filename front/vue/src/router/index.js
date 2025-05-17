@@ -1,12 +1,20 @@
 import { createRouter, createWebHistory } from "vue-router";
 import LoginPage from "@/views/login";
 import HomePage from "@/views/home";
+import FriendsPage from "@/views/friend";
+import NoticePage from "@/views/notice";
+import TeamPage from "@/views/team";
+import PersonalPage from "@/views/profiles";
 
 
 const routes = [
   { path: "/" , redirect: "/login"},//默认路由
   { path: "/login", component: LoginPage },
-  { path: "/home", component: HomePage }
+  { path: "/home", component: HomePage },
+  { path: "/friend", component: FriendsPage },
+  { path: "/notice", component: NoticePage },
+  { path: "/team", component: TeamPage },
+  { path: "/profile", component: PersonalPage },
 ];
 
 const router = createRouter({
