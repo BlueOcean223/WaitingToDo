@@ -63,15 +63,27 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		}
 
 		// 解析Token
-		claims, err := ParseToken(tokenString)
+		_, err := ParseToken(tokenString)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "无效的Token"})
 			c.Abort()
 			return
 		}
 
-		// 放入Context
-		c.Set("Token", claims)
+		// 放行
 		c.Next()
 	}
+}
+
+// GetUserFromToken 根据Token获取用户名
+func GetUserFromToken(c *gin.Context) (string, error) {
+	// 获取token
+	tokenString := c.GetHeader("Authorization")
+	tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
+	// 解析token
+	claims, err := ParseToken(tokenString)
+	if err != nil {
+		return "", err
+	}
+	return claims.Name, nil
 }
