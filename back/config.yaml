@@ -7,7 +7,7 @@ redis:
   db: 0
 
 mail:
-  SMTPHost: "smtp.163.com"
-  SMTPPort: 465
-  From: "your_username@163.com"
-  Password: "your_authorization_code"
+  smtp_host: "smtp.163.com"
+  smtp_port: 465
+  from: "your_username@163.com"
+  password: "your_authorization_code"
