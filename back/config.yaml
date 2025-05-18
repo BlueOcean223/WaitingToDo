@@ -11,3 +11,8 @@ mail:
   smtp_port: 465
   from: "your_username@163.com"
   password: "your_authorization_code"
+
+minio:
+  endpoint: "127.0.0.1:9000"
+  access_key_id: "your_access_key_id"
+  secret_access_key: "your_secret_access_key"

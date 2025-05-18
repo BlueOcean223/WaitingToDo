@@ -48,6 +48,12 @@ func main() {
 		log.Fatalf("Redis连接异常: %v", err)
 	}
 
+	// 连接Minio
+	err = configs.InitMinioClient()
+	if err != nil {
+		log.Fatalf("Minio连接异常: %v", err)
+	}
+
 	err = r.Run(":8080")
 	if err != nil {
 		log.Fatal("程序启动失败")

@@ -9,6 +9,7 @@ type Config struct {
 	MySQLConfig MySQLConfig `yaml:"mysql"`
 	RedisConfig RedisConfig `yaml:"redis"`
 	MailConfig  MailConfig  `yaml:"mail"`
+	MinioConfig MinioConfig `yaml:"minio"`
 }
 
 var AppConfigs Config
