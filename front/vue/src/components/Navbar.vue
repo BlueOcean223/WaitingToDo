@@ -32,7 +32,7 @@
 
 <script>
 import { Bell } from '@element-plus/icons-vue'
-import { lo } from 'element-plus/es/locales.mjs'
+import { useUserStore } from '@/stores/user'
 
 export default {
   name: 'NavBar',
@@ -47,7 +47,7 @@ export default {
   },
   computed: {
     user() {
-      return JSON.parse(localStorage.getItem('user')) || {}
+      return useUserStore().userInfo // 从全局状态中获取用户信息
     },
     userName() {
       return this.user.name || '未登录'
