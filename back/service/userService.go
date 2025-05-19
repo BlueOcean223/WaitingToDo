@@ -7,10 +7,18 @@ import (
 	"back/utils"
 )
 
+type UserService struct {
+	authRepository *repository.AuthRepository
+}
+
+func NewUserService(authRepository *repository.AuthRepository) *UserService {
+	return &UserService{authRepository: authRepository}
+}
+
 // ResetPassword 重置密码
-func ResetPassword(email, password string) error {
+func (s *UserService) ResetPassword(email, password string) error {
 	// 检查数据库是否有该邮箱的用户
-	user, err := repository.SelectUserByEmail(email)
+	user, err := s.authRepository.SelectUserByEmail(email)
 	// 查询异常
 	if err != nil {
 		return err
@@ -25,12 +33,12 @@ func ResetPassword(email, password string) error {
 		return err
 	}
 	user.Password = hashPassword
-	return repository.UpdateUser(user)
+	return s.authRepository.UpdateUser(user)
 }
 
 // UpdateUserInfo 更新用户信息
-func UpdateUserInfo(userVo vo.UserVo) error {
-	user, err := repository.SelectUserByEmail(userVo.Email)
+func (s *UserService) UpdateUserInfo(userVo vo.UserVo) error {
+	user, err := s.authRepository.SelectUserByEmail(userVo.Email)
 	if err != nil {
 		return err
 	}
@@ -41,5 +49,5 @@ func UpdateUserInfo(userVo vo.UserVo) error {
 	// 更新个人信息
 	user.Name = userVo.Name
 	user.Description = userVo.Description
-	return repository.UpdateUser(user)
+	return s.authRepository.UpdateUser(user)
 }

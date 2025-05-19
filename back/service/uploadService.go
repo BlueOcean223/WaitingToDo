@@ -13,8 +13,21 @@ import (
 	"time"
 )
 
+type UploadService struct {
+	authRepository  *repository.AuthRepository
+	imageRepository *repository.ImageRepository
+}
+
+func NewUploadService(authRepository *repository.AuthRepository,
+	imageRepository *repository.ImageRepository) *UploadService {
+	return &UploadService{
+		authRepository:  authRepository,
+		imageRepository: imageRepository,
+	}
+}
+
 // UploadImg 上传图片
-func UploadImg(email string, fileHeader *multipart.FileHeader) (string, error) {
+func (s *UploadService) UploadImg(email string, fileHeader *multipart.FileHeader) (string, error) {
 	// 读取文件
 	file, err := fileHeader.Open()
 	if err != nil {
@@ -29,19 +42,19 @@ func UploadImg(email string, fileHeader *multipart.FileHeader) (string, error) {
 	}
 
 	// 根据MD5值查询数据库中是否已经有该图片
-	image, err := repository.GetImageByMD5(md5Hash)
+	image, err := s.imageRepository.GetImageByMD5(md5Hash)
 	if err != nil {
 		return "", err
 	}
 
 	if image != (models.Image{}) {
 		// 数据库中已有该图片，更新用户URL，然后直接返回图片的URL
-		user, err := repository.SelectUserByEmail(email)
+		user, err := s.authRepository.SelectUserByEmail(email)
 		if err != nil {
 			return "", err
 		}
 		user.Pic = image.Url
-		err = repository.UpdateUser(user)
+		err = s.authRepository.UpdateUser(user)
 		if err != nil {
 			return "", err
 		}
@@ -62,7 +75,7 @@ func UploadImg(email string, fileHeader *multipart.FileHeader) (string, error) {
 	objectName := date + "/" + md5Hash + extensionName
 
 	contentType := fileHeader.Header.Get("Content-Type")
-	err = UploadImgToMinio(utils.ImagesBucket, objectName, file, fileHeader.Size, contentType)
+	err = s.UploadImgToMinio(utils.ImagesBucket, objectName, file, fileHeader.Size, contentType)
 	if err != nil {
 		return "", err
 	}
@@ -78,20 +91,20 @@ func UploadImg(email string, fileHeader *multipart.FileHeader) (string, error) {
 		Md5: md5Hash,
 		Url: "/" + utils.ImagesBucket + "/" + objectName,
 	}
-	err = repository.InsertImage(image)
+	err = s.imageRepository.InsertImage(image)
 	if err != nil {
 		tx.Rollback() // 回滚事务
 		return "", err
 	}
 
 	// 更新用户表
-	user, err := repository.SelectUserByEmail(email)
+	user, err := s.authRepository.SelectUserByEmail(email)
 	if err != nil {
 		tx.Rollback() // 回滚事务
 		return "", err
 	}
 	user.Pic = image.Url
-	err = repository.UpdateUser(user)
+	err = s.authRepository.UpdateUser(user)
 	if err != nil {
 		tx.Rollback() // 回滚事务
 		return "", err
@@ -107,7 +120,7 @@ func UploadImg(email string, fileHeader *multipart.FileHeader) (string, error) {
 	return image.Url, nil
 }
 
-func UploadImgToMinio(bucketName, objectName string, file io.Reader, size int64, contentType string) error {
+func (s *UploadService) UploadImgToMinio(bucketName, objectName string, file io.Reader, size int64, contentType string) error {
 	// 获取Minio客户端
 	minioClient := configs.MinioClient
 

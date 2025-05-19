@@ -10,8 +10,16 @@ import (
 	"net/http"
 )
 
+type AuthController struct {
+	authService *service.AuthService
+}
+
+func NewAuthController(authService *service.AuthService) *AuthController {
+	return &AuthController{authService: authService}
+}
+
 // Login /auth/login 登录
-func Login(c *gin.Context) {
+func (s *AuthController) Login(c *gin.Context) {
 	var userVo vo.UserVo
 	if err := c.ShouldBindJSON(&userVo); err != nil {
 		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
@@ -26,7 +34,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	userDto, token, err := service.CheckUser(email, password)
+	userDto, token, err := s.authService.CheckUser(email, password)
 	// 错误处理
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.Fail("", err.Error(), nil))
@@ -43,14 +51,14 @@ func Login(c *gin.Context) {
 }
 
 // Register /auth/register 注册
-func Register(c *gin.Context) {
+func (s *AuthController) Register(c *gin.Context) {
 	var userVo vo.UserVo
 	if err := c.ShouldBindJSON(&userVo); err != nil {
 		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
 		return
 	}
 
-	err := service.Register(userVo)
+	err := s.authService.Register(userVo)
 	if err != nil {
 		if utils.IsMyError(err) {
 			// 自定义错误，验证码错误等
@@ -66,14 +74,14 @@ func Register(c *gin.Context) {
 }
 
 // Forget /auth/forget 重置密码
-func Forget(c *gin.Context) {
+func (s *AuthController) Forget(c *gin.Context) {
 	var userVo vo.UserVo
 	if err := c.ShouldBindJSON(&userVo); err != nil {
 		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
 		return
 	}
 
-	err := service.ForgetPassword(userVo)
+	err := s.authService.ForgetPassword(userVo)
 	if err != nil {
 		if utils.IsMyError(err) {
 			// 自定义错误
@@ -89,10 +97,10 @@ func Forget(c *gin.Context) {
 }
 
 // Captcha /auth/captcha 发送验证码
-func Captcha(c *gin.Context) {
+func (s *AuthController) Captcha(c *gin.Context) {
 	email := c.Query("email")
 	to := []string{email}
-	err := service.Captcha(to)
+	err := s.authService.Captcha(to)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.Fail("", "发送验证码失败", nil))
 		return

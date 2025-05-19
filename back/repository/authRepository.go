@@ -1,18 +1,24 @@
 package repository
 
 import (
-	"back/configs"
 	"back/models"
 	"errors"
 	"gorm.io/gorm"
 )
 
+type AuthRepository struct {
+	db *gorm.DB
+}
+
+func NewAuthRepository(db *gorm.DB) *AuthRepository {
+	return &AuthRepository{db: db}
+}
+
 // SelectUserByEmail 根据邮箱查询用户
-func SelectUserByEmail(email string) (models.User, error) {
-	db := configs.MysqlDb
+func (s *AuthRepository) SelectUserByEmail(email string) (models.User, error) {
 	// 根据邮箱查询用户
 	var user models.User
-	result := db.Where("email = ?", email).First(&user)
+	result := s.db.Where("email = ?", email).First(&user)
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		// 处理未查询到的情况
@@ -23,15 +29,13 @@ func SelectUserByEmail(email string) (models.User, error) {
 }
 
 // InsertUser 插入用户
-func InsertUser(user models.User) error {
-	db := configs.MysqlDb
-	result := db.Create(&user)
+func (s *AuthRepository) InsertUser(user models.User) error {
+	result := s.db.Create(&user)
 	return result.Error
 }
 
 // UpdateUser 更新用户
-func UpdateUser(user models.User) error {
-	db := configs.MysqlDb
-	result := db.Save(&user)
+func (s *AuthRepository) UpdateUser(user models.User) error {
+	result := s.db.Save(&user)
 	return result.Error
 }

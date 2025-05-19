@@ -1,17 +1,23 @@
 package repository
 
 import (
-	"back/configs"
 	"back/models"
 	"errors"
 	"gorm.io/gorm"
 )
 
+type ImageRepository struct {
+	db *gorm.DB
+}
+
+func NewImageRepository(db *gorm.DB) *ImageRepository {
+	return &ImageRepository{db: db}
+}
+
 // GetImageByMD5 根据md5值查询图片
-func GetImageByMD5(md5 string) (models.Image, error) {
-	db := configs.MysqlDb
+func (s *ImageRepository) GetImageByMD5(md5 string) (models.Image, error) {
 	var image models.Image
-	err := db.Where("md5 = ?", md5).First(&image).Error
+	err := s.db.Where("md5 = ?", md5).First(&image).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// 处理未查询到的情况
@@ -22,8 +28,7 @@ func GetImageByMD5(md5 string) (models.Image, error) {
 }
 
 // InsertImage 插入图片信息
-func InsertImage(image models.Image) error {
-	db := configs.MysqlDb
-	err := db.Create(&image).Error
+func (s *ImageRepository) InsertImage(image models.Image) error {
+	err := s.db.Create(&image).Error
 	return err
 }

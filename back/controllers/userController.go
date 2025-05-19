@@ -9,8 +9,21 @@ import (
 	"net/http"
 )
 
+type UserController struct {
+	authService *service.AuthService
+	userService *service.UserService
+}
+
+func NewUserController(authService *service.AuthService,
+	userService *service.UserService) *UserController {
+	return &UserController{
+		authService: authService,
+		userService: userService,
+	}
+}
+
 // CheckCaptcha /user/checkCaptcha 检查验证码
-func CheckCaptcha(c *gin.Context) {
+func (s *UserController) CheckCaptcha(c *gin.Context) {
 	var userVo vo.UserVo
 	if err := c.ShouldBindJSON(&userVo); err != nil {
 		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
@@ -24,7 +37,7 @@ func CheckCaptcha(c *gin.Context) {
 		return
 	}
 
-	err = service.CheckCaptcha(email, userVo.Captcha)
+	err = s.authService.CheckCaptcha(email, userVo.Captcha)
 	if err != nil {
 		if utils.IsMyError(err) {
 			// 自定义错误
@@ -33,13 +46,14 @@ func CheckCaptcha(c *gin.Context) {
 			// 系统错误
 			c.JSON(http.StatusInternalServerError, models.Fail("", err.Error(), nil))
 		}
+		return
 	}
 
 	c.JSON(http.StatusOK, models.Success("", "验证成功", nil))
 }
 
 // Reset /user/reset 重置密码
-func Reset(c *gin.Context) {
+func (s *UserController) Reset(c *gin.Context) {
 	var userVo vo.UserVo
 	if err := c.ShouldBindJSON(&userVo); err != nil {
 		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
@@ -53,7 +67,7 @@ func Reset(c *gin.Context) {
 		return
 	}
 
-	err = service.ResetPassword(email, userVo.Password)
+	err = s.userService.ResetPassword(email, userVo.Password)
 	if err != nil {
 		if utils.IsMyError(err) {
 			// 自定义错误
@@ -62,6 +76,7 @@ func Reset(c *gin.Context) {
 			// 系统错误
 			c.JSON(http.StatusInternalServerError, models.Fail("", err.Error(), nil))
 		}
+		return
 	}
 
 	c.JSON(http.StatusOK, models.Success("", "重置密码成功！", nil))
@@ -69,7 +84,7 @@ func Reset(c *gin.Context) {
 }
 
 // UpdateUserInfo /user/update 更新用户信息
-func UpdateUserInfo(c *gin.Context) {
+func (s *UserController) UpdateUserInfo(c *gin.Context) {
 	var userVo vo.UserVo
 	if err := c.ShouldBindJSON(&userVo); err != nil {
 		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
@@ -84,7 +99,7 @@ func UpdateUserInfo(c *gin.Context) {
 	}
 
 	userVo.Email = email
-	err = service.UpdateUserInfo(userVo)
+	err = s.userService.UpdateUserInfo(userVo)
 	if err != nil {
 		if utils.IsMyError(err) {
 			// 自定义错误
@@ -93,6 +108,7 @@ func UpdateUserInfo(c *gin.Context) {
 			// 系统错误
 			c.JSON(http.StatusInternalServerError, models.Fail("", err.Error(), nil))
 		}
+		return
 	}
 
 	c.JSON(http.StatusOK, models.Success("", "更新个人信息成功！", nil))

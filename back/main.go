@@ -22,9 +22,6 @@ func main() {
 	// 使用JWT令牌校验、拦截
 	r.Use(utils.JWTAuthMiddleware())
 
-	// 初始化路由
-	routers.InitializeRoutes(r)
-
 	// 加载配置文件
 	err := configs.InitConfig("config.yaml")
 	if err != nil {
@@ -53,6 +50,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Minio连接异常: %v", err)
 	}
+
+	// 初始化路由
+	routers.InitializeRoutes(r)
 
 	err = r.Run(":8080")
 	if err != nil {

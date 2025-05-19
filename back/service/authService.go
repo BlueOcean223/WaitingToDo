@@ -13,10 +13,20 @@ import (
 	"time"
 )
 
+type AuthService struct {
+	authRepository *repository.AuthRepository
+}
+
+func NewAuthService(authRepository *repository.AuthRepository) *AuthService {
+	return &AuthService{
+		authRepository: authRepository,
+	}
+}
+
 // CheckUser 登录校验
 // 返回用户信息及JWT令牌
-func CheckUser(email, password string) (dto.UserDto, string, error) {
-	user, err := repository.SelectUserByEmail(email)
+func (s *AuthService) CheckUser(email, password string) (dto.UserDto, string, error) {
+	user, err := s.authRepository.SelectUserByEmail(email)
 	// 查询用户异常
 	if err != nil {
 		return dto.UserDto{}, "", err
@@ -47,9 +57,9 @@ func CheckUser(email, password string) (dto.UserDto, string, error) {
 }
 
 // Register 注册
-func Register(userVo vo.UserVo) error {
+func (s *AuthService) Register(userVo vo.UserVo) error {
 	// 验证邮箱是否已经存在，不允许已存在的邮箱重复注册
-	user, err := repository.SelectUserByEmail(userVo.Email)
+	user, err := s.authRepository.SelectUserByEmail(userVo.Email)
 	if err != nil {
 		return err
 	}
@@ -59,7 +69,7 @@ func Register(userVo vo.UserVo) error {
 	}
 
 	// 校验验证码
-	err = CheckCaptcha(userVo.Email, userVo.Captcha)
+	err = s.CheckCaptcha(userVo.Email, userVo.Captcha)
 	if err != nil {
 		return err
 	}
@@ -75,13 +85,13 @@ func Register(userVo vo.UserVo) error {
 		Name:     userVo.Name,
 		Password: hashPassword,
 	}
-	return repository.InsertUser(user)
+	return s.authRepository.InsertUser(user)
 }
 
 // ForgetPassword 忘记密码
-func ForgetPassword(userVo vo.UserVo) error {
+func (s *AuthService) ForgetPassword(userVo vo.UserVo) error {
 	// 检查数据库中是否有该用户
-	user, err := repository.SelectUserByEmail(userVo.Email)
+	user, err := s.authRepository.SelectUserByEmail(userVo.Email)
 	// 查询发生异常
 	if err != nil {
 		return err
@@ -93,7 +103,7 @@ func ForgetPassword(userVo vo.UserVo) error {
 	}
 
 	// 校验验证码
-	err = CheckCaptcha(userVo.Email, userVo.Captcha)
+	err = s.CheckCaptcha(userVo.Email, userVo.Captcha)
 	if err != nil {
 		return err
 	}
@@ -104,11 +114,11 @@ func ForgetPassword(userVo vo.UserVo) error {
 		return err
 	}
 	user.Password = hashPassword
-	return repository.UpdateUser(user)
+	return s.authRepository.UpdateUser(user)
 }
 
 // Captcha 获取验证码
-func Captcha(to []string) error {
+func (s *AuthService) Captcha(to []string) error {
 	// 生成验证码
 	code := utils.GenerateCaptcha()
 	// 封装邮件
@@ -122,7 +132,7 @@ func Captcha(to []string) error {
 		`, code),
 	}
 	// 发送验证码
-	err := Send163Mail(mail)
+	err := s.Send163Mail(mail)
 	if err != nil {
 		return err
 	}
@@ -134,7 +144,7 @@ func Captcha(to []string) error {
 }
 
 // Send163Mail 通过163邮箱发送邮件
-func Send163Mail(mail models.Mail) error {
+func (s *AuthService) Send163Mail(mail models.Mail) error {
 	config := configs.AppConfigs.MailConfig
 
 	m := gomail.NewMessage()
@@ -154,7 +164,7 @@ func Send163Mail(mail models.Mail) error {
 }
 
 // CheckCaptcha 校验验证码
-func CheckCaptcha(email, captcha string) error {
+func (s *AuthService) CheckCaptcha(email, captcha string) error {
 	// 从redis获取验证码
 	redisClient := configs.RedisClient
 	ctx := context.Background()
