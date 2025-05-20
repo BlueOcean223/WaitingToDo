@@ -7,4 +7,5 @@ func InitializeRoutes(r *gin.Engine) {
 	SetAuthRoutes(r)
 	SetUserRoutes(r)
 	SetLoadRoutes(r)
+	SetTaskRoutes(r)
 }
