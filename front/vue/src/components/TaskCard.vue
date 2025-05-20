@@ -1,5 +1,6 @@
 <template>
-  <el-card class="task-card">
+  <!-- 未完成的任务卡片 -->
+  <el-card class="task-card" v-if="task.status === 0">
     <div class="card-content">
       <h3>{{ task.title }}</h3>
       <p class="content">{{ truncatedContent }}</p>
@@ -7,10 +8,22 @@
       <div class="actions">
         <el-button 
           type="success" 
-          :disabled="task.status === 1"
           @click="handleComplete"
         >完成</el-button>
-        <el-button type="warning" @click="handleDelay">延期</el-button>
+        <el-button type="warning" @click="handleChange">修改</el-button>
+        <el-button type="danger" @click="handleDelete">删除</el-button>
+      </div>
+    </div>
+  </el-card>
+
+  <!-- 已完成的任务卡片 -->
+  <el-card class="task-card" v-else>
+    <div class="card-content">
+      <h3>{{ task.title }}</h3>
+      <p class="content">{{ truncatedContent }}</p>
+      <el-tag type="info">{{ formatDate(task.ddl) }}</el-tag>
+      <div class="actions">
+        <span class="completed">该任务已完成！</span>
         <el-button type="danger" @click="handleDelete">删除</el-button>
       </div>
     </div>
@@ -39,8 +52,8 @@ export default {
     handleComplete() {
       this.$emit('complete', this.task.id)
     },
-    handleDelay() {
-      this.$emit('delay', this.task.id)
+    handleChange() {
+      this.$emit('change', this.task.id)
     },
     handleDelete() {
       this.$emit('delete', this.task.id)
@@ -65,5 +78,8 @@ export default {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+.completed{
+  color:rgb(201, 20, 120)
 }
 </style>
