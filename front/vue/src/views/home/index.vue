@@ -137,7 +137,7 @@ import TaskCard from '@/components/TaskCard.vue'
 import ConfirmDialog  from '@/components/ConfirmDialog.vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { getList, add, remove, update } from '@/api/task'
+import { getList, add, remove, update, getUrgent } from '@/api/task'
 
 export default {
   name: 'HomeView',
@@ -186,6 +186,7 @@ export default {
   mounted() {
     window.addEventListener('scroll', this.handleScroll)
     this.fetchTasks()
+    this.fetchUrgentTasks()
   },
   beforeDestroy() {
     window.removeEventListener('scroll', this.handleScroll)
@@ -208,13 +209,26 @@ export default {
           }
           
           // 判断是否还有更多数据
-          this.hasMore = this.tasks.length < res.data.data.count
+          this.hasMore = this.tasks.length < res.data.data[0].count
           this.currentPage++
         }else{
           ElMessage.error(res.data.message)
         }
       } finally {
         this.loading = false
+      }
+    },
+    // 查询紧急任务
+    async fetchUrgentTasks() {
+      try{
+        const res = await getUrgent()
+        if(res.data.status === 1){
+          this.urgentTasks = res.data.data
+        }else{
+          ElMessage.error(res.data.message)
+        }
+      }catch(error){
+        ElMessage.error(error.message)
       }
     },
     handleScroll() {
@@ -255,6 +269,8 @@ export default {
           this.currentPage = 1
           this.hasMore = true
           this.fetchTasks()
+          // 刷新紧急任务列表
+          this.fetchUrgentTasks()
         }else{
           // 添加失败
           ElMessage.error(res.data.message)
@@ -387,5 +403,8 @@ export default {
   padding: 20px;
   color: #999;
   font-size: 14px;
+}
+.urgent-task {
+  color: red
 }
 </style>
