@@ -50,10 +50,10 @@ export default {
       return new Date(dateStr).toLocaleString()
     },
     handleComplete() {
-      this.$emit('complete', this.task.id)
+      this.$emit('complete', this.task)
     },
     handleChange() {
-      this.$emit('change', this.task.id)
+      this.$emit('change', this.task)
     },
     handleDelete() {
       this.$emit('delete', this.task.id)

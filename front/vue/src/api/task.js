@@ -13,3 +13,15 @@ export function getList(page,pageSize){
 export function add(data){
     return api.post('/task/add', data)
 }
+
+export function update(data) {
+    return api.put('/task/update',data)
+}
+
+export function remove(id) {
+    return api.delete('/task/delete',{
+        params: {
+            id: id
+        }
+    })
+}

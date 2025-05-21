@@ -9,6 +9,9 @@
           v-for="task in tasks" 
           :key="task.id" 
           :task="task"
+          @complete="handleComplete"
+          @change="handleChange"
+          @delete="handleDelete"
         />
         <div v-if="loading" class="loading">加载中...</div>
         <!-- 没有更多数据时，提示用户已加载完 -->
@@ -26,6 +29,7 @@
           >
             {{ task.title }} - {{ formatDate(task.ddl) }}
           </div>
+          <div v-if="!urgentTasks.length" class="no-more">暂时不用慌</div>
         </el-scrollbar>
       </div>
     </div>
@@ -41,7 +45,7 @@
     </el-button>
   </div>
 
-  <!--  添加任务模态框 -->
+<!--  添加任务模态框 -->
     <el-dialog v-model="showAddTask" title="添加任务" width="500px">
       <el-form 
         :model="addTaskForm" 
@@ -79,21 +83,68 @@
       </template>
     </el-dialog>
 
+  <!-- 修改任务模态框 -->
+    <el-dialog v-model="showEditTask" title="修改任务" width="500px">
+      <el-form 
+        :model="editTaskForm" 
+        label-width="80px" 
+        label-position="left"
+        :rules="addTaskRules"
+        ref="editTaskForm"
+      >
+        <el-form-item label="标题" prop="title">
+          <el-input v-model="editTaskForm.title" placeholder="请输入标题"/>
+        </el-form-item>
+        <el-form-item label="内容" prop="description">
+          <el-input 
+            v-model="editTaskForm.description" 
+            type="textarea" 
+            :rows="8"
+            placeholder="请输入任务内容"
+            maxlength="500"
+            show-word-limit
+            prefix-icon="Info"
+          />
+        </el-form-item>
+        <el-form-item label="截止时间" prop="ddl">
+          <el-date-picker 
+            v-model="editTaskForm.ddl" 
+            type="datetime" 
+            placeholder="请选择截止时间" 
+            size="large"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showEditTask = false" size="large">取消</el-button>
+        <el-button type="primary" @click="submitEditTask" size="large">完成</el-button>
+      </template>
+    </el-dialog>
+
+  <!-- 确认窗口 -->
+  <ConfirmDialog
+    ref="confirmDialog"
+    v-model="dialogVisible"
+    :title="dialogTitle"
+  />
+
 
 </template>
 
 <script>
 import NavBar from '@/components/NavBar.vue'
 import TaskCard from '@/components/TaskCard.vue'
+import ConfirmDialog  from '@/components/ConfirmDialog.vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { getList, add } from '@/api/task'
+import { getList, add, remove, update } from '@/api/task'
 
 export default {
   name: 'HomeView',
   components: {
     NavBar,
     TaskCard,
+    ConfirmDialog,
     ElIconPlus: Plus
   },
   data() {
@@ -103,6 +154,7 @@ export default {
       loading: false,
       currentPage: 1,
       showAddTask: false, // 是否显示添加任务表单
+      showEditTask: false, // 是否显示修改任务表单
       hasMore: true, // 是否有更多数据
       addTaskForm:{
         title: '',
@@ -120,6 +172,15 @@ export default {
           { required: true, message: '请选择任务截止时间', trigger: ['blur','change'] } // 失去焦点与改变时均触发
         ]
       },
+      editTaskForm: {
+        id: '',
+        title: '',
+        description: '',
+        ddl: ''
+      },
+      confirmDialog: {},
+      dialogVisible: false,
+      dialogTitle: '',
     }
   },
   mounted() {
@@ -203,7 +264,88 @@ export default {
           ElMessage.error('任务发布失败: ' + error.message)
         }
       }
-    }
+    },
+    // 提交修改任务
+    async submitEditTask(){ 
+      // 检查表格参数是否合法
+      try{
+        await this.$refs.editTaskForm.validate()
+        // 将数据发送给后端
+        const data = {
+          ...this.editTaskForm,
+          type: 0
+        }
+        const res = await update(data)
+        if(res.data.status === 1){
+          // 修改成功
+          ElMessage.success(res.data.message)
+          this.showEditTask = false
+          // 更新任务列表中的当前任务信息
+          for(let i = 0; i < this.tasks.length; i++){
+            if(this.tasks[i].id === data.id){
+              this.tasks[i].title = data.title
+              this.tasks[i].description = data.description
+              this.tasks[i].ddl = data.ddl
+              break
+            }
+          }
+        }else{
+          ElMessage.error(res.data.message)
+        }
+      }catch(error){
+        if(error instanceof Error){
+          ElMessage.error('任务修改失败: ' + error.message)
+        }
+      }
+    },
+    // 完成任务
+    async handleComplete(task){
+      this.dialogTitle = '这个任务搞定了吗？'
+      this.dialogVisible = true
+      const isConfirmed = await this.$refs.confirmDialog.confirm()
+      if (isConfirmed){
+        // 用户确认执行操作
+        task.status = 1
+        const res = await update(task)
+        if(res.data.status === 1){
+          // 任务完成
+          ElMessage.success(res.data.message)
+          // 将任务列表中的该任务更新
+          this.tasks = this.tasks.map(item => item.id === task.id ? task : item)
+        }else{
+          // 任务未完成
+          ElMessage.error(res.data.message)
+        }
+      }
+    },
+    // 修改任务
+    handleChange(task){
+      this.editTaskForm.id = task.id
+      this.editTaskForm.title = task.title
+      this.editTaskForm.description = task.description
+      this.editTaskForm.ddl = task.ddl
+      this.showEditTask = true
+    },
+    // 删除任务
+    async handleDelete(id){
+      console.log(id)
+      this.dialogTitle = '确定要删除该任务吗？'
+      this.dialogVisible = true
+      const isConfirmed = await this.$refs.confirmDialog.confirm()
+      if (isConfirmed){
+        // 用户确认执行操作
+        const res = await remove(id)
+        if(res.data.status === 1){
+          // 删除成功
+          ElMessage.success(res.data.message)
+          // 刷新任务列表,删除该任务
+          this.tasks = this.tasks.filter(item => item.id !== id)
+        }else{
+          // 删除失败
+          ElMessage.error(res.data.message)
+        }
+      }
+    },
   }
 }
 </script>
@@ -226,6 +368,7 @@ export default {
   padding: 20px;
   border-radius: 4px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  text-align: center;
 }
 .publish-btn {
   position: fixed;

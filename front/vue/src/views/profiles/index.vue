@@ -255,7 +255,7 @@ const passwordFormRef = ref(null) // 修改密码表单引用
 
 const captchaRules = {
   captcha: [
-    { required: true, message: '请输入验证码', trigger: 'blur' },
+    { required: true, message: '请输入验证码', trigger: ['blur','change'] },
     { len: 6, message: '验证码长度为6位', trigger: 'blur' }
   ]
 }
