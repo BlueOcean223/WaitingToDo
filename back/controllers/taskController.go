@@ -120,3 +120,21 @@ func (s *TaskController) DeleteTask(c *gin.Context) {
 
 	c.JSON(http.StatusOK, models.Success("", "删除成功", nil))
 }
+
+// GetUrgentTaskList 获取紧急任务列表
+func (s *TaskController) GetUrgentTaskList(c *gin.Context) {
+	// 获取用户邮箱
+	email, err := utils.GetUserFromToken(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, models.Fail("", "令牌无效", nil))
+		return
+	}
+	// 获取紧急任务列表
+	taskList, err := s.taskService.GetUrgentTaskList(email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Fail("", "系统错误", nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success("", "查询成功", taskList))
+}

@@ -95,3 +95,35 @@ func (s *TaskService) UpdateTask(taskVo vo.TaskVo) error {
 func (s *TaskService) DeleteTask(id int) error {
 	return s.taskRepository.Delete(id)
 }
+
+// GetUrgentTaskList 获取紧急任务列表
+func (s *TaskService) GetUrgentTaskList(email string) ([]dto.TaskDto, error) {
+	// 根据邮箱查询用户
+	user, err := s.authRepository.SelectUserByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+	if user == (models.User{}) {
+		return nil, errors.New("用户不存在")
+	}
+
+	userId := user.Id
+
+	// 查询紧急任务列表
+	taskList, err := s.taskRepository.GetUrgentList(userId)
+	if err != nil {
+		return nil, err
+	}
+	// 封装Dto列表
+	var taskDtoList []dto.TaskDto
+	for _, task := range taskList {
+		taskDtoList = append(taskDtoList, dto.TaskDto{
+			Id:          task.Id,
+			Title:       task.Title,
+			Description: task.Description,
+			Ddl:         task.Ddl,
+			Status:      task.Status,
+		})
+	}
+	return taskDtoList, nil
+}

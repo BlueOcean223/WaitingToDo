@@ -25,5 +25,7 @@ func SetTaskRoutes(r *gin.Engine) {
 		task.DELETE("/delete", taskController.DeleteTask)
 		// 修改任务
 		task.PUT("/update", taskController.UpdateTask)
+		// 获取紧急任务列表
+		task.GET("/urgent", taskController.GetUrgentTaskList)
 	}
 }

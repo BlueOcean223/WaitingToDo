@@ -3,6 +3,7 @@ package repository
 import (
 	"back/models"
 	"gorm.io/gorm"
+	"time"
 )
 
 type TaskRepository struct {
@@ -44,4 +45,18 @@ func (s *TaskRepository) Update(task models.Task) error {
 // Delete 删除任务
 func (s *TaskRepository) Delete(id int) error {
 	return s.db.Delete(&models.Task{}, id).Error
+}
+
+// GetUrgentList 获取紧急任务
+func (s *TaskRepository) GetUrgentList(userId int) ([]models.Task, error) {
+	// 获取当前时间
+	now := time.Now()
+	// 计算三天后的时间
+	threeDaysLater := now.Add(3 * 24 * time.Hour)
+	// 查询数据库
+	var tasks []models.Task
+	err := s.db.Where("user_id = ? AND status = ? AND ddl >= ? AND ddl <= ?",
+		userId, 0, now, threeDaysLater).Find(&tasks).Error
+
+	return tasks, err
 }
