@@ -206,6 +206,7 @@
 <script>
 import { ElMessage } from 'element-plus';
 import { login, forget, captcha, register } from '@/api/auth'
+import { useUserStore } from '@/stores/user.js';
 
 export default{
   name: 'LoginPage',
@@ -325,6 +326,8 @@ export default{
               // 保存token和用户信息
               localStorage.setItem('token',res.data.token)
               localStorage.setItem('user',JSON.stringify(res.data.data))// 存放前先将对象转换为字符串
+              // 更新全局用户信息
+              useUserStore().updateUserInfo(res.data.data)
               // 跳转到首页
               this.$router.push('/home')
             }else {

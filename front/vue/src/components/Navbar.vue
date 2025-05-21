@@ -63,6 +63,9 @@ export default {
         localStorage.removeItem('user')
         //  清除token
         localStorage.removeItem('token')
+        // 清除全局用户信息
+        useUserStore().clearUserInfo()
+        // 跳转到登录页
         this.$router.push('/login')
     },
   }

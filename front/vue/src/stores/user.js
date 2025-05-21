@@ -9,6 +9,10 @@ export const useUserStore = defineStore('user',{
         updateUserInfo(userInfo){
             this.userInfo = userInfo
             localStorage.setItem('user', JSON.stringify(userInfo))
+        },
+        // 清除用户信息
+        clearUserInfo(){
+            this.userInfo = {}
         }
     }
 })
