@@ -24,7 +24,7 @@ func (s *TaskRepository) GetList(userId, page, pageSize, myType int) ([]models.T
 
 	var taskList []models.Task
 	// 分页查询
-	err = s.db.Where("user_id = ? and type = ?", userId, myType).Offset(offset).Limit(pageSize).Find(&taskList).Error
+	err = s.db.Where("user_id = ? and type = ?", userId, myType).Order("ddl desc").Offset(offset).Limit(pageSize).Find(&taskList).Error
 	if err != nil {
 		return nil, 0, err
 	}

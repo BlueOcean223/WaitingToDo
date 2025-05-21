@@ -6,7 +6,6 @@ import (
 	"back/models/vo"
 	"back/repository"
 	"errors"
-	"sort"
 )
 
 type TaskService struct {
@@ -49,10 +48,7 @@ func (s *TaskService) GetTaskList(email string, page, pageSize int) ([]dto.TaskD
 			Count:       count,
 		})
 	}
-	// 将任务列表按ddl降序排序
-	sort.Slice(taskDtoList, func(i, j int) bool {
-		return taskList[i].Ddl > taskList[j].Ddl
-	})
+
 	return taskDtoList, nil
 }
 
