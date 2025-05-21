@@ -86,3 +86,37 @@ func (s *TaskController) AddTask(c *gin.Context) {
 
 	c.JSON(http.StatusOK, models.Success("", "添加成功", nil))
 }
+
+// UpdateTask 修改任务
+func (s *TaskController) UpdateTask(c *gin.Context) {
+	var taskVo vo.TaskVo
+	if err := c.ShouldBind(&taskVo); err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", "参数异常", nil))
+		return
+	}
+
+	err := s.taskService.UpdateTask(taskVo)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Fail("", "系统错误", nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success("", "修改成功", nil))
+}
+
+// DeleteTask 删除任务
+func (s *TaskController) DeleteTask(c *gin.Context) {
+	id, err := strconv.Atoi(c.Query("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
+		return
+	}
+
+	err = s.taskService.DeleteTask(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Fail("", "系统错误", nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success("", "删除成功", nil))
+}

@@ -78,3 +78,20 @@ func (s *TaskService) AddTask(email string, taskVo vo.TaskVo) error {
 	// 插入数据库
 	return s.taskRepository.Create(task)
 }
+
+// UpdateTask 更新任务
+func (s *TaskService) UpdateTask(taskVo vo.TaskVo) error {
+	return s.taskRepository.Update(models.Task{
+		Id:          taskVo.Id,
+		Title:       taskVo.Title,
+		Description: taskVo.Description,
+		Ddl:         taskVo.Ddl,
+		Type:        taskVo.Type,
+		Status:      taskVo.Status,
+	})
+}
+
+// DeleteTask 删除任务
+func (s *TaskService) DeleteTask(id int) error {
+	return s.taskRepository.Delete(id)
+}

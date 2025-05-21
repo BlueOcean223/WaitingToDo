@@ -49,6 +49,7 @@ func (s *AuthService) CheckUser(email, password string) (dto.UserDto, string, er
 	}
 
 	return dto.UserDto{
+		Id:          user.Id,
 		Email:       user.Email,
 		Name:        user.Name,
 		Pic:         user.Pic,

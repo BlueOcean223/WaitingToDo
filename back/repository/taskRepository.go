@@ -35,3 +35,13 @@ func (s *TaskRepository) Create(task models.Task) error {
 	err := s.db.Create(&task).Error
 	return err
 }
+
+// Update 修改任务
+func (s *TaskRepository) Update(task models.Task) error {
+	return s.db.Model(&task).Updates(task).Error
+}
+
+// Delete 删除任务
+func (s *TaskRepository) Delete(id int) error {
+	return s.db.Delete(&models.Task{}, id).Error
+}
