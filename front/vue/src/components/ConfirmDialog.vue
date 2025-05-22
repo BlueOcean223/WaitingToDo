@@ -5,6 +5,7 @@
     width="30%"
     @update:model-value="$emit('update:modelValue', $event)"
     @close="handleClose"
+    class="confirm-dialog"
   >
     <div class="dialog-footer">
       <el-button @click="handleCancel">取 消</el-button>
@@ -60,6 +61,9 @@ defineExpose({
 </script>
 
 <style scoped>
+.confirm-dialog{
+  text-align: center;
+}
 .dialog-footer {
   text-align: right;
 }

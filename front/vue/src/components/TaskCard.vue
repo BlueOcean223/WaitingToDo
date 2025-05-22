@@ -3,7 +3,7 @@
   <el-card class="task-card" v-if="task.status === 0">
     <div class="card-content">
       <h3>{{ task.title }}</h3>
-      <p class="content">{{ truncatedContent }}</p>
+      <p class="content">{{ task.description }}</p>
       <el-tag type="info">{{ formatDate(task.ddl) }}</el-tag>
       <div class="actions">
         <el-button 
@@ -20,7 +20,7 @@
   <el-card class="task-card" v-else>
     <div class="card-content">
       <h3>{{ task.title }}</h3>
-      <p class="content">{{ truncatedContent }}</p>
+      <p class="content">{{ task.description }}</p>
       <el-tag type="info">{{ formatDate(task.ddl) }}</el-tag>
       <div class="actions">
         <span class="completed">该任务已完成！</span>
@@ -40,10 +40,7 @@ export default {
     }
   },
   computed: {
-    truncatedContent() {
-      const content = this.task.description || ''
-      return content.slice(0, 20) + (content.length > 20 ? '...' : '')
-    }
+
   },
   methods: {
     formatDate(dateStr) {

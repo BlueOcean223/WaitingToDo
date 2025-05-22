@@ -1,11 +1,12 @@
 import api from '@/api'
 
 // 分页查询
-export function getList(page,pageSize){
+export function getList(page,pageSize,status){
     return api.get('/task/list',{
         params: {
             page: page,
-            pageSize: pageSize
+            pageSize: pageSize,
+            status: status
         }
     })
 }

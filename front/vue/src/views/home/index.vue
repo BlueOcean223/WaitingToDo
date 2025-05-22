@@ -5,6 +5,14 @@
     <div class="main-content">
       <!-- 任务列表区域 -->
       <div class="task-list">
+        <!-- 添加筛选按钮 -->
+        <div class="filter-controls">
+          <el-radio-group v-model="filterStatus" @change="handleFilterChange">
+            <el-radio-button label="all">全部任务</el-radio-button>
+            <el-radio-button label="uncompleted">未完成</el-radio-button>
+          </el-radio-group>
+        </div>
+
         <TaskCard 
           v-for="task in tasks" 
           :key="task.id" 
@@ -149,8 +157,9 @@ export default {
   },
   data() {
     return {
-      tasks: [{title: 'Task 1',description: '测试数据测试数据',ddl: '2025/05/18', status: 0},{title: 'Task 2',description: '测试数据测试数据',ddl: '2025/06/01', status: 1}],
+      tasks: [],
       urgentTasks: [],
+      filterStatus: 'all', // 'all' 或者 'uncompleted' 筛选状态
       loading: false,
       currentPage: 1,
       showAddTask: false, // 是否显示添加任务表单
@@ -198,8 +207,11 @@ export default {
         if (!this.hasMore) return;
 
         this.loading = true
+        // 根据筛选状态传递不同的status给后端
+        const status = this.filterStatus === 'uncompleted' ? 0 :undefined
         // 调用API接口
-        const res = await getList(this.currentPage,5)
+        const res = await getList(this.currentPage,5,status)
+
         if(res.data.status === 1){
           // 如果是第一页，直接赋值
           if (this.currentPage === 1){
@@ -217,6 +229,13 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+    // 筛选变化处理方法
+    handleFilterChange() { 
+      this.currentPage = 1
+      this.hasMore = true
+      this.tasks  = []
+      this.fetchTasks()
     },
     // 查询紧急任务
     async fetchUrgentTasks() {
@@ -406,5 +425,10 @@ export default {
 }
 .urgent-task {
   color: red
+}
+.filter-controls {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: flex-end;
 }
 </style>
