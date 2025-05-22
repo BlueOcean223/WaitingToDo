@@ -22,7 +22,7 @@ func NewTaskService(authRepository *repository.AuthRepository,
 }
 
 // GetTaskList 获取任务列表
-func (s *TaskService) GetTaskList(email string, page, pageSize int) ([]dto.TaskDto, error) {
+func (s *TaskService) GetTaskList(email string, page, pageSize int, status *int) ([]dto.TaskDto, error) {
 	// 根据邮箱查询用户
 	user, err := s.authRepository.SelectUserByEmail(email)
 	if err != nil {
@@ -47,6 +47,17 @@ func (s *TaskService) GetTaskList(email string, page, pageSize int) ([]dto.TaskD
 			Status:      task.Status,
 			Count:       count,
 		})
+	}
+
+	// 如果status不为空，则仅返回未完成任务
+	if status != nil {
+		var filteredTaskDtoList []dto.TaskDto
+		for _, taskDto := range taskDtoList {
+			if taskDto.Status == *status {
+				filteredTaskDtoList = append(filteredTaskDtoList, taskDto)
+			}
+		}
+		return filteredTaskDtoList, nil
 	}
 
 	return taskDtoList, nil

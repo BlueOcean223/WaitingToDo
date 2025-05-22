@@ -24,6 +24,18 @@ func NewTaskController(taskService *service.TaskService) *TaskController {
 func (s *TaskController) GetTaskList(c *gin.Context) {
 	page, err := strconv.Atoi(c.Query("page"))
 	pageSize, err := strconv.Atoi(c.Query("pageSize"))
+	statusStr := c.Query("status")
+
+	// 前端是否需要筛选状态
+	var status *int
+	if statusStr != "" {
+		temp, err := strconv.Atoi(statusStr)
+		if err != nil {
+			c.JSON(http.StatusOK, models.Fail("", "状态参数异常", nil))
+			return
+		}
+		status = &temp
+	}
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
@@ -43,7 +55,7 @@ func (s *TaskController) GetTaskList(c *gin.Context) {
 		return
 	}
 
-	taskList, err := s.taskService.GetTaskList(email, page, pageSize)
+	taskList, err := s.taskService.GetTaskList(email, page, pageSize, status)
 	if err != nil {
 		if utils.IsMyError(err) {
 			// 自定义错误
