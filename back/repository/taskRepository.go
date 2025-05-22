@@ -15,7 +15,24 @@ func NewTaskRepository(db *gorm.DB) *TaskRepository {
 }
 
 // GetList 分页查询
-func (s *TaskRepository) GetList(userId, page, pageSize, myType int) ([]models.Task, int64, error) {
+func (s *TaskRepository) GetList(userId, page, pageSize, myType int, status *int) ([]models.Task, int64, error) {
+	if status != nil {
+		// 计算偏移量
+		offset := (page - 1) * pageSize
+		// 查询总数
+		var count int64
+		err := s.db.Model(&models.Task{}).Where("user_id = ? and type = ? and status = ?", userId, myType, *status).
+			Count(&count).Error
+
+		var taskList []models.Task
+		// 分页查询
+		err = s.db.Where("user_id = ? and type = ? and status = ?", userId, myType, *status).
+			Order("ddl desc").Offset(offset).Limit(pageSize).Find(&taskList).Error
+		if err != nil {
+			return nil, 0, err
+		}
+		return taskList, count, nil
+	}
 	// 计算偏移量
 	offset := (page - 1) * pageSize
 	// 查询总数

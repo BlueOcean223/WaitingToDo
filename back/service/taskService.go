@@ -32,7 +32,7 @@ func (s *TaskService) GetTaskList(email string, page, pageSize int, status *int)
 		return nil, errors.New("用户不存在")
 	}
 
-	taskList, count, err := s.taskRepository.GetList(user.Id, page, pageSize, 0)
+	taskList, count, err := s.taskRepository.GetList(user.Id, page, pageSize, 0, status)
 	if err != nil {
 		return nil, err
 	}
@@ -47,17 +47,6 @@ func (s *TaskService) GetTaskList(email string, page, pageSize int, status *int)
 			Status:      task.Status,
 			Count:       count,
 		})
-	}
-
-	// 如果status不为空，则仅返回未完成任务
-	if status != nil {
-		var filteredTaskDtoList []dto.TaskDto
-		for _, taskDto := range taskDtoList {
-			if taskDto.Status == *status {
-				filteredTaskDtoList = append(filteredTaskDtoList, taskDto)
-			}
-		}
-		return filteredTaskDtoList, nil
 	}
 
 	return taskDtoList, nil
