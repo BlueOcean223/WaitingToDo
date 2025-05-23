@@ -5,6 +5,7 @@ import FriendsPage from "@/views/friend";
 import NoticePage from "@/views/notice";
 import TeamPage from "@/views/team";
 import PersonalPage from "@/views/profiles";
+import FriendDetail from "@/views/friend/FriendDetail.vue";
 
 
 const routes = [
@@ -15,6 +16,7 @@ const routes = [
   { path: "/notice", component: NoticePage },
   { path: "/team", component: TeamPage },
   { path: "/profile", component: PersonalPage },
+  { path: "/friendDetail/:id", component: FriendDetail }
 ];
 
 const router = createRouter({
