@@ -28,6 +28,14 @@ func (s *AuthRepository) SelectUserByEmail(email string) (models.User, error) {
 	return user, result.Error
 }
 
+// SelectUserById 根据Id查询用户
+func (s *AuthRepository) SelectUserById(id int) (models.User, error) {
+	var user models.User
+	result := s.db.Where("id = ?", id).First(&user)
+
+	return user, result.Error
+}
+
 // InsertUser 插入用户
 func (s *AuthRepository) InsertUser(user models.User) error {
 	result := s.db.Create(&user)

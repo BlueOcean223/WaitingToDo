@@ -8,4 +8,5 @@ func InitializeRoutes(r *gin.Engine) {
 	SetUserRoutes(r)
 	SetLoadRoutes(r)
 	SetTaskRoutes(r)
+	SetFriendRoutes(r)
 }
