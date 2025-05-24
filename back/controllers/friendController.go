@@ -4,6 +4,7 @@ import (
 	"back/models"
 	"back/models/dto"
 	"back/service"
+	"back/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -30,7 +31,7 @@ func (s *FriendController) GetFriendInfo(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, models.Fail("", "系统错误", nil))
 		return
 	}
-	if friendInfo == (dto.UserDto{}) {
+	if friendInfo == (dto.FriendInfoDto{}) {
 		c.JSON(http.StatusOK, models.Fail("", "用户不存在", nil))
 		return
 	}
@@ -57,14 +58,20 @@ func (s *FriendController) GetFriendList(c *gin.Context) {
 
 // SearchUserByEmail 根据邮箱搜索用户
 func (s *FriendController) SearchUserByEmail(c *gin.Context) {
-	email := c.Query("email")
+	searchEmail := c.Query("email")
+	// 获取用户邮箱
+	userEmail, err := utils.GetUserFromToken(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, models.Fail("", "令牌无效", nil))
+		return
+	}
 
-	user, err := s.friendService.SearchUserByEmail(email)
+	user, err := s.friendService.SearchUserByEmail(userEmail, searchEmail)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.Fail("", "系统错误", nil))
 		return
 	}
-	if user == (dto.UserDto{}) {
+	if user == (dto.FriendInfoDto{}) {
 		c.JSON(http.StatusOK, models.Success("", "用户不存在", nil))
 		return
 	}
