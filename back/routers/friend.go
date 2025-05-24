@@ -12,7 +12,10 @@ func SetFriendRoutes(r *gin.Engine) {
 	// 初始化依赖
 	authRepository := repository.NewAuthRepository(configs.MysqlDb)
 	friendRepository := repository.NewFriendRepository(configs.MysqlDb)
-	friendService := service.NewFriendService(authRepository, friendRepository)
+	messageRepository := repository.NewMessageRepository(configs.MysqlDb)
+
+	friendService := service.NewFriendService(authRepository, friendRepository, messageRepository)
+
 	friendController := controllers.NewFriendController(friendService)
 
 	// 配置路由
@@ -24,5 +27,7 @@ func SetFriendRoutes(r *gin.Engine) {
 		friend.GET("/list", friendController.GetFriendList)
 		// 根据邮箱查询用户信息，用于添加好友
 		friend.GET("/search", friendController.SearchUserByEmail)
+		// 添加好友请求
+		friend.POST("/add", friendController.AddFriend)
 	}
 }

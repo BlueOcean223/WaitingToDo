@@ -3,6 +3,7 @@ package controllers
 import (
 	"back/models"
 	"back/models/dto"
+	"back/models/vo"
 	"back/service"
 	"back/utils"
 	"github.com/gin-gonic/gin"
@@ -77,4 +78,19 @@ func (s *FriendController) SearchUserByEmail(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, models.Success("", "查询成功", user))
+}
+
+// AddFriend 发送添加好友请求
+func (s *FriendController) AddFriend(c *gin.Context) {
+	var friendVo vo.FriendVo
+	if err := c.ShouldBind(&friendVo); err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
+	}
+
+	err := s.friendService.AddFriend(friendVo.UserId, friendVo.FriendId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Fail("", "系统错误", nil))
+		return
+	}
+	c.JSON(http.StatusOK, models.Success("", "发送成功", nil))
 }
