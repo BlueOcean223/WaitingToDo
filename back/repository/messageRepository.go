@@ -17,3 +17,32 @@ func NewMessageRepository(db *gorm.DB) *MessageRepository {
 func (s *MessageRepository) InsertMessage(message models.Message) error {
 	return s.Db.Create(&message).Error
 }
+
+// GetUnreadMessageCount GetUnreadMessage 查询用户未读消息数量
+func (s *MessageRepository) GetUnreadMessageCount(userId int) (int64, error) {
+	var count int64
+	err := s.Db.Table("messages").Where("to_id = ? and is_read = ?", userId, 0).Count(&count).Error
+	return count, err
+}
+
+// GetMessageList 查询用户消息列表
+func (s *MessageRepository) GetMessageList(page, pageSize, userId int) ([]models.Message, error) {
+	// 计算偏移量
+	offset := (page - 1) * pageSize
+
+	var messages []models.Message
+	// 分页查询
+	err := s.Db.Where("to_id = ?", userId).Order("send_time desc").
+		Offset(offset).Limit(pageSize).Find(&messages).Error
+	return messages, err
+}
+
+// Update 更新消息
+func (s *MessageRepository) Update(message models.Message) error {
+	return s.Db.Save(&message).Error
+}
+
+// Delete 删除消息
+func (s *MessageRepository) Delete(id int) error {
+	return s.Db.Delete(&models.Message{}, id).Error
+}

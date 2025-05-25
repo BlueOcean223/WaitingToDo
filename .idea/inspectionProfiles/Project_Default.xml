@@ -5,6 +5,8 @@
     <inspection_tool class="GoDfaErrorMayBeNotNil" enabled="true" level="WARNING" enabled_by_default="true">
       <methods>
         <method importPath="github.com/gin-gonic/gin" receiver="*Context" name="FormFile" />
+        <method importPath="back/repository" receiver="*AuthRepository" name="SelectUserById" />
+        <method importPath="back/repository" receiver="*AuthRepository" name="SelectUserByEmail" />
       </methods>
     </inspection_tool>
   </profile>

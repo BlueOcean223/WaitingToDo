@@ -9,4 +9,5 @@ func InitializeRoutes(r *gin.Engine) {
 	SetLoadRoutes(r)
 	SetTaskRoutes(r)
 	SetFriendRoutes(r)
+	SetMessageRoutes(r)
 }

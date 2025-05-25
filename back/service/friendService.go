@@ -134,6 +134,7 @@ func (s *FriendService) AddFriend(userId, friendId int) error {
 		Type:        1,
 		SendTime:    time.Now().String(),
 		OutId:       thisFriend.Id,
+		IsRead:      0,
 	}
 	err = s.messageRepository.InsertMessage(message)
 	if err != nil {
