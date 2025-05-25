@@ -220,8 +220,7 @@ export default {
             this.tasks = [...this.tasks, ...res.data.data]
           }
           
-          // 判断是否还有更多数据
-          this.hasMore = this.tasks.length < res.data.data[0].count
+          this.hasMore = this.tasks != null && this.tasks.length < res.data.data[0].count
           this.currentPage++
         }else{
           ElMessage.error(res.data.message)
