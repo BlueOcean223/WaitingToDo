@@ -36,9 +36,17 @@
           <div class="user-info">
               <span class="username">{{ searchResult.name }}</span>
           </div>
-          <el-button type="primary" size="small" @click="handleAddFriend(searchResult.id)">
+          <div>
+            <el-button type="primary" size="small" @click="handleAddFriend(searchResult.id)" v-if="searchResult.isFriend === 2">
             添加好友
-          </el-button>
+            </el-button>
+            <el-button type="success" size="small" v-if="searchResult.isFriend === 1">
+            已是好友
+            </el-button>
+            <el-button type="warning" size="small" v-if="searchResult.isFriend === 0">
+            待同意
+            </el-button>
+          </div>
         </div>
       </div>
       <div class="search-null" v-if="searchNull">该邮箱未注册！</div>
@@ -54,7 +62,7 @@ import NavBar from '@/components/NavBar.vue'
 import FriendCard from '@/components/FriendCard.vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user.js'
-import { getFriendList, searchUserInfoByEmail } from '@/api/friend'
+import { getFriendList, searchUserInfoByEmail, sendAddFriendRequest } from '@/api/friend'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -101,6 +109,11 @@ const handleSearch = async() => {
     ElMessage.error('请输入正确的邮箱格式')
     return
   }
+  // 用户不能搜索自己
+  if (searchEmail.value === userStore.userInfo.email) {
+    ElMessage.error('请不要搜索自己')
+    return
+  }
   
   // 调用后端API搜索用户
   const res = await searchUserInfoByEmail(searchEmail.value)
@@ -120,11 +133,20 @@ const handleSearchClear = () => {
   isSearch.value = false
 }
 
-const handleAddFriend = (userId) => {
-  // TODO: 调用后端API添加好友
-  console.log('添加好友:', userId)
+const handleAddFriend = async (friendId) => {
+  // 调用后端API添加好友
+  const data = {
+    user_id: userStore.userInfo.id,
+    friend_id: friendId
+  }
+  const res = await sendAddFriendRequest(data)
+  if(res.data.status === 1){
+    ElMessage.success('发送好友请求成功！')
+  }else{
+    ElMessage.error(res.data.message)
+  }
+  // 关闭对话框
   addFriendDialogVisible.value = false
-  // 可以在这里刷新好友列表
 }
 
 const handleSendMessage = (friendId) => {

@@ -26,3 +26,8 @@ export function searchUserInfoByEmail(email){
         }
     })
 }
+
+// 发送添加好友请求
+export function sendAddFriendRequest(data){
+    return api.post('/friend/add', data)
+}

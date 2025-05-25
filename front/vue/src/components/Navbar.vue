@@ -15,8 +15,10 @@
     <div class="flex-grow"></div>
     
     <el-menu-item index="/notice" class="notification-icon">
-      <el-icon><Bell /></el-icon>
-      通知
+      <el-badge :value="unreadCount" :max="99" :hidden="unreadCount === 0">
+        <el-icon><Bell /></el-icon>
+        <span>通知</span>
+      </el-badge>
     </el-menu-item>
     
     <el-sub-menu index="user-menu">
@@ -33,6 +35,8 @@
 <script>
 import { Bell } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
+import { useMessageStore } from '@/stores/message'
+import { getUnreadMessageCount } from '@/api/message'
 
 export default {
   name: 'NavBar',
@@ -55,6 +59,17 @@ export default {
     avatarUrl() {
       const baseUrl = import.meta.env.VITE_PIC_BASE_URL || 'http://192.168.163.129:9000'
       return `${baseUrl}${this.user.pic || ''}`
+    },
+    unreadCount() {
+      return this.messageStore.unreadCount
+    }
+  },
+  mounted(){
+    this.getUnreadCount()
+  },
+  data() {
+    return {
+      messageStore: useMessageStore(),
     }
   },
   methods: {
@@ -68,6 +83,14 @@ export default {
         // 跳转到登录页
         this.$router.push('/login')
     },
+    async getUnreadCount() {
+      const res = await getUnreadMessageCount(this.user.id)
+      if(res.data.status  === 1){
+        useMessageStore().setUnreadCount(res.data.data)
+      }else{
+        console.log(res.data.message)
+      }
+    }
   }
 }
 </script>
@@ -89,16 +112,22 @@ export default {
 
 .notification-icon {
   margin-right: 10px;
+  position: relative;
+}
+
+.el-menu--horizontal {
+  height: 45px;
+  line-height: 45px;
 }
 
 .el-menu--horizontal > .el-menu-item,
 .el-menu--horizontal > .el-sub-menu {
-  height: 60px;
-  line-height: 60px;
+  height: 45px;
+  line-height: 45px;
 }
 
 .el-menu--horizontal .el-sub-menu__title {
-  height: 60px;
-  line-height: 60px;
+  height: 45px;
+  line-height: 45px;
 }
 </style>

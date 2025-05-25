@@ -13,7 +13,7 @@
         <span class="friend-name">{{ friend.name }}</span>
       </div>
       <div class="second-line">
-        <p class="friend-description">{{ friend.description }}</p>
+        <p class="friend-description">{{ friend.description === '' ? "用户暂无简介" : friend.description}}</p>
       </div>
       <div class="actions">
         <el-button type="primary" size="small" @click.stop="$emit('send-message', friend.id)">
