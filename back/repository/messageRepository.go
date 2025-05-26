@@ -46,3 +46,8 @@ func (s *MessageRepository) Update(message models.Message) error {
 func (s *MessageRepository) Delete(id int) error {
 	return s.Db.Delete(&models.Message{}, id).Error
 }
+
+// ReadAllMessage 将全部消息设置为已读
+func (s *MessageRepository) ReadAllMessage(userId int) error {
+	return s.Db.Model(&models.Message{}).Where("to_id = ?", userId).Update("is_read", 1).Error
+}

@@ -55,3 +55,8 @@ func (s *MessageService) UpdateMessage(message models.Message) error {
 func (s *MessageService) DeleteMessage(messageId int) error {
 	return s.MessageRepository.Delete(messageId)
 }
+
+// ReadAllMessage 全部已读
+func (s *MessageService) ReadAllMessage(userId int) error {
+	return s.MessageRepository.ReadAllMessage(userId)
+}

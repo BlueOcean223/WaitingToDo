@@ -84,3 +84,20 @@ func (s *MessageController) DeleteMessage(c *gin.Context) {
 
 	c.JSON(http.StatusOK, models.Success("", "删除成功", nil))
 }
+
+// ReadAllMessage 一键已读
+func (s *MessageController) ReadAllMessage(c *gin.Context) {
+	var userId int
+	if err := c.ShouldBindJSON(&userId); err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
+		return
+	}
+
+	err := s.messageService.ReadAllMessage(userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Fail("", "系统错误", nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success("", "操作成功", nil))
+}
