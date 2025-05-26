@@ -38,3 +38,13 @@ func (s *FriendRepository) GetFriendRelation(userId, friendId int) (models.Frien
 func (s *FriendRepository) AddFriendRequest(friend models.Friend) error {
 	return s.Db.Create(&friend).Error
 }
+
+// UpdateFriend 更新好友关系
+func (s *FriendRepository) UpdateFriend(friend models.Friend) error {
+	return s.Db.Save(&friend).Error
+}
+
+// DeleteFriend 删除好友关系
+func (s *FriendRepository) DeleteFriend(id int) error {
+	return s.Db.Where("id = ?", id).Delete(&models.Friend{}).Error
+}

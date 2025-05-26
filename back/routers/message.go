@@ -26,5 +26,7 @@ func SetMessageRoutes(r *gin.Engine) {
 		message.DELETE("/delete", messageController.DeleteMessage)
 		// 一键已读
 		message.PUT("/readAll", messageController.ReadAllMessage)
+		// 处理请求
+		message.POST("/handle", messageController.HandleRequest)
 	}
 }

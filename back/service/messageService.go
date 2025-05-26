@@ -1,9 +1,13 @@
 package service
 
 import (
+	"back/configs"
 	"back/models"
 	"back/models/dto"
+	"back/models/vo"
 	"back/repository"
+	"encoding/json"
+	"github.com/rabbitmq/amqp091-go"
 )
 
 type MessageService struct {
@@ -59,4 +63,84 @@ func (s *MessageService) DeleteMessage(messageId int) error {
 // ReadAllMessage 全部已读
 func (s *MessageService) ReadAllMessage(userId int) error {
 	return s.MessageRepository.ReadAllMessage(userId)
+}
+
+// HandleRequest 处理请求
+func (s *MessageService) HandleRequest(messageVo vo.MessageVo) error {
+	// 更新消息状态为已读
+	message := models.Message{
+		Id:          messageVo.Id,
+		Title:       messageVo.Title,
+		Description: messageVo.Description,
+		FromId:      messageVo.FromId,
+		ToId:        messageVo.ToId,
+		Type:        messageVo.Type,
+		SendTime:    messageVo.SendTime,
+		OutId:       messageVo.OutId,
+		IsRead:      1,
+	}
+	err := s.UpdateMessage(message)
+	if err != nil {
+		return err
+	}
+	// 使用消息队列发送处理消息
+	return s.SendMQMessage(messageVo)
+}
+func (s *MessageService) SendMQMessage(messageVo vo.MessageVo) error {
+	// 准备MQ消息
+	mqMsg := models.MQMessage{
+		MessageType: messageVo.Type,
+		ActionType:  models.FriendRequestReject,
+		RelationID:  messageVo.OutId,
+		RequesterID: messageVo.FromId,
+		ReceiverID:  messageVo.ToId,
+	}
+
+	if messageVo.RequestAction == 1 {
+		mqMsg.ActionType = models.FriendRequestAccept
+	}
+
+	// 准备MQ连接
+	MQConn := configs.RabbitMQConn
+	channel, err := MQConn.Channel()
+	if err != nil {
+		return err
+	}
+	defer channel.Close()
+
+	// 声明交换机
+	err = channel.ExchangeDeclare(
+		"social",
+		"direct",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+
+	body, err := json.Marshal(mqMsg)
+	if err != nil {
+		return err
+	}
+	var routingKey string
+	if messageVo.Type == 1 {
+		// 添加好友
+		routingKey = configs.AppConfigs.RabbitMQConfig.Queues["friend_request"].RoutingKey
+	} else {
+		// 小组邀请
+		routingKey = configs.AppConfigs.RabbitMQConfig.Queues["group_request"].RoutingKey
+	}
+	// 发送消息
+	err = channel.Publish(
+		"social",
+		routingKey,
+		false,
+		false,
+		amqp091.Publishing{
+			ContentType: "application/json",
+			Body:        body,
+		})
+
+	return err
 }

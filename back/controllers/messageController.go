@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"back/models"
+	"back/models/vo"
 	"back/service"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -99,5 +100,21 @@ func (s *MessageController) ReadAllMessage(c *gin.Context) {
 		return
 	}
 
+	c.JSON(http.StatusOK, models.Success("", "操作成功", nil))
+}
+
+// HandleRequest 同意请求
+func (s *MessageController) HandleRequest(c *gin.Context) {
+	var messageVo vo.MessageVo
+	if err := c.ShouldBindJSON(&messageVo); err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
+		return
+	}
+
+	err := s.messageService.HandleRequest(messageVo)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Fail("", err.Error(), nil))
+		return
+	}
 	c.JSON(http.StatusOK, models.Success("", "操作成功", nil))
 }

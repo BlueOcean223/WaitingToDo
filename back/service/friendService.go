@@ -1,9 +1,12 @@
 package service
 
 import (
+	"back/configs"
 	"back/models"
 	"back/models/dto"
 	"back/repository"
+	"encoding/json"
+	"log"
 	"time"
 )
 
@@ -149,4 +152,138 @@ func (s *FriendService) AddFriend(userId, friendId int) error {
 		return err
 	}
 	return nil
+}
+
+// AcceptFriendRequest 接受好友请求
+func (s *FriendService) AcceptFriendRequest(userId, friendId int) error {
+	// 开启事务
+	tx := s.friendRepository.Db.Begin()
+	friend, err := s.friendRepository.GetFriendRelation(userId, friendId)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	friend.Status = 1
+	err = s.friendRepository.UpdateFriend(friend)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// 反向添加好友
+	newFriend := models.Friend{
+		UserId:   friend.FriendId,
+		FriendId: friend.UserId,
+		Status:   1,
+	}
+	err = s.friendRepository.AddFriendRequest(newFriend)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit().Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	return nil
+}
+
+// RejectFriendRequest 拒绝好友请求
+func (s *FriendService) RejectFriendRequest(id int) error {
+	return s.friendRepository.DeleteFriend(id)
+}
+
+// StartFriendConsumer 监听消息队列，处理好友请求
+func StartFriendConsumer() {
+	for {
+		MQConn := configs.RabbitMQConn
+		channel, err := MQConn.Channel()
+		if err != nil {
+			log.Printf("Failed to open channel: %v, retrying...", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+		defer channel.Close()
+
+		// 声明队列
+		queue, err := channel.QueueDeclare(
+			"friend_requests",
+			true,
+			false,
+			false,
+			false,
+			nil,
+		)
+		if err != nil {
+			log.Printf("Failed to declare queue: %v", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		// 绑定队列
+		err = channel.QueueBind(
+			queue.Name,
+			configs.AppConfigs.RabbitMQConfig.Queues["friend_request"].RoutingKey,
+			"social",
+			false,
+			nil,
+		)
+		if err != nil {
+			log.Printf("Failed to bind queue: %v", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		// 消费消息
+		msgs, err := channel.Consume(
+			queue.Name,
+			"",
+			false,
+			false,
+			false,
+			false,
+			nil,
+		)
+		if err != nil {
+			log.Printf("Failed to register consumer: %v", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		log.Println("Friend consumer started, waiting for messages...")
+
+		for msg := range msgs {
+			var mqMessage models.MQMessage
+			if err := json.Unmarshal(msg.Body, &mqMessage); err != nil {
+				log.Printf("Failed to unmarshal message: %v", err)
+				msg.Nack(false, true) // 重新入队
+				continue
+			}
+
+			friendRepository := repository.NewFriendRepository(configs.MysqlDb)
+			friendService := NewFriendService(nil, friendRepository, nil)
+
+			var processErr error
+			switch mqMessage.ActionType {
+			case models.FriendRequestAccept:
+				processErr = friendService.AcceptFriendRequest(mqMessage.RequesterID, mqMessage.ReceiverID)
+			case models.FriendRequestReject:
+				processErr = friendService.RejectFriendRequest(mqMessage.RelationID)
+			}
+
+			if processErr != nil {
+				log.Printf("Failed to process message: %v", processErr)
+				msg.Nack(false, true) // 处理失败，重新入队
+			} else {
+				if err := msg.Ack(false); err != nil {
+					log.Printf("Failed to ack message: %v", err)
+				}
+			}
+		}
+
+		log.Println("Message channel closed, reconnecting...")
+		time.Sleep(5 * time.Second)
+	}
 }
