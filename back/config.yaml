@@ -16,3 +16,15 @@ minio:
   endpoint: "127.0.0.1:9000"
   access_key_id: "your_access_key_id"
   secret_access_key: "your_secret_access_key"
+
+# RabbitMQ配置
+rabbitmq:
+  dsn: "amqp://guest:guest@localhost:5672/"
+  exchange: "social"
+  queues:
+    friend_request:
+      name: "friend_requests"
+      routing_key: "friend.request"
+    team_request:
+      name: "team_requests"
+      routing_key: "team.request"

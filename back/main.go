@@ -3,6 +3,7 @@ package main
 import (
 	"back/configs"
 	"back/routers"
+	"back/service"
 	"back/utils"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -50,6 +51,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("Minio连接异常: %v", err)
 	}
+
+	// 连接RabbitMQ
+	err = configs.InitRabbitMQ()
+	if err != nil {
+		log.Fatalf("RabbitMQ连接异常: %v", err)
+	}
+
+	// 启动MQ消费者
+	go service.StartFriendConsumer()
 
 	// 初始化路由
 	routers.InitializeRoutes(r)

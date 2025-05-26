@@ -6,10 +6,11 @@ import (
 )
 
 type Config struct {
-	MySQLConfig MySQLConfig `yaml:"mysql"`
-	RedisConfig RedisConfig `yaml:"redis"`
-	MailConfig  MailConfig  `yaml:"mail"`
-	MinioConfig MinioConfig `yaml:"minio"`
+	MySQLConfig    MySQLConfig    `yaml:"mysql"`
+	RedisConfig    RedisConfig    `yaml:"redis"`
+	MailConfig     MailConfig     `yaml:"mail"`
+	MinioConfig    MinioConfig    `yaml:"minio"`
+	RabbitMQConfig RabbitMQConfig `yaml:"rabbitmq"`
 }
 
 var AppConfigs Config
