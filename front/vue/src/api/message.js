@@ -19,3 +19,23 @@ export function getMessageList(page,pageSize,id) {
         }
     })
 }
+
+// 更新消息
+export function updateMessage(data){
+    return api.put('/message/update',data)
+}
+
+// 删除消息
+export function deleteMessage(id){
+    return api.delete('/message/delete',{
+        params: {
+            id: id
+        }
+    })
+
+}
+
+// 一键已读所有消息
+export function readAllMessage(id){
+    return api.put('/message/readAll',id)
+}

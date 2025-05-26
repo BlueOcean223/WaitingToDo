@@ -49,7 +49,7 @@
             >
               已读
             </el-button>
-            <el-button type="danger" size="small" @click="deleteMessage(message)">
+            <el-button type="danger" size="small" @click="handleDelete(message)">
               删除
             </el-button>
           </template>
@@ -57,6 +57,14 @@
       </el-card>
     </div>
   </div>
+
+  <!-- 确认窗口 -->
+  <ConfirmDialog
+    ref="confirmDialog"
+    v-model="dialogVisible"
+    :title="dialogTitle"
+  />
+
 </template>
 
 <script setup>
@@ -64,10 +72,14 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import Navbar from '@/components/Navbar.vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
-import { getMessageList } from '@/api/message'
+import { useMessageStore } from '@/stores/message'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import { getMessageList, updateMessage,deleteMessage,readAllMessage } from '@/api/message'
 
 // 当前用户信息
 const userStore = useUserStore()
+// 未读取消息全局管理
+const messageStore = useMessageStore()
 
 // 分页相关数据
 const loading = ref(false)
@@ -75,8 +87,13 @@ const currentPage = ref(1)
 const hasMore = ref(true)
 const pageSize = ref(5)
 
-// 模拟消息数据
+// 消息数据
 const messages = ref([])
+
+// 确认窗口相关数据
+const confirmDialog = ref({})
+const dialogVisible = ref(false)
+const dialogTitle = ref('')
 
 // 滚动事件监听
 const handleScroll = () => {
@@ -120,49 +137,89 @@ const unreadCount = computed(() => {
 const formatTime = (timeString) => {
   // 将.后面的全部内容忽略
   const index = timeString.indexOf('.')
-  return timeString.substring(0, index)
+  if (index !== -1) {
+    timeString = timeString.substring(0, index)
+  }
+  return timeString
 }
 
 // 标记单条消息为已读
-const markAsRead = (message) => {
+const markAsRead = async (message) => {
   message.is_read = 1
-  // TODO: 调用API更新消息状态
-  emit('update-unread', unreadCount.value)
-  ElMessage.success('消息已标记为已读')
+  // 调用API更新消息状态
+  const res = await updateMessage(message)
+  if(res.data.status === 1){
+    ElMessage.success('消息已标记为已读')
+    // 更新未读消息数量
+    messageStore.readMessage()
+  }else{
+    ElMessage.error(res.data.message)
+  }
 }
 
 // 一键已读所有消息
-const markAllAsRead = () => {
+const markAllAsRead = async() => {
+  // 如果用户还有未处理的好友请求或组队邀请，则不能全部标记为已读
+  var ok = false
+  messages.value.forEach(msg => {
+    if((msg.type === 1 || msg.type === 2) && msg.is_read === 0 ){
+      ok = true
+      return
+    }
+  })
+  if (ok) {
+    ElMessage.warning('请先处理好友请求或组队邀请')
+    return
+  }
+  // 将所有消息标记为已读
   messages.value.forEach(msg => {
     if (!msg.is_read) {
       msg.is_read = 1
     }
   })
-  // TODO: 调用API批量更新消息状态
-  emit('update-unread', unreadCount.value)
-  ElMessage.success('所有消息已标记为已读')
+  // 调用API批量更新消息状态
+  const res = await readAllMessage(userStore.userInfo.id)
+  if (res.data.status === 1) {
+    ElMessage.success('所有消息已标记为已读')
+    // 更新全局的未读消息数量
+    messageStore.readAllMessage()
+  }else{
+    console.log(res.data.message)
+    ElMessage.error('标记已读失败')
+  }
 }
 
 // 删除消息
-const deleteMessage = (message) => {
-  const index = messages.value.findIndex(msg => msg.id === message.id)
-  if (index !== -1) {
-    const wasUnread = !messages.value[index].is_read
-    messages.value.splice(index, 1)
-    // TODO: 调用API删除消息
-    if (wasUnread) {
-      emit('update-unread', unreadCount.value)
+const handleDelete = async (message) => {
+  dialogTitle.value = '确认要删除该消息吗？'
+  dialogVisible.value = true
+  const isConfirmed = await confirmDialog.value.confirm()
+  if (isConfirmed){
+    // 调用API删除消息
+    const res = await deleteMessage(message.id)
+    if(res.data.status === 1){
+      ElMessage.success('消息已删除')
+      // 从消息队列中删除该消息
+      messages.value = messages.value.filter(item => item.id !== message.id)
+      // 如果该消息为未读消息，则更新未读消息数
+      if(message.isRead === 0){
+        messageStore.readMessage()
+      }
+    }else{
+      console.log(res.data.message)
+      ElMessage.error('删除消息失败')
     }
-    ElMessage.success('消息已删除')
   }
+  console.log(isConfirmed)
+  dialogVisible.value = false
 }
 
 // 处理接受请求
 const handleAccept = (message) => {
   // 根据消息类型执行不同操作
-  if (message.type === 'friend_request') {
+  if (message.type === 1) {
     ElMessage.success('好友请求已接受')
-  } else if (message.type === 'team_invite') {
+  } else if (message.type === 2) {
     ElMessage.success('小队邀请已接受')
   }
   
@@ -175,9 +232,9 @@ const handleAccept = (message) => {
 // 处理拒绝请求
 const handleReject = (message) => {
   // 根据消息类型执行不同操作
-  if (message.type === 'friend_request') {
+  if (message.type === 1) {
     ElMessage.warning('好友请求已拒绝')
-  } else if (message.type === 'team_invite') {
+  } else if (message.type === 2) {
     ElMessage.warning('小队邀请已拒绝')
   }
   
