@@ -31,3 +31,13 @@ export function searchUserInfoByEmail(email){
 export function sendAddFriendRequest(data){
     return api.post('/friend/add', data)
 }
+
+// 删除好友
+export function deleteFriend(userId,friendId){
+    return api.delete('/friend/delete',{
+        params:{
+            userId: userId,
+            friendId: friendId
+        }
+    })
+}

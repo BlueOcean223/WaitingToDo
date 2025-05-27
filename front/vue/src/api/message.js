@@ -39,3 +39,13 @@ export function deleteMessage(id){
 export function readAllMessage(id){
     return api.put('/message/readAll',id)
 }
+
+// 处理请求
+export function handleRequest(data){
+    return api.post('/message/handle',data)
+}
+
+// 添加消息
+export function addMessage(data){
+    return api.post('/message/add',data)
+}

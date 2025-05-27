@@ -74,7 +74,7 @@ import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { useMessageStore } from '@/stores/message'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import { getMessageList, updateMessage,deleteMessage,readAllMessage } from '@/api/message'
+import { getMessageList, updateMessage,deleteMessage,readAllMessage, handleRequest } from '@/api/message'
 
 // 当前用户信息
 const userStore = useUserStore()
@@ -215,33 +215,53 @@ const handleDelete = async (message) => {
 }
 
 // 处理接受请求
-const handleAccept = (message) => {
-  // 根据消息类型执行不同操作
-  if (message.type === 1) {
-    ElMessage.success('好友请求已接受')
-  } else if (message.type === 2) {
-    ElMessage.success('小队邀请已接受')
+const handleAccept = async (message) => {
+  // 调用API处理接受请求
+  const data = {
+    ...message,
+    request_action: 1
   }
-  
-  // 标记为已读
-  message.is_read = 1
-  // TODO: 调用API处理接受请求
-  emit('update-unread', unreadCount.value)
+  const res = await handleRequest(data)
+
+  if(res.data.status === 1){
+    // 根据消息类型执行不同操作
+    if (message.type === 1) {
+      ElMessage.success('好友请求已接受')
+    } else if (message.type === 2) {
+      ElMessage.success('小队邀请已接受')
+    }
+    // 标记为已读
+    message.is_read = 1
+    messageStore.readMessage()
+  }else{
+    console.log(res.data.message)
+    ElMessage.error('处理请求失败')
+  }
 }
 
 // 处理拒绝请求
-const handleReject = (message) => {
-  // 根据消息类型执行不同操作
-  if (message.type === 1) {
-    ElMessage.warning('好友请求已拒绝')
-  } else if (message.type === 2) {
-    ElMessage.warning('小队邀请已拒绝')
+const handleReject = async (message) => {
+  // 调用API处理接受请求
+  const data = {
+    ...message,
+    request_action: 0
   }
-  
-  // 标记为已读
-  message.is_read = 1
-  // TODO: 调用API处理拒绝请求
-  emit('update-unread', unreadCount.value)
+  const res = await handleRequest(data)
+
+  if(res.data.status === 1){
+    // 根据消息类型执行不同操作
+    if (message.type === 1) {
+      ElMessage.warning('好友请求已拒绝')
+    } else if (message.type === 2) {
+      ElMessage.warning('小队邀请已拒绝')
+    }
+    // 标记为已读
+    message.is_read = 1
+    messageStore.readMessage()
+  }else{
+    console.log(res.data.message)
+    ElMessage.error('处理请求失败')
+  }
 }
 
 // 组件挂载时获取消息数据

@@ -52,6 +52,31 @@
       <div class="search-null" v-if="searchNull">该邮箱未注册！</div>
     </el-dialog>
   </div>
+
+
+  <!-- 给好友捎句话窗口 -->
+  <el-dialog v-model="showAddMessage" title="给好友捎句话" width="500px">
+    <el-input
+      v-model="messageContent"
+      type="textarea"
+      :rows="8"
+      placeholder="请输入要捎带的话"
+      maxlength="500"
+      show-word-limit
+      style="margin: 20px 0"
+    />
+    <template #footer>
+      <el-button @click="showAddMessage = false" size="large">取消</el-button>
+      <el-button type="primary" @click="submitAddMessage" size="large">完成</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- 确认窗口 -->
+  <ConfirmDialog
+    ref="confirmDialog"
+    v-model="dialogVisible"
+    :title="dialogTitle"
+  />
 </template>
 
 <script setup>
@@ -60,9 +85,11 @@ import { useRouter } from 'vue-router'
 import { Search } from '@element-plus/icons-vue'
 import NavBar from '@/components/NavBar.vue'
 import FriendCard from '@/components/FriendCard.vue'
-import { ElMessage } from 'element-plus'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import { ElMessage, ElStep } from 'element-plus'
 import { useUserStore } from '@/stores/user.js'
-import { getFriendList, searchUserInfoByEmail, sendAddFriendRequest } from '@/api/friend'
+import { getFriendList, searchUserInfoByEmail, sendAddFriendRequest,deleteFriend } from '@/api/friend'
+import { addMessage } from '@/api/message'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -78,6 +105,16 @@ const searchEmail = ref('')
 const searchResult = ref(null)
 const searchNull  = ref(false)
 const isSearch = ref(false)
+
+// 确认窗口数据
+const confirmDialog = ref({})
+const dialogVisible = ref(false)
+const dialogTitle = ref('')
+
+// 给好友捎句话窗口数据
+const showAddMessage = ref(false)
+const messageContent = ref('')
+const messageToFriendId = ref('')
 
 const showAddFriendDialog = () => {
   addFriendDialogVisible.value = true
@@ -150,14 +187,55 @@ const handleAddFriend = async (friendId) => {
 }
 
 const handleSendMessage = (friendId) => {
-  // TODO: 处理发送消息逻辑
-  console.log('发送消息给:', friendId)
+  // 显示发送消息的对话框
+  showAddMessage.value  = true
+  messageToFriendId.value = friendId
 }
 
-const handleDeleteFriend = (friendId) => {
-  // TODO: 调用后端API删除好友
-  console.log('删除好友:', friendId)
-  // 可以在这里刷新好友列表
+const submitAddMessage = async () => { 
+  if (messageContent.value === ''){
+    ElMessage.error('发送内容不能为空！')
+    return
+  }
+  const title = `好友${userStore.userInfo.name}给你发来消息`
+  const data = {
+    title: title,
+    description: messageContent.value,
+    from_id: userStore.userInfo.id,
+    to_id: messageToFriendId.value,
+    type: 0
+  }
+
+  const res = await addMessage(data)
+  if(res.data.status === 1){
+    ElMessage.success('发送成功！')
+    messageContent.value = ''
+    showAddMessage.value = false
+    messageToFriendId.value = ''
+  }else {
+    ElMessage.error('发送失败！')
+    console.log(res.data.message)
+  }
+}
+
+const handleDeleteFriend = async (friendId) => {
+  // 弹出确认窗口，询问用户是否要删除该好友
+  dialogTitle.value = '确认要删除该好友吗？'
+  dialogVisible.value = true
+  const isConfirmed = await confirmDialog.value.confirm()
+
+  if (isConfirmed) {
+    // 调用后端API删除好友
+    const res = await deleteFriend(userStore.userInfo.id,friendId)
+    if (res.data.status === 1 ){
+      ElMessage.success('删除好友成功')
+      friends.value = friends.value.filter(friend => friend.id !== friendId)
+    }else{
+      ElMessage.error('删除好友失败')
+      console.log(res.data.message)
+    }
+  }
+
 }
 
 const goToFriendDetail = (friendId) => {
