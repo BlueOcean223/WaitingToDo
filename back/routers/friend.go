@@ -29,5 +29,7 @@ func SetFriendRoutes(r *gin.Engine) {
 		friend.GET("/search", friendController.SearchUserByEmail)
 		// 添加好友请求
 		friend.POST("/add", friendController.AddFriend)
+		// 删除好友
+		friend.DELETE("/delete", friendController.DeleteFriend)
 	}
 }

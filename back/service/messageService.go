@@ -8,6 +8,7 @@ import (
 	"back/repository"
 	"encoding/json"
 	"github.com/rabbitmq/amqp091-go"
+	"time"
 )
 
 type MessageService struct {
@@ -143,4 +144,12 @@ func (s *MessageService) SendMQMessage(messageVo vo.MessageVo) error {
 		})
 
 	return err
+}
+
+// AddMessage 添加消息
+func (s *MessageService) AddMessage(message models.Message) error {
+	// 填充消息
+	message.SendTime = time.Now().Format("2006-01-02 15:04:05")
+	// 插入数据库
+	return s.MessageRepository.InsertMessage(message)
 }

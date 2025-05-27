@@ -118,3 +118,20 @@ func (s *MessageController) HandleRequest(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, models.Success("", "操作成功", nil))
 }
+
+// AddMessage 添加消息
+func (s *MessageController) AddMessage(c *gin.Context) {
+	var message models.Message
+	if err := c.ShouldBindJSON(&message); err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
+		return
+	}
+
+	err := s.messageService.AddMessage(message)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Fail("", "系统错误", nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success("", "添加成功", nil))
+}

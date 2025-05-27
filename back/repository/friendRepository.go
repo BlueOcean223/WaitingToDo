@@ -48,3 +48,8 @@ func (s *FriendRepository) UpdateFriend(friend models.Friend) error {
 func (s *FriendRepository) DeleteFriend(id int) error {
 	return s.Db.Where("id = ?", id).Delete(&models.Friend{}).Error
 }
+
+// DeleteByUserIdAndFriendId 根据用户id和好友id删除好友关系
+func (s *FriendRepository) DeleteByUserIdAndFriendId(userId, friendId int) error {
+	return s.Db.Where("user_id = ? AND friend_id = ?", userId, friendId).Delete(&models.Friend{}).Error
+}

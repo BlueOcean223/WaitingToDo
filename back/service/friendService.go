@@ -135,7 +135,7 @@ func (s *FriendService) AddFriend(userId, friendId int) error {
 		FromId:      userId,
 		ToId:        friendId,
 		Type:        1,
-		SendTime:    time.Now().String(),
+		SendTime:    time.Now().Format("2006-01-02 15:04:05"),
 		OutId:       thisFriend.Id,
 		IsRead:      0,
 	}
@@ -286,4 +286,31 @@ func StartFriendConsumer() {
 		log.Println("Message channel closed, reconnecting...")
 		time.Sleep(5 * time.Second)
 	}
+}
+
+// DeleteFriend 删除好友
+func (s *FriendService) DeleteFriend(userId, friendId int) error {
+	// 开启事务
+	tx := s.friendRepository.Db.Begin()
+
+	// 双向删除好友关系
+	err := s.friendRepository.DeleteByUserIdAndFriendId(userId, friendId)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = s.friendRepository.DeleteByUserIdAndFriendId(friendId, userId)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// 提交事务
+	if err = tx.Commit().Error; err != nil {
+		// 提交事务异常
+		tx.Rollback()
+		return err
+	}
+	return nil
 }

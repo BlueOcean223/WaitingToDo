@@ -28,5 +28,7 @@ func SetMessageRoutes(r *gin.Engine) {
 		message.PUT("/readAll", messageController.ReadAllMessage)
 		// 处理请求
 		message.POST("/handle", messageController.HandleRequest)
+		// 添加消息
+		message.POST("/add", messageController.AddMessage)
 	}
 }

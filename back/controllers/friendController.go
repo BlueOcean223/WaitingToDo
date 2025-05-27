@@ -94,3 +94,22 @@ func (s *FriendController) AddFriend(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, models.Success("", "发送成功", nil))
 }
+
+// DeleteFriend  删除好友
+func (s *FriendController) DeleteFriend(c *gin.Context) {
+	userId, err := strconv.Atoi(c.Query("userId"))
+	friendId, err := strconv.Atoi(c.Query("friendId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
+		return
+	}
+
+	err = s.friendService.DeleteFriend(userId, friendId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Fail("", "系统错误", nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success("", "操作成功", nil))
+	return
+}
