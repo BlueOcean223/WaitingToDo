@@ -2,6 +2,7 @@
 
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
+import router from '@/router'
 
 const baseURL = import.meta.env.VITE_APP_API_BASE_URL;
 
@@ -32,6 +33,11 @@ service.interceptors.response.use(
     error => {
         // token过期
         if (error.response && error.response.status === 401){
+            // 清除本地信息
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            // 重定向到登录页面
+            router.push('/login');
             ElMessage.error('登录过期，请重新登录');
         }
         return Promise.reject(error);
