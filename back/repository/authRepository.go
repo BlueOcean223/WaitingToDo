@@ -36,6 +36,14 @@ func (s *AuthRepository) SelectUserById(id int) (models.User, error) {
 	return user, result.Error
 }
 
+// SelectUsersByIds 根据Ids批量查询用户
+func (s *AuthRepository) SelectUsersByIds(ids []int) ([]models.User, error) {
+	var users []models.User
+	result := s.db.Where("id in (?)", ids).Find(&users)
+
+	return users, result.Error
+}
+
 // InsertUser 插入用户
 func (s *AuthRepository) InsertUser(user models.User) error {
 	result := s.db.Create(&user)

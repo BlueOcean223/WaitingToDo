@@ -60,6 +60,8 @@ func main() {
 
 	// 启动MQ消费者
 	go service.StartFriendConsumer()
+	// 启动定时任务
+	go service.TickerNotify()
 
 	// 初始化路由
 	routers.InitializeRoutes(r)

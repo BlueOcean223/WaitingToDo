@@ -1,11 +1,17 @@
 package service
 
 import (
+	"back/configs"
 	"back/models"
 	"back/models/dto"
 	"back/models/vo"
 	"back/repository"
 	"errors"
+	"fmt"
+	"gopkg.in/gomail.v2"
+	"log"
+	"sync"
+	"time"
 )
 
 type TaskService struct {
@@ -122,4 +128,121 @@ func (s *TaskService) GetUrgentTaskList(email string) ([]dto.TaskDto, error) {
 		})
 	}
 	return taskDtoList, nil
+}
+
+// TickerNotify 定时任务，当用户的任务结束时间小于一天时，发邮件提醒用户
+func TickerNotify() {
+	// 初始化时创建所有repository
+	taskNoticeHistoryRepo := repository.NewTaskNoticeHistoryRepository(configs.MysqlDb)
+	taskRepo := repository.NewTaskRepository(configs.MysqlDb)
+	authRepo := repository.NewAuthRepository(configs.MysqlDb)
+
+	// 初始化邮件dialer
+	mailConfig := configs.AppConfigs.MailConfig
+	d := gomail.NewDialer(
+		mailConfig.SMTPHost,
+		mailConfig.SMTPPort,
+		mailConfig.From,
+		mailConfig.Password,
+	)
+
+	// 测试使用一分钟
+	//ticker := time.NewTicker(1 * time.Minute)
+	// 使用一小时的定时器
+	ticker := time.NewTicker(1 * time.Hour)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		// 1. 获取即将过期的任务列表
+		tasks, err := taskRepo.GetOneDayDDLTaskList()
+		if err != nil {
+			log.Printf("获取任务列表失败: %v", err)
+			continue
+		}
+
+		if len(tasks) == 0 {
+			continue
+		}
+
+		// 2. 批量获取需要通知的任务(过滤已通知的)
+		taskIds := make([]int, 0, len(tasks))
+		for _, task := range tasks {
+			taskIds = append(taskIds, task.Id)
+		}
+
+		notifiedTasks, err := taskNoticeHistoryRepo.GetHistoriesByTaskIds(taskIds)
+		if err != nil {
+			log.Printf("获取通知历史失败: %v", err)
+			continue
+		}
+
+		notifiedMap := make(map[int]bool)
+		for _, history := range notifiedTasks {
+			notifiedMap[history.TaskId] = true
+		}
+
+		// 3. 批量获取用户信息
+		userIds := make([]int, 0, len(tasks))
+		tasksToNotify := make([]models.Task, 0, len(tasks))
+		for _, task := range tasks {
+			if !notifiedMap[task.Id] {
+				userIds = append(userIds, task.UserId)
+				tasksToNotify = append(tasksToNotify, task)
+			}
+		}
+
+		users, err := authRepo.SelectUsersByIds(userIds)
+		if err != nil {
+			log.Printf("获取用户信息失败: %v", err)
+			continue
+		}
+
+		userMap := make(map[int]models.User)
+		for _, user := range users {
+			userMap[user.Id] = user
+		}
+
+		// 4. 并发发送邮件并记录历史
+		var wg sync.WaitGroup
+		for _, task := range tasksToNotify {
+			user, ok := userMap[task.UserId]
+			if !ok {
+				log.Printf("用户%d不存在", task.UserId)
+				continue
+			}
+
+			wg.Add(1)
+			// 使用协程发送邮件
+			go func(task models.Task, user models.User) {
+				defer wg.Done()
+
+				mail := models.Mail{
+					To:      []string{user.Email},
+					Subject: "您有一个即将到达ddl的任务",
+					Body: fmt.Sprintf(
+						`您标题为 <strong>%s</strong> 的任务即将到达ddl，请尽快完成！`, task.Title),
+				}
+
+				m := gomail.NewMessage()
+				m.SetHeader("From", mailConfig.From)
+				m.SetHeader("To", mail.To...)
+				m.SetHeader("Subject", mail.Subject)
+				m.SetBody("text/html", mail.Body)
+
+				if err := d.DialAndSend(m); err != nil {
+					log.Printf("发送邮件失败: %v", err)
+					return
+				}
+
+				// 记录通知历史
+				if err := taskNoticeHistoryRepo.Insert(models.TaskNoticeHistory{
+					TaskId: task.Id,
+				}); err != nil {
+					log.Printf("记录通知历史失败: %v", err)
+				}
+			}(task, user)
+		}
+		// 等待所有任务完成
+		wg.Wait()
+	}
 }

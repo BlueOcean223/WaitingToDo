@@ -77,3 +77,15 @@ func (s *TaskRepository) GetUrgentList(userId int) ([]models.Task, error) {
 
 	return tasks, err
 }
+
+// GetOneDayDDLTaskList 获取还有不到一天就过期的未完成的任务
+func (s *TaskRepository) GetOneDayDDLTaskList() ([]models.Task, error) {
+	// 获取当前时间
+	now := time.Now()
+	// 计算一天后的时间
+	oneDayLater := now.Add(24 * time.Hour)
+	// 获取所有任务
+	var tasks []models.Task
+	err := s.db.Where("status = ? AND ddl >= ? AND ddl <= ?", 0, now, oneDayLater).Find(&tasks).Error
+	return tasks, err
+}
