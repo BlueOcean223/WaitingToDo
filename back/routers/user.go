@@ -23,5 +23,7 @@ func SetUserRoutes(r *gin.Engine) {
 		user.POST("/reset", userController.Reset)
 		// 修改个人信息
 		user.POST("/update", userController.UpdateUserInfo)
+		// 获取用户信息
+		user.GET("/info", userController.GetUserInfo)
 	}
 }

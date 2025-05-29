@@ -14,3 +14,12 @@ export function reset(data){
 export function update(data){
     return api.post('/user/update', data)
 }
+
+// 根据id获取用户信息
+export function getUserById(id) {
+    return api.get('/user/info',{
+        params:{
+            id: id
+        }
+    })
+}

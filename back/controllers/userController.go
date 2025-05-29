@@ -7,6 +7,7 @@ import (
 	"back/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 type UserController struct {
@@ -112,4 +113,20 @@ func (s *UserController) UpdateUserInfo(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, models.Success("", "更新个人信息成功！", nil))
+}
+
+// GetUserInfo /user/info 获取用户信息
+func (s *UserController) GetUserInfo(c *gin.Context) {
+	id, err := strconv.Atoi(c.Query("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
+		return
+	}
+	user, err := s.userService.GetUserInfo(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Fail("", "系统错误", nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success("", "查询成功", user))
 }

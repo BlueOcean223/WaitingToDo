@@ -14,6 +14,7 @@
       <el-card
         v-for="message in messages"
         :key="message.id"
+        @click="showSendMessageUser(message.from_id)"
         class="message-card"
         :class="{ 'unread': !message.is_read }"
       >
@@ -31,10 +32,10 @@
         <div class="card-actions">
           <!-- 好友请求或小队邀请的按钮 -->
           <template v-if="(message.type === 1 || message.type === 2) && !message.is_read">
-            <el-button type="success" size="small" @click="handleAccept(message)">
+            <el-button type="success" size="small" @click.stop="handleAccept(message)">
               接受
             </el-button>
-            <el-button type="danger" size="small" @click="handleReject(message)">
+            <el-button type="danger" size="small" @click.stop="handleReject(message)">
               拒绝
             </el-button>
           </template>
@@ -44,12 +45,12 @@
             <el-button
               type="primary"
               size="small"
-              @click="markAsRead(message)"
+              @click.stop="markAsRead(message)"
               :disabled="message.is_read"
             >
               已读
             </el-button>
-            <el-button type="danger" size="small" @click="handleDelete(message)">
+            <el-button type="danger" size="small" @click.stop="handleDelete(message)">
               删除
             </el-button>
           </template>
@@ -65,6 +66,40 @@
     :title="dialogTitle"
   />
 
+  <!-- 展示邮件发送者信息窗口 -->
+  <el-dialog 
+    v-model="isShowFromUser" 
+    title="是这位用户给你发送的消息" 
+    width="500px"
+    :close-on-click-modal="false"
+  >
+    <div class="sender-info-container">
+      <div class="sender-avatar">
+        <el-avatar :size="120" :src="sendMessageUser.avatar">
+          <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
+        </el-avatar>
+      </div>
+      <div class="sender-details">
+        <div class="detail-item">
+          <span class="detail-label">昵称：</span>
+          <span class="detail-value">{{ sendMessageUser.name || '未知用户' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">邮箱：</span>
+          <span class="detail-value">{{ sendMessageUser.email || '未提供邮箱' }}</span>
+        </div>
+        <div class="detail-item" v-if="sendMessageUser.description">
+          <span class="detail-label">简介：</span>
+          <span class="detail-value">{{ sendMessageUser.description }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <template #footer>
+      <el-button type="primary" @click="isShowFromUser = false" size="large">关闭</el-button>
+    </template>
+  </el-dialog>
+
 </template>
 
 <script setup>
@@ -75,6 +110,7 @@ import { useUserStore } from '@/stores/user'
 import { useMessageStore } from '@/stores/message'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { getMessageList, updateMessage,deleteMessage,readAllMessage, handleRequest } from '@/api/message'
+import { getUserById } from '@/api/user'
 
 // 当前用户信息
 const userStore = useUserStore()
@@ -264,6 +300,24 @@ const handleReject = async (message) => {
   }
 }
 
+// 是否展示
+const isShowFromUser = ref(false)
+// 信息存储
+const sendMessageUser = ref({})
+// 点击时展示发送该消息的用户信息
+const showSendMessageUser = async (from_id) => {
+  isShowFromUser.value = true
+
+  const res = await getUserById(from_id)
+  if(res.data.status === 1){
+    sendMessageUser.value = res.data.data
+    sendMessageUser.value.avatar = import.meta.env.VITE_PIC_BASE_URL + res.data.data.pic
+  }else{
+    ElMessage.error('展示失败')
+    console.log(res.data.message)
+  }
+}
+
 // 组件挂载时获取消息数据
 onMounted(() => {
   // 监听滚动事件
@@ -344,5 +398,50 @@ const emit = defineEmits(['update-unread'])
   padding: 20px;
   color: #999;
   font-size: 14px;
+}
+.sender-info-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.sender-avatar {
+  margin-bottom: 24px;
+}
+
+.sender-avatar .el-avatar {
+  border: 3px solid #f0f0f0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s;
+}
+
+.sender-avatar .el-avatar:hover {
+  transform: scale(1.05);
+}
+
+.sender-details {
+  width: 100%;
+  padding: 0 20px;
+}
+
+.detail-item {
+  display: flex;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: #606266;
+  min-width: 60px;
+  text-align: right;
+  margin-right: 12px;
+}
+
+.detail-value {
+  flex: 1;
+  color: #303133;
+  word-break: break-word;
 }
 </style>

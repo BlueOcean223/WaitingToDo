@@ -51,3 +51,18 @@ func (s *UserService) UpdateUserInfo(userVo vo.UserVo) error {
 	user.Description = userVo.Description
 	return s.authRepository.UpdateUser(user)
 }
+
+// GetUserInfo 获取用户信息
+func (s *UserService) GetUserInfo(id int) (vo.UserVo, error) {
+	user, err := s.authRepository.SelectUserById(id)
+	if err != nil {
+		return vo.UserVo{}, err
+	}
+
+	return vo.UserVo{
+		Name:        user.Name,
+		Description: user.Description,
+		Email:       user.Email,
+		Pic:         user.Pic,
+	}, nil
+}

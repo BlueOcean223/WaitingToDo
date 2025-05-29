@@ -6,4 +6,5 @@ type UserVo struct {
 	Password    string `json:"password"`
 	Captcha     string `json:"captcha"`
 	Description string `json:"description"`
+	Pic         string `json:"pic"`
 }
