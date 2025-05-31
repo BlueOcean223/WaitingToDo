@@ -150,3 +150,28 @@ func (s *TaskController) GetUrgentTaskList(c *gin.Context) {
 
 	c.JSON(http.StatusOK, models.Success("", "查询成功", taskList))
 }
+
+// GetTeamTaskList 获取小组任务列表
+func (s *TaskController) GetTeamTaskList(c *gin.Context) {
+	page, err := strconv.Atoi(c.Query("page"))
+	pageSize, err := strconv.Atoi(c.Query("pageSize"))
+	userId, err := strconv.Atoi(c.Query("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
+		return
+	}
+
+	// 防止传入过大的分页参数
+	if page > 10000 || pageSize > 1000 {
+		c.JSON(http.StatusBadRequest, models.Fail("", "分页参数过大", nil))
+		return
+	}
+
+	taskList, err := s.taskService.GetTeamTaskList(userId, page, pageSize)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Fail("", "系统错误", nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success("", "查询成功", taskList))
+}

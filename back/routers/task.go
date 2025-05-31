@@ -12,7 +12,8 @@ func SetTaskRoutes(r *gin.Engine) {
 	// 初始化依赖
 	authRepository := repository.NewAuthRepository(configs.MysqlDb)
 	taskRepository := repository.NewTaskRepository(configs.MysqlDb)
-	taskService := service.NewTaskService(authRepository, taskRepository)
+	teamTaskRepo := repository.NewTeamTaskRepository(configs.MysqlDb)
+	taskService := service.NewTaskService(authRepository, taskRepository, teamTaskRepo)
 	taskController := controllers.NewTaskController(taskService)
 
 	task := r.Group("/task")
@@ -27,5 +28,7 @@ func SetTaskRoutes(r *gin.Engine) {
 		task.PUT("/update", taskController.UpdateTask)
 		// 获取紧急任务列表
 		task.GET("/urgent", taskController.GetUrgentTaskList)
+		// 查询小组任务列表
+		task.GET("/teamList", taskController.GetTeamTaskList)
 	}
 }

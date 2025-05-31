@@ -15,15 +15,17 @@ import (
 )
 
 type TaskService struct {
-	authRepository *repository.AuthRepository
-	taskRepository *repository.TaskRepository
+	authRepository     *repository.AuthRepository
+	taskRepository     *repository.TaskRepository
+	teamTaskRepository *repository.TeamTaskRepository
 }
 
 func NewTaskService(authRepository *repository.AuthRepository,
-	taskRepository *repository.TaskRepository) *TaskService {
+	taskRepository *repository.TaskRepository, teamTaskRepository *repository.TeamTaskRepository) *TaskService {
 	return &TaskService{
-		authRepository: authRepository,
-		taskRepository: taskRepository,
+		authRepository:     authRepository,
+		taskRepository:     taskRepository,
+		teamTaskRepository: teamTaskRepository,
 	}
 }
 
@@ -245,4 +247,88 @@ func TickerNotify() {
 		// 等待所有任务完成
 		wg.Wait()
 	}
+}
+
+// GetTeamTaskList 获取小组任务列表
+func (s *TaskService) GetTeamTaskList(userId, page, pageSize int) ([]dto.TeamTaskDto, error) {
+	// 分页查询小组任务表中，用户的小组任务id
+	teamTaskList, err := s.teamTaskRepository.GetList(page, pageSize, userId)
+	if err != nil {
+		return nil, err
+	}
+	var taskIds []int
+	for _, teamTask := range teamTaskList {
+		taskIds = append(taskIds, teamTask.TaskId)
+	}
+
+	// 查询任务列表
+	taskList, err := s.taskRepository.GetTaskListByIds(taskIds)
+	if err != nil {
+		return nil, err
+	}
+
+	// 根据任务id列表获取所有任务关系
+	teamTaskShipList, err := s.teamTaskRepository.GetTeamTaskShipByTaskIds(taskIds)
+	if err != nil {
+		return nil, err
+	}
+	// 收集用户id，以及任务与用户关联关系
+	var userIds []int
+	taskUserShipMap := make(map[int][]int)
+	for _, teamTaskShip := range teamTaskShipList {
+		tId := teamTaskShip.TaskId
+		uId := teamTaskShip.UserId
+		userIds = append(userIds, uId)
+		taskUserShipMap[tId] = append(taskUserShipMap[tId], uId)
+	}
+
+	// 根据用户id获取用户信息
+	userInfoList, err := s.authRepository.SelectUsersByIds(userIds)
+	if err != nil {
+		return nil, err
+	}
+	// 将用户信息根据id映射成map
+	userInfoMap := make(map[int]models.User)
+	for _, user := range userInfoList {
+		userInfoMap[user.Id] = user
+	}
+
+	// 收集同一小组的成员信息
+	teamUsersMap := make(map[int][]models.User)
+	for _, taskId := range taskIds {
+		for _, uId := range taskUserShipMap[taskId] {
+			teamUsersMap[taskId] = append(teamUsersMap[taskId], userInfoMap[uId])
+		}
+	}
+
+	// 封装teamTaskDto列表
+	var teamTaskDtoList []dto.TeamTaskDto
+	for _, task := range taskList {
+		// 获取同小组的成员信息
+		users := teamUsersMap[task.Id]
+		// 封装userDto
+		var userDtoList []dto.UserDto
+		for _, user := range users {
+			userDtoList = append(userDtoList, dto.UserDto{
+				Id:          user.Id,
+				Name:        user.Name,
+				Email:       user.Email,
+				Description: user.Description,
+				Pic:         user.Pic,
+			})
+		}
+
+		// 封装dto
+		teamTaskDtoList = append(teamTaskDtoList, dto.TeamTaskDto{
+			Id:          task.Id,
+			UserId:      userId,
+			Title:       task.Title,
+			Description: task.Description,
+			Ddl:         task.Ddl,
+			Status:      task.Status,
+			Users:       userDtoList,
+		})
+	}
+
+	return teamTaskDtoList, nil
 }

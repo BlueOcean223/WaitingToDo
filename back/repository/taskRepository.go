@@ -89,3 +89,10 @@ func (s *TaskRepository) GetOneDayDDLTaskList() ([]models.Task, error) {
 	err := s.db.Where("status = ? AND ddl >= ? AND ddl <= ?", 0, now, oneDayLater).Find(&tasks).Error
 	return tasks, err
 }
+
+// GetTaskListByIds 根据任务id列表批量获取任务
+func (s *TaskRepository) GetTaskListByIds(ids []int) ([]models.Task, error) {
+	var tasks []models.Task
+	err := s.db.Where("id IN (?)", ids).Order("ddl desc").Find(&tasks).Error
+	return tasks, err
+}
