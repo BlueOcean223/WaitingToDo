@@ -18,7 +18,7 @@
     </div>
 
     <!-- 添加好友对话框 -->
-    <el-dialog v-model="addFriendDialogVisible" title="添加好友" width="50%" @close="handleSearchClear">
+    <el-dialog v-model="addFriendDialogVisible" title="添加好友" width="35%" @close="handleSearchClear">
       <el-input 
         v-model="searchEmail" 
         placeholder="请输入好友邮箱" 
@@ -86,7 +86,7 @@ import { Search } from '@element-plus/icons-vue'
 import NavBar from '@/components/NavBar.vue'
 import FriendCard from '@/components/FriendCard.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import { ElMessage, ElStep } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user.js'
 import { getFriendList, searchUserInfoByEmail, sendAddFriendRequest,deleteFriend } from '@/api/friend'
 import { addMessage } from '@/api/message'
