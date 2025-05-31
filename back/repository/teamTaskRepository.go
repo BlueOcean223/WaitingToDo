@@ -48,3 +48,8 @@ func (s *TeamTaskRepository) GetTeamTaskShipByTaskIds(taskIds []int) ([]models.T
 
 	return teamTaskShip, err
 }
+
+// Delete 删除
+func (s *TeamTaskRepository) Delete(taskId, userId int) error {
+	return s.Db.Where("task_id = ? AND user_id = ?", taskId, userId).Delete(&models.TeamTask{}).Error
+}

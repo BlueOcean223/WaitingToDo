@@ -16,14 +16,17 @@ import (
 
 type TaskService struct {
 	authRepository     *repository.AuthRepository
+	messageRepository  *repository.MessageRepository
 	taskRepository     *repository.TaskRepository
 	teamTaskRepository *repository.TeamTaskRepository
 }
 
 func NewTaskService(authRepository *repository.AuthRepository,
+	messageRepository *repository.MessageRepository,
 	taskRepository *repository.TaskRepository, teamTaskRepository *repository.TeamTaskRepository) *TaskService {
 	return &TaskService{
 		authRepository:     authRepository,
+		messageRepository:  messageRepository,
 		taskRepository:     taskRepository,
 		teamTaskRepository: teamTaskRepository,
 	}
@@ -274,12 +277,12 @@ func (s *TaskService) GetTeamTaskList(userId, page, pageSize int) ([]dto.TeamTas
 	}
 	// 收集用户id，以及任务与用户关联关系
 	var userIds []int
-	taskUserShipMap := make(map[int][]int)
+	taskUserShipMap := make(map[int][]models.TeamTask)
 	for _, teamTaskShip := range teamTaskShipList {
 		tId := teamTaskShip.TaskId
 		uId := teamTaskShip.UserId
 		userIds = append(userIds, uId)
-		taskUserShipMap[tId] = append(taskUserShipMap[tId], uId)
+		taskUserShipMap[tId] = append(taskUserShipMap[tId], teamTaskShip)
 	}
 
 	// 根据用户id获取用户信息
@@ -294,10 +297,19 @@ func (s *TaskService) GetTeamTaskList(userId, page, pageSize int) ([]dto.TeamTas
 	}
 
 	// 收集同一小组的成员信息
-	teamUsersMap := make(map[int][]models.User)
+	teamUsersMap := make(map[int][]dto.TeamUserDto)
 	for _, taskId := range taskIds {
-		for _, uId := range taskUserShipMap[taskId] {
-			teamUsersMap[taskId] = append(teamUsersMap[taskId], userInfoMap[uId])
+		for _, taskUserShip := range taskUserShipMap[taskId] {
+			uId := taskUserShip.UserId
+			userInfo := userInfoMap[uId]
+			// 封装对应任务的用户信息
+			teamUserDto := dto.TeamUserDto{
+				Id:     userInfo.Id,
+				Name:   userInfo.Name,
+				Pic:    userInfo.Pic,
+				Status: taskUserShip.Status,
+			}
+			teamUsersMap[taskId] = append(teamUsersMap[taskId], teamUserDto)
 		}
 	}
 
@@ -306,17 +318,6 @@ func (s *TaskService) GetTeamTaskList(userId, page, pageSize int) ([]dto.TeamTas
 	for _, task := range taskList {
 		// 获取同小组的成员信息
 		users := teamUsersMap[task.Id]
-		// 封装userDto
-		var userDtoList []dto.UserDto
-		for _, user := range users {
-			userDtoList = append(userDtoList, dto.UserDto{
-				Id:          user.Id,
-				Name:        user.Name,
-				Email:       user.Email,
-				Description: user.Description,
-				Pic:         user.Pic,
-			})
-		}
 
 		// 封装dto
 		teamTaskDtoList = append(teamTaskDtoList, dto.TeamTaskDto{
@@ -326,9 +327,136 @@ func (s *TaskService) GetTeamTaskList(userId, page, pageSize int) ([]dto.TeamTas
 			Description: task.Description,
 			Ddl:         task.Ddl,
 			Status:      task.Status,
-			Users:       userDtoList,
+			Users:       users,
 		})
 	}
 
 	return teamTaskDtoList, nil
+}
+
+// DeleteTeamTask 删除小组任务
+func (s *TaskService) DeleteTeamTask(taskId, userId int) error {
+	// 开启事务
+	tx := s.teamTaskRepository.Db.Begin()
+	// 删除任务关系表数据
+	err := tx.Where("task_id = ? AND user_id = ?", taskId, userId).Delete(&models.TeamTask{}).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	// 如果小组成员全部删除，则删除任务表数据
+	teamTaskList, err := s.teamTaskRepository.GetTeamTaskShipByTaskIds([]int{taskId})
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if len(teamTaskList) == 1 {
+		err = tx.Delete(&models.Task{}, taskId).Error
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	if err = tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
+// AddTeamTask 添加小组任务
+func (s *TaskService) AddTeamTask(task models.Task) error {
+	// 开启事务
+	tx := s.teamTaskRepository.Db.Begin()
+	// 向任务表写数据
+	if err := tx.Create(&task).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	// 向任务关系表写数据
+	teamTask := models.TeamTask{
+		TaskId: task.Id,
+		UserId: task.UserId,
+		Status: 0,
+	}
+	if err := tx.Create(&teamTask).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// 提交事务
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
+// CompleteTeamTask 小组成员完成小组任务
+func (s *TaskService) CompleteTeamTask(teamTask models.TeamTask) error {
+	// 开启事务
+	tx := s.teamTaskRepository.Db.Begin()
+	// 更新任务关系表
+	err := tx.Where("task_id = ? AND user_id = ?", teamTask.TaskId, teamTask.UserId).Updates(teamTask).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	// 如果小组成员已经全部完成任务，则更新任务表
+	teamTaskList, err := s.teamTaskRepository.GetTeamTaskShipByTaskIds([]int{teamTask.TaskId})
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	count := 0
+	for _, taskShip := range teamTaskList {
+		count += taskShip.Status
+	}
+
+	if count == len(teamTaskList)-1 {
+		err = tx.Where("id = ?", teamTask.TaskId).Updates(models.Task{Status: 1}).Error
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	// 提交事务
+	if err = tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
+// InviteTeamMember 邀请成员,向被邀请的好友发送信息
+func (s *TaskService) InviteTeamMember(email string, teamTask models.TeamTask) error {
+	// 获取当前用户信息
+	user, err := s.authRepository.SelectUserByEmail(email)
+	if err != nil {
+		return err
+	}
+	// 查询小组任务信息
+	tasks, err := s.taskRepository.GetTaskListByIds([]int{teamTask.TaskId})
+	if err != nil {
+		return err
+	}
+
+	// 填写发送信息
+	message := models.Message{
+		Title:       "小组任务邀请",
+		Description: fmt.Sprintf("好友 %s 邀请你加入名为 %s 的小组任务", user.Name, tasks[0].Title),
+		FromId:      user.Id,
+		ToId:        teamTask.UserId,
+		Type:        2,
+		SendTime:    time.Now().Format("2006-01-02 15:04:05"),
+		OutId:       teamTask.TaskId,
+		IsRead:      0,
+	}
+	// 写入信息表
+	return s.messageRepository.InsertMessage(message)
 }

@@ -175,3 +175,77 @@ func (s *TaskController) GetTeamTaskList(c *gin.Context) {
 
 	c.JSON(http.StatusOK, models.Success("", "查询成功", taskList))
 }
+
+// DeleteTeamTask 删除小组任务
+func (s *TaskController) DeleteTeamTask(c *gin.Context) {
+	taskId, err := strconv.Atoi(c.Query("taskId"))
+	userId, err := strconv.Atoi(c.Query("userId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
+		return
+	}
+
+	err = s.taskService.DeleteTeamTask(taskId, userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Fail("", "系统错误", nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success("", "删除成功", nil))
+}
+
+// AddTeamTask 添加小组任务
+func (s *TaskController) AddTeamTask(c *gin.Context) {
+	var task models.Task
+	if err := c.ShouldBind(&task); err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
+		return
+	}
+
+	err := s.taskService.AddTeamTask(task)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Fail("", "系统错误", nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success("", "添加成功", nil))
+}
+
+// CompleteTeamTask 小组成员完成小组任务
+func (s *TaskController) CompleteTeamTask(c *gin.Context) {
+	var teamTask models.TeamTask
+	if err := c.ShouldBind(&teamTask); err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
+		return
+	}
+
+	err := s.taskService.CompleteTeamTask(teamTask)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Fail("", "系统错误", nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success("", "完成成功", nil))
+}
+
+// InviteTeamMember 邀请成员
+func (s *TaskController) InviteTeamMember(c *gin.Context) {
+	var teamTask models.TeamTask
+	if err := c.ShouldBind(&teamTask); err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
+		return
+	}
+	email, err := utils.GetUserFromToken(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, models.Fail("", "无效令牌", nil))
+		return
+	}
+
+	err = s.taskService.InviteTeamMember(email, teamTask)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Fail("", "系统错误", nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success("", "邀请成功", nil))
+}
