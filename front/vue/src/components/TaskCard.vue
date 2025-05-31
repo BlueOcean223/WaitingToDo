@@ -21,7 +21,7 @@
     <div class="card-content">
       <h3>{{ task.title }}</h3>
       <p class="content">{{ task.description }}</p>
-      <el-tag type="info">{{ formatDate(task.ddl) }}</el-tag>
+      <el-tag :type="task.status === 0 ? 'info' : 'success'">{{ formatDate(task.ddl) }}</el-tag>
       <div class="actions">
         <span class="completed">该任务已完成！</span>
         <el-button type="danger" @click="handleDelete">删除</el-button>

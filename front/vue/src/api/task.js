@@ -34,3 +34,14 @@ export function remove(id) {
 export function getUrgent() {
     return api.get('/task/urgent')
 }
+
+// 获取小组任务列表
+export function getTeamTaskList(page,pageSize,id){
+    return api.get('/task/teamList',{
+        params: {
+            page: page,
+            pageSize: pageSize,
+            id: id
+        }
+    })
+}
