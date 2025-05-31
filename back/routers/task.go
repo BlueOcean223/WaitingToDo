@@ -11,9 +11,12 @@ import (
 func SetTaskRoutes(r *gin.Engine) {
 	// 初始化依赖
 	authRepository := repository.NewAuthRepository(configs.MysqlDb)
+	messageRepository := repository.NewMessageRepository(configs.MysqlDb)
 	taskRepository := repository.NewTaskRepository(configs.MysqlDb)
 	teamTaskRepo := repository.NewTeamTaskRepository(configs.MysqlDb)
-	taskService := service.NewTaskService(authRepository, taskRepository, teamTaskRepo)
+
+	taskService := service.NewTaskService(authRepository, messageRepository, taskRepository, teamTaskRepo)
+
 	taskController := controllers.NewTaskController(taskService)
 
 	task := r.Group("/task")
@@ -30,5 +33,13 @@ func SetTaskRoutes(r *gin.Engine) {
 		task.GET("/urgent", taskController.GetUrgentTaskList)
 		// 查询小组任务列表
 		task.GET("/teamList", taskController.GetTeamTaskList)
+		// 删除小组任务
+		task.DELETE("/team/delete", taskController.DeleteTeamTask)
+		// 添加小组任务
+		task.POST("/team/add", taskController.AddTeamTask)
+		// 小组成员完成任务
+		task.PUT("/team/complete", taskController.CompleteTeamTask)
+		// 邀请成员
+		task.POST("/team/invite", taskController.InviteTeamMember)
 	}
 }
