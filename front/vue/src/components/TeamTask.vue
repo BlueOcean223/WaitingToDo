@@ -31,11 +31,6 @@
             size="small" 
             @click.stop="handleExit"
           >退出</el-button>
-          <el-button 
-            type="danger" 
-            size="small" 
-            @click.stop="handleDelete"
-          >删除</el-button>
         </div>
       </div>
     </div>
@@ -59,12 +54,12 @@
             />
             <span class="user-name">{{ user.name }}</span>
             <el-button 
-              v-if="user.id === userStore.userInfo.id"
-              :type="task.status === 1 ? 'success' : 'primary'"
+              :disabled="user.id !== userStore.userInfo.id"
+              :type="user.status === 1 ? 'success' : 'primary'"
               size="small"
               @click="handleComplete"
             >
-              {{ task.status === 1 ? '已完成' : '完成' }}
+              {{ user.status === 1 ? '已完成' : '完成' }}
             </el-button>
           </div>
         </div>
@@ -84,7 +79,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['delete', 'invite', 'complete','exitTeam'])
+const emit = defineEmits(['invite', 'complete','exitTeam'])
 
 const BaseUrl = import.meta.env.VITE_PIC_BASE_URL
 const userStore = useUserStore()
@@ -103,9 +98,6 @@ const handleExit = () => {
   emit('exitTeam',props.task.id)
 }
 
-const handleDelete = () => {
-  emit('delete', props.task.id)
-}
 
 const handleInvite = () => {
   emit('invite', props.task.id)

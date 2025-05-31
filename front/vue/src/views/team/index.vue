@@ -6,7 +6,6 @@
         v-for="task in tasks" 
         :key="task.id" 
         :task="task"
-        @delete="handleDeleteTask"
         @invite="handleInviteMember"
         @complete="handleCompleteTask"
         @exitTeam="handleExitTeam"
@@ -61,7 +60,36 @@
         <el-button type="primary" @click="submitAddTask" size="large">完成</el-button>
       </template>
     </el-dialog>
+
+    <!-- 邀请成员对话框 -->
+    <el-dialog v-model="inviteVisible" title="邀请好友加入小组任务" width="35%" @close="handleInviteClear">
+      <div class="invite-results">
+        <div class="invite-card" v-for="friend in friends" :key="friend.id">
+          <el-avatar :size="50" :src="picBaseUrl + friend.pic" />
+          <div class="user-info">
+              <span class="username">{{ friend.name }}</span>
+          </div>
+          <div>
+            <el-button type="primary" size="small" @click="handleInviteFriend(friend.id)" v-if="isInvited(friend.id)">
+            邀请好友
+            </el-button>
+            <el-button type="success" size="small" v-else>
+            已在小组中
+            </el-button>
+          </div>
+        </div>
+      </div>
+      <div class="friends-null" v-if="friendsNull">您暂时没有好友可以邀请！</div>
+    </el-dialog>
+
   </div>
+
+  <!-- 确认操作弹窗 -->
+  <ConfirmDialog
+    ref="confirmDialog"
+    v-model="dialogVisible"
+    :title="dialogTitle"
+  />
 </template>
 
 <script setup name="TeamPage">
@@ -69,9 +97,11 @@ import { ref,onMounted,onBeforeUnmount } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import TeamTask from '@/components/TeamTask.vue'
 import Navbar from '@/components/Navbar.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
-import { getTeamTaskList } from '@/api/task'
+import { getFriendList } from '@/api/friend'
+import { getTeamTaskList, removeTeamTask, addTeamTask, completeTeamTask, inviteMember } from '@/api/task'
 
 // 分页相关数据
 const loading = ref(false)
@@ -81,6 +111,14 @@ const pageSize = ref(5) // 每页显示的任务数量
 
 // 当前用户全局信息
 const userStore = useUserStore()
+
+// 图片基础URL
+const picBaseUrl = import.meta.env.VITE_PIC_BASE_URL
+
+// 确认窗口信息
+const confirmDialog = ref(null)
+const dialogVisible = ref(false)
+const dialogTitle = ref('')
 
 // 任务列表
 const tasks = ref([])
@@ -106,6 +144,12 @@ const addTaskRules = {
     { required: true, message: '请选择截止时间', trigger: 'change' }
   ]
 }
+
+// 邀请好友加入小组相关数据
+const inviteVisible = ref(false)
+const friends = ref([])
+const friendsNull = ref(false)
+const inviteTaskId = ref(0)
 
 // 滚动事件监听
 const handleScroll = () => {
@@ -141,47 +185,143 @@ const fetchTasks = async () => {
   }
 }
 
-const handleDeleteTask = (taskId) => {
-  // TODO: 调用API删除任务
-  tasks.value = tasks.value.filter(task => task.id !== taskId)
+// 显示邀请对话框
+const handleInviteMember = async (taskId) => {
+  inviteVisible.value = true
+  inviteTaskId.value = taskId
+
+  // 加载好友数据
+  const res = await getFriendList(userStore.userInfo.id)
+  if(res.data.status === 1){
+    if(res.data.data === null){
+      friendsNull.value = true
+      return
+    }
+    friends.value = res.data.data
+  }else{
+    friendsNull.value = true
+    ElMessage.error('显示好友列表异常')
+  }
 }
 
-const handleInviteMember = (taskId) => {
-  // TODO: 调用API邀请成员
-  console.log('邀请成员到任务', taskId)
+// 邀请好友加入小组
+const handleInviteFriend = async (friendId) => { 
+  // 向好友发送邀请信息
+  const data = {
+    task_id: inviteTaskId.value,
+    user_id: friendId
+  }
+
+  const res = await inviteMember(data)
+  if(res.data.status === 1){
+    ElMessage.success('发送邀请成功！')
+  }else{
+    ElMessage.error('发送邀请失败！')
+  }
 }
 
-const handleCompleteTask = (taskId) => {
-  // TODO: 调用API完成任务
-  const task = tasks.value.find(t => t.id === taskId)
-  if (task) {
-    task.status = 1
+// 检查好友是否已经在小组中
+const isInvited = (friendId) => {
+  // 先找到任务对应的小组成员
+  const members = tasks.value.find( task => task.id === inviteTaskId.value).users
+  return !members.some(member => member.id === friendId)
+}
+
+// 关闭邀请对话框
+const handleInviteClear = () => {
+  inviteVisible.value = false
+  inviteTaskId.value = 0
+  friends.value = []
+  friendsNull.value = false
+}
+
+const handleCompleteTask = async (taskId) => {
+  // 调用API完成任务
+  const data = {
+    task_id:  taskId,
+    user_id:  userStore.userInfo.id,
+    status:   1
+  }
+  const res = await completeTeamTask(data)
+  if(res.data.status === 1){
+    ElMessage.success('成功完成了属于您的部分')
+    // 更新任务完成状态
+    tasks.value = tasks.value.map(task => {
+      if(task.id === taskId){
+        var count = 0
+        task.users.map(user => {
+          if(user.id === userStore.userInfo.id){
+            user.status = 1
+          }
+          count += user.status
+          return user
+        })
+        // 小组成员全部完成了对应部分，则任务完成
+        task.status = (count === task.users.length ?  1 : 0)
+      }
+      return task
+    })
+  }else{
+    ElMessage.error('完成任务失败')
+    console.log(res.data.message)
   }
 }
 
 // 处理退出小组
-const handleExitTeam = (taskId) => {
-  // TODO: 调用API退出小组
-  ElMessage.success('已退出小组')
+const handleExitTeam = async (taskId) => {
+  // 调用API退出小组
+  dialogVisible.value = true
+  dialogTitle.value = '退出小组同时也会删除任务记录，您确定要退出吗？'
+  // 等待用户操作
+  const isConfirm = await confirmDialog.value.confirm()
+
+  if(isConfirm){
+    const res = await removeTeamTask(taskId,userStore.userInfo.id)
+    if(res.data.status === 1){
+      ElMessage.success('退出小组成功')
+      tasks.value = tasks.value.filter(task => task.id !== taskId)
+    }else{
+      ElMessage.error('退出小组失败')
+    }
+    dialogVisible.value = false
+  }
 }
 
+// 添加任务
 const submitAddTask = async () => {
   try {
     await addTaskFormRef.value.validate()
     
-    // TODO: 调用API添加任务
-    const newTask = {
-      id: Date.now(), // 临时ID，实际应由后端生成
+    // 调用API添加任务
+    const data = {
+      user_id: userStore.userInfo.id,
       ...addTaskForm.value,
+      type:   1,
       status: 0,
-      users: [] // 初始没有成员，或者包含当前用户
     }
     
-    tasks.value.push(newTask)
-    showAddTask.value = false
-    addTaskFormRef.value.resetFields()
+    const res = await addTeamTask(data)
+    if(res.data.status === 1){
+      ElMessage.success('添加任务成功')
+
+      // 重新加载任务列表
+      currentPage.value = 1
+      hasMore.value = true
+      tasks.value = []
+      fetchTasks()
+      // 重置相关数据
+      showAddTask.value = false
+      addTaskFormRef.value.resetFields()
+      addTaskForm.value = {
+        title: '',
+        description: '',
+        ddl: '',
+      }
+    }else{
+      ElMessage .error('添加任务失败')
+    }
   } catch (error) {
-    console.error('表单验证失败', error)
+    ElMessage.error('表单填写格式不正确')
   }
 }
 
@@ -234,6 +374,37 @@ onBeforeUnmount(() => {
   color: #666;
 }
 .no-more {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+  font-size: 14px;
+}
+
+.invite-results {
+  margin-top: 20px;
+}
+
+.invite-card {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.invite-card .el-avatar {
+  margin-right: 15px;
+}
+
+.invite-card .user-info {
+  flex: 1;
+}
+
+.invite-card .username {
+  font-weight: bold;
+}
+.friends-null{
   text-align: center;
   padding: 20px;
   color: #999;

@@ -45,3 +45,28 @@ export function getTeamTaskList(page,pageSize,id){
         }
     })
 }
+
+// 删除小组任务
+export function removeTeamTask(taskId,userId){
+    return api.delete('/task/team/delete',{
+        params: {
+            taskId: taskId,
+            userId: userId
+        }
+    })
+}
+
+// 添加小组任务
+export function addTeamTask(data){
+    return api.post( '/task/team/add', data)
+}
+
+// 小组成员完成任务
+export function completeTeamTask(data){
+    return api.put('/task/team/complete', data)
+}
+
+// 邀请成员
+export function inviteMember(data){
+    return api.post('/task/team/invite', data)
+}
