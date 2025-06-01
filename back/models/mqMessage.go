@@ -5,6 +5,7 @@ type QueueActionType int
 const (
 	FriendRequestReject QueueActionType = iota
 	FriendRequestAccept
+	TeamRequestAccept
 )
 
 type MQMessage struct {

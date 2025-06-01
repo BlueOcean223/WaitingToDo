@@ -8,6 +8,7 @@ import (
 	"back/repository"
 	"back/utils"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"gopkg.in/gomail.v2"
@@ -445,7 +446,7 @@ func (s *TaskService) InviteTeamMember(email string, teamTask models.TeamTask) e
 
 	// 查询redis，判断24h内是否已经邀请过
 	redisClient := configs.RedisClient
-	key := fmt.Sprintf(utils.InviteTeamMemberKey+"%d:%d", user.Id, teamTask.UserId)
+	key := fmt.Sprintf(utils.InviteTeamMemberKey+"%d:%d:%d", user.Id, teamTask.UserId, teamTask.TaskId)
 	if redisClient.Exists(context.Background(), key).Val() == 1 {
 		return utils.NewMyError("已邀请过该用户，请等待用户同意")
 	}
@@ -476,4 +477,112 @@ func (s *TaskService) InviteTeamMember(email string, teamTask models.TeamTask) e
 	// 写入redis，记录24h内邀请信息
 	redisClient.Set(context.Background(), key, 1, time.Hour*24)
 	return nil
+}
+
+// StartTeamConsumer 监听消息队列，处理同意加入小组任务
+func StartTeamConsumer() {
+	for {
+		MQConn := configs.RabbitMQConn
+		channel, err := MQConn.Channel()
+		if err != nil {
+			log.Printf("打开channel失败: %v, 重新尝试...", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+		defer channel.Close()
+
+		// 声明队列
+		queue, err := channel.QueueDeclare(
+			configs.AppConfigs.RabbitMQConfig.Queues["team_request"].Name,
+			true,
+			false,
+			false,
+			false,
+			nil,
+		)
+		if err != nil {
+			log.Printf("声明队列失败：%v", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		// 绑定队列
+		err = channel.QueueBind(
+			queue.Name,
+			configs.AppConfigs.RabbitMQConfig.Queues["team_request"].RoutingKey,
+			"social",
+			false,
+			nil,
+		)
+		if err != nil {
+			log.Printf("绑定队列失败：%v", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		// 消费信息
+		msgs, err := channel.Consume(
+			queue.Name,
+			"",
+			false,
+			false,
+			false,
+			false,
+			nil,
+		)
+		if err != nil {
+			log.Printf("消费信息失败：%v", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		for msg := range msgs {
+			var mqMessage models.MQMessage
+			if err = json.Unmarshal(msg.Body, &mqMessage); err != nil {
+				log.Printf("反序列化消息失败：%v", err)
+				msg.Nack(false, true) // 重新入队
+				continue
+			}
+
+			// 开启事务
+			tx := configs.MysqlDb.Begin()
+
+			// 向任务关系表插入数据
+			teamTask := models.TeamTask{
+				TaskId: mqMessage.RelationID,
+				UserId: mqMessage.ReceiverID,
+				Status: 0,
+			}
+			if err = tx.Create(&teamTask).Error; err != nil {
+				tx.Rollback()
+				log.Printf("向任务关系表插入数据异常：%v", err)
+				msg.Nack(false, true) // 处理失败，重新入队
+				continue
+			}
+
+			// 将任务表相应任务状态改为未完成
+			if err = tx.Model(&models.Task{}).Where("id = ?", mqMessage.RelationID).
+				Update("status", 0).Error; err != nil {
+				tx.Rollback()
+				log.Printf("更新任务状态异常：%v", err)
+				msg.Nack(false, true) // 处理失败，重新入队
+				continue
+			}
+
+			// 提交事务
+			if err = tx.Commit().Error; err != nil {
+				tx.Rollback()
+				log.Printf("提交事务异常：%v", err)
+				msg.Nack(false, true) // 处理失败，重新入队
+				continue
+			}
+
+			// 消息消费完成
+			if err = msg.Ack(false); err != nil {
+				log.Printf("消息消费确认失败：%v", err)
+			}
+		}
+
+		time.Sleep(5 * time.Second)
+	}
 }

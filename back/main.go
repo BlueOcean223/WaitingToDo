@@ -60,6 +60,7 @@ func main() {
 
 	// 启动MQ消费者
 	go service.StartFriendConsumer()
+	go service.StartTeamConsumer()
 	// 启动定时任务
 	go service.TickerNotify()
 

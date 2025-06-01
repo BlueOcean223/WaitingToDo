@@ -84,6 +84,11 @@ func (s *MessageService) HandleRequest(messageVo vo.MessageVo) error {
 	if err != nil {
 		return err
 	}
+	// 如果是团队消息，且为拒绝。则无需发消息
+	if messageVo.Type == 2 && messageVo.RequestAction == 0 {
+		return nil
+	}
+
 	// 使用消息队列发送处理消息
 	return s.SendMQMessage(messageVo)
 }
@@ -98,7 +103,11 @@ func (s *MessageService) SendMQMessage(messageVo vo.MessageVo) error {
 	}
 
 	if messageVo.RequestAction == 1 {
-		mqMsg.ActionType = models.FriendRequestAccept
+		if messageVo.Type == 1 {
+			mqMsg.ActionType = models.FriendRequestAccept
+		} else {
+			mqMsg.ActionType = models.TeamRequestAccept
+		}
 	}
 
 	// 准备MQ连接
@@ -130,7 +139,7 @@ func (s *MessageService) SendMQMessage(messageVo vo.MessageVo) error {
 		routingKey = configs.AppConfigs.RabbitMQConfig.Queues["friend_request"].RoutingKey
 	} else {
 		// 小组邀请
-		routingKey = configs.AppConfigs.RabbitMQConfig.Queues["group_request"].RoutingKey
+		routingKey = configs.AppConfigs.RabbitMQConfig.Queues["team_request"].RoutingKey
 	}
 	// 发送消息
 	err = channel.Publish(
