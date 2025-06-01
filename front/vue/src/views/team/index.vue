@@ -214,7 +214,7 @@ const handleInviteFriend = async (friendId) => {
 
   const res = await inviteMember(data)
   if(res.data.status === 1){
-    ElMessage.success('发送邀请成功！')
+    ElMessage.success(res.data.message)
   }else{
     ElMessage.error('发送邀请失败！')
   }

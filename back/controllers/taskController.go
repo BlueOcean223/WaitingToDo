@@ -243,9 +243,13 @@ func (s *TaskController) InviteTeamMember(c *gin.Context) {
 
 	err = s.taskService.InviteTeamMember(email, teamTask)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.Fail("", "系统错误", nil))
+		if utils.IsMyError(err) {
+			c.JSON(http.StatusOK, models.Success("", err.Error(), nil))
+		} else {
+			c.JSON(http.StatusInternalServerError, models.Fail("", "系统错误", nil))
+		}
 		return
 	}
 
-	c.JSON(http.StatusOK, models.Success("", "邀请成功", nil))
+	c.JSON(http.StatusOK, models.Success("", "发送邀请成功", nil))
 }

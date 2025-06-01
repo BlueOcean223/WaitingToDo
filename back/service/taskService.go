@@ -6,6 +6,8 @@ import (
 	"back/models/dto"
 	"back/models/vo"
 	"back/repository"
+	"back/utils"
+	"context"
 	"errors"
 	"fmt"
 	"gopkg.in/gomail.v2"
@@ -440,6 +442,14 @@ func (s *TaskService) InviteTeamMember(email string, teamTask models.TeamTask) e
 	if err != nil {
 		return err
 	}
+
+	// 查询redis，判断24h内是否已经邀请过
+	redisClient := configs.RedisClient
+	key := fmt.Sprintf(utils.InviteTeamMemberKey+"%d:%d", user.Id, teamTask.UserId)
+	if redisClient.Exists(context.Background(), key).Val() == 1 {
+		return utils.NewMyError("已邀请过该用户，请等待用户同意")
+	}
+
 	// 查询小组任务信息
 	tasks, err := s.taskRepository.GetTaskListByIds([]int{teamTask.TaskId})
 	if err != nil {
@@ -458,5 +468,12 @@ func (s *TaskService) InviteTeamMember(email string, teamTask models.TeamTask) e
 		IsRead:      0,
 	}
 	// 写入信息表
-	return s.messageRepository.InsertMessage(message)
+	err = s.messageRepository.InsertMessage(message)
+	if err != nil {
+		return err
+	}
+
+	// 写入redis，记录24h内邀请信息
+	redisClient.Set(context.Background(), key, 1, time.Hour*24)
+	return nil
 }
