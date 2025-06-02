@@ -5,7 +5,10 @@ import (
 	"back/models"
 	"back/models/dto"
 	"back/repository"
+	"back/utils"
+	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 )
@@ -73,7 +76,33 @@ func (s *FriendService) SearchUserByEmail(userEmail, searchEmail string) (dto.Fr
 
 	// 根据用户id和好友id查询两者目前关系
 	// 根据用户邮箱查询用户
-	user, err := s.authRepository.SelectUserByEmail(userEmail)
+	redisClient := configs.RedisClient
+	key := utils.UserInfoKey + userEmail
+	var user models.User
+	if redisClient.Exists(context.Background(), key).Val() == 1 {
+		val, err := redisClient.Get(context.Background(), key).Bytes()
+		if err != nil {
+			return dto.FriendInfoDto{}, err
+		}
+
+		err = json.Unmarshal(val, &user)
+		if err != nil {
+			return dto.FriendInfoDto{}, err
+		}
+	} else {
+		user, err = s.authRepository.SelectUserByEmail(userEmail)
+		if err != nil {
+			return dto.FriendInfoDto{}, err
+		}
+
+		// 将用户信息写入缓存
+		val, err := json.Marshal(user)
+		if err != nil {
+			return dto.FriendInfoDto{}, err
+		}
+		redisClient.Set(context.Background(), key, val, 24*time.Hour)
+	}
+
 	// 查询关系
 	relation, err := s.friendRepository.GetFriendRelation(user.Id, searchUser.Id)
 	if err != nil {
@@ -122,10 +151,37 @@ func (s *FriendService) AddFriend(userId, friendId int) error {
 		return err
 	}
 	// 获取用户信息
-	user, err := s.authRepository.SelectUserById(userId)
-	if err != nil {
-		tx.Rollback()
-		return err
+	redisClient := configs.RedisClient
+	key := fmt.Sprintf(utils.UserInfoKey+"%d", userId)
+	var user models.User
+
+	if redisClient.Exists(context.Background(), key).Val() == 1 {
+		val, err := redisClient.Get(context.Background(), key).Bytes()
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		err = json.Unmarshal(val, &user)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	} else {
+		user, err = s.authRepository.SelectUserById(userId)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		// 将用户信息写入缓存
+		val, err := json.Marshal(user)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		redisClient.Set(context.Background(), key, val, 24*time.Hour)
 	}
 
 	// 向请求添加对象发送消息

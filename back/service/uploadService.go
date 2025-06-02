@@ -6,6 +6,8 @@ import (
 	"back/repository"
 	"back/utils"
 	"context"
+	"encoding/json"
+	"fmt"
 	"github.com/minio/minio-go/v7"
 	"io"
 	"mime/multipart"
@@ -98,17 +100,62 @@ func (s *UploadService) UploadImg(email string, fileHeader *multipart.FileHeader
 	}
 
 	// 更新用户表
-	user, err := s.authRepository.SelectUserByEmail(email)
+	redisClient := configs.RedisClient
+	key := utils.UserInfoKey + email
+	var user models.User
+
+	if redisClient.Exists(context.Background(), key).Val() == 1 {
+		val, err := redisClient.Get(context.Background(), key).Bytes()
+		if err != nil {
+			tx.Rollback()
+			return "", err
+		}
+
+		err = json.Unmarshal(val, &user)
+		if err != nil {
+			tx.Rollback()
+			return "", err
+		}
+	} else {
+		user, err = s.authRepository.SelectUserByEmail(email)
+		if err != nil {
+			tx.Rollback() // 回滚事务
+			return "", err
+		}
+
+		// 将用户信息写入缓存
+		val, err := json.Marshal(user)
+		if err != nil {
+			tx.Rollback()
+			return "", err
+		}
+		redisClient.Set(context.Background(), key, val, 24*time.Hour)
+	}
+
+	// 更新前删除缓存
+	emailKey := key
+	idKey := fmt.Sprintf(utils.UserInfoKey+"%d", user.Id)
+	err = redisClient.Del(context.Background(), emailKey, idKey).Err()
 	if err != nil {
-		tx.Rollback() // 回滚事务
+		tx.Rollback()
 		return "", err
 	}
+
 	user.Pic = image.Url
 	err = s.authRepository.UpdateUser(user)
 	if err != nil {
 		tx.Rollback() // 回滚事务
 		return "", err
 	}
+
+	// 更新缓存
+	userJson, err := json.Marshal(user)
+	if err != nil {
+		tx.Rollback()
+		return "", err
+	}
+	redisClient.Set(context.Background(), emailKey, userJson, 24*time.Hour)
+	redisClient.Set(context.Background(), idKey, userJson, 24*time.Hour)
 
 	// 提交事务
 	if err = tx.Commit().Error; err != nil {

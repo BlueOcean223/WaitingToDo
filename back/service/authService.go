@@ -8,6 +8,7 @@ import (
 	"back/repository"
 	"back/utils"
 	"context"
+	"encoding/json"
 	"fmt"
 	"gopkg.in/gomail.v2"
 	"time"
@@ -48,13 +49,27 @@ func (s *AuthService) CheckUser(email, password string) (dto.UserDto, string, er
 		return dto.UserDto{}, "", e
 	}
 
-	return dto.UserDto{
+	userDto := dto.UserDto{
 		Id:          user.Id,
 		Email:       user.Email,
 		Name:        user.Name,
 		Pic:         user.Pic,
 		Description: user.Description,
-	}, token, nil
+	}
+
+	// 将用户信息写入redis
+	userInfo, err := json.Marshal(userDto)
+	if err != nil {
+		return dto.UserDto{}, "", err
+	}
+
+	emailKey := utils.UserInfoKey + email
+	idKey := fmt.Sprintf(utils.UserInfoKey+"%d", user.Id)
+	redisClient := configs.RedisClient
+	redisClient.Set(context.Background(), emailKey, userInfo, 24*time.Hour)
+	redisClient.Set(context.Background(), idKey, userInfo, 24*time.Hour)
+
+	return userDto, token, nil
 }
 
 // Register 注册

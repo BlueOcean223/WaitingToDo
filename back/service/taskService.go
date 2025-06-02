@@ -439,13 +439,37 @@ func (s *TaskService) CompleteTeamTask(teamTask models.TeamTask) error {
 // InviteTeamMember 邀请成员,向被邀请的好友发送信息
 func (s *TaskService) InviteTeamMember(email string, teamTask models.TeamTask) error {
 	// 获取当前用户信息
-	user, err := s.authRepository.SelectUserByEmail(email)
-	if err != nil {
-		return err
+	redisClient := configs.RedisClient
+	userInfoKey := utils.UserInfoKey + email
+	var user models.User
+	var err error
+
+	// 先查询redis
+	if redisClient.Exists(context.Background(), userInfoKey).Val() == 1 {
+		val, err := redisClient.Get(context.Background(), userInfoKey).Bytes()
+		if err != nil {
+			return err
+		}
+		err = json.Unmarshal(val, &user)
+		if err != nil {
+			return err
+		}
+	} else {
+		// Redis中不存在，查询数据库
+		user, err = s.authRepository.SelectUserByEmail(email)
+		if err != nil {
+			return err
+		}
+
+		// 将用户信息写入redis
+		userJson, err := json.Marshal(user)
+		if err != nil {
+			return err
+		}
+		redisClient.Set(context.Background(), userInfoKey, userJson, 24*time.Hour)
 	}
 
 	// 查询redis，判断24h内是否已经邀请过
-	redisClient := configs.RedisClient
 	key := fmt.Sprintf(utils.InviteTeamMemberKey+"%d:%d:%d", user.Id, teamTask.UserId, teamTask.TaskId)
 	if redisClient.Exists(context.Background(), key).Val() == 1 {
 		return utils.NewMyError("已邀请过该用户，请等待用户同意")
