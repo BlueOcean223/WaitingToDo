@@ -5,7 +5,7 @@ import (
 	"back/models"
 	"back/models/dto"
 	"back/repository"
-	"back/utils"
+	"back/utils/redisContent"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -77,7 +77,7 @@ func (s *FriendService) SearchUserByEmail(userEmail, searchEmail string) (dto.Fr
 	// 根据用户id和好友id查询两者目前关系
 	// 根据用户邮箱查询用户
 	redisClient := configs.RedisClient
-	key := utils.UserInfoKey + userEmail
+	key := redisContent.UserInfoKey + userEmail
 	var user models.User
 	if redisClient.Exists(context.Background(), key).Val() == 1 {
 		val, err := redisClient.Get(context.Background(), key).Bytes()
@@ -152,7 +152,7 @@ func (s *FriendService) AddFriend(userId, friendId int) error {
 	}
 	// 获取用户信息
 	redisClient := configs.RedisClient
-	key := fmt.Sprintf(utils.UserInfoKey+"%d", userId)
+	key := fmt.Sprintf(redisContent.UserInfoKey+"%d", userId)
 	var user models.User
 
 	if redisClient.Exists(context.Background(), key).Val() == 1 {

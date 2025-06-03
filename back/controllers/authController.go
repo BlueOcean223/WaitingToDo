@@ -5,7 +5,7 @@ import (
 	"back/models/dto"
 	"back/models/vo"
 	"back/service"
-	"back/utils"
+	"back/utils/myError"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -60,7 +60,7 @@ func (s *AuthController) Register(c *gin.Context) {
 
 	err := s.authService.Register(userVo)
 	if err != nil {
-		if utils.IsMyError(err) {
+		if myError.IsMyError(err) {
 			// 自定义错误，验证码错误等
 			c.JSON(http.StatusOK, models.Fail("", err.Error(), nil))
 		} else {
@@ -83,7 +83,7 @@ func (s *AuthController) Forget(c *gin.Context) {
 
 	err := s.authService.ForgetPassword(userVo)
 	if err != nil {
-		if utils.IsMyError(err) {
+		if myError.IsMyError(err) {
 			// 自定义错误
 			c.JSON(http.StatusOK, models.Fail("", err.Error(), nil))
 		} else {

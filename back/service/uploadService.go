@@ -5,7 +5,9 @@ import (
 	"back/models"
 	"back/models/dto"
 	"back/repository"
-	"back/utils"
+	"back/utils/fileUtil"
+	"back/utils/minioContent"
+	"back/utils/redisContent"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -39,7 +41,7 @@ func (s *UploadService) UploadImg(email string, fileHeader *multipart.FileHeader
 	defer file.Close()
 
 	// 计算文件的md5值
-	md5Hash, err := utils.GetFileMD5(file)
+	md5Hash, err := fileUtil.GetFileMD5(file)
 	if err != nil {
 		return "", err
 	}
@@ -78,7 +80,7 @@ func (s *UploadService) UploadImg(email string, fileHeader *multipart.FileHeader
 	objectName := date + "/" + md5Hash + extensionName
 
 	contentType := fileHeader.Header.Get("Content-Type")
-	err = s.UploadImgToMinio(utils.ImagesBucket, objectName, file, fileHeader.Size, contentType)
+	err = s.UploadImgToMinio(minioContent.ImagesBucket, objectName, file, fileHeader.Size, contentType)
 	if err != nil {
 		return "", err
 	}
@@ -92,7 +94,7 @@ func (s *UploadService) UploadImg(email string, fileHeader *multipart.FileHeader
 
 	image = models.Image{
 		Md5: md5Hash,
-		Url: "/" + utils.ImagesBucket + "/" + objectName,
+		Url: "/" + minioContent.ImagesBucket + "/" + objectName,
 	}
 	err = s.imageRepository.InsertImage(image, tx)
 	if err != nil {
@@ -109,8 +111,8 @@ func (s *UploadService) UploadImg(email string, fileHeader *multipart.FileHeader
 
 	// 更新前删除缓存
 	redisClient := configs.RedisClient
-	emailKey := utils.UserInfoKey + email
-	idKey := fmt.Sprintf(utils.UserInfoKey+"%d", user.Id)
+	emailKey := redisContent.UserInfoKey + email
+	idKey := fmt.Sprintf(redisContent.UserInfoKey+"%d", user.Id)
 	err = redisClient.Del(context.Background(), emailKey, idKey).Err()
 	if err != nil {
 		tx.Rollback()

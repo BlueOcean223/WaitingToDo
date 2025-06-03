@@ -4,7 +4,7 @@ import (
 	"back/configs"
 	"back/routers"
 	"back/service"
-	"back/utils"
+	"back/utils/jwt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -21,7 +21,7 @@ func main() {
 	}))
 
 	// 使用JWT令牌校验、拦截
-	r.Use(utils.JWTAuthMiddleware())
+	r.Use(jwt.JWTAuthMiddleware())
 
 	// 加载配置文件
 	err := configs.InitConfig("config.yaml")

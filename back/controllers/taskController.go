@@ -4,7 +4,8 @@ import (
 	"back/models"
 	"back/models/vo"
 	"back/service"
-	"back/utils"
+	"back/utils/jwt"
+	"back/utils/myError"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -49,7 +50,7 @@ func (s *TaskController) GetTaskList(c *gin.Context) {
 	}
 
 	// 获取当前用户的邮箱
-	email, err := utils.GetUserFromToken(c)
+	email, err := jwt.GetUserFromToken(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, models.Fail("", "令牌无效", nil))
 		return
@@ -57,7 +58,7 @@ func (s *TaskController) GetTaskList(c *gin.Context) {
 
 	taskList, err := s.taskService.GetTaskList(email, page, pageSize, status)
 	if err != nil {
-		if utils.IsMyError(err) {
+		if myError.IsMyError(err) {
 			// 自定义错误
 			c.JSON(http.StatusOK, models.Fail("", err.Error(), nil))
 		} else {
@@ -78,7 +79,7 @@ func (s *TaskController) AddTask(c *gin.Context) {
 		return
 	}
 	// 获取用户邮箱
-	email, err := utils.GetUserFromToken(c)
+	email, err := jwt.GetUserFromToken(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, models.Fail("", "令牌无效", nil))
 		return
@@ -86,7 +87,7 @@ func (s *TaskController) AddTask(c *gin.Context) {
 	// 添加任务
 	err = s.taskService.AddTask(email, taskVo)
 	if err != nil {
-		if utils.IsMyError(err) {
+		if myError.IsMyError(err) {
 			// 自定义错误
 			c.JSON(http.StatusOK, models.Fail("", err.Error(), nil))
 		} else {
@@ -136,7 +137,7 @@ func (s *TaskController) DeleteTask(c *gin.Context) {
 // GetUrgentTaskList 获取紧急任务列表
 func (s *TaskController) GetUrgentTaskList(c *gin.Context) {
 	// 获取用户邮箱
-	email, err := utils.GetUserFromToken(c)
+	email, err := jwt.GetUserFromToken(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, models.Fail("", "令牌无效", nil))
 		return
@@ -235,7 +236,7 @@ func (s *TaskController) InviteTeamMember(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
 		return
 	}
-	email, err := utils.GetUserFromToken(c)
+	email, err := jwt.GetUserFromToken(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, models.Fail("", "无效令牌", nil))
 		return
@@ -243,7 +244,7 @@ func (s *TaskController) InviteTeamMember(c *gin.Context) {
 
 	err = s.taskService.InviteTeamMember(email, teamTask)
 	if err != nil {
-		if utils.IsMyError(err) {
+		if myError.IsMyError(err) {
 			c.JSON(http.StatusOK, models.Success("", err.Error(), nil))
 		} else {
 			c.JSON(http.StatusInternalServerError, models.Fail("", "系统错误", nil))

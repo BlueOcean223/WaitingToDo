@@ -6,7 +6,11 @@ import (
 	"back/models/dto"
 	"back/models/vo"
 	"back/repository"
-	"back/utils"
+	"back/utils/captcha"
+	"back/utils/hashPassword"
+	"back/utils/jwt"
+	"back/utils/myError"
+	"back/utils/redisContent"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -38,13 +42,13 @@ func (s *AuthService) CheckUser(email, password string) (dto.UserDto, string, er
 	}
 
 	// 校验密码
-	if !utils.CheckPasswordHash(password, user.Password) {
+	if !hashPassword.CheckPasswordHash(password, user.Password) {
 		// 密码错误
 		return dto.UserDto{}, "", nil
 	}
 
 	// 校验成功，下发令牌
-	token, e := utils.GenerateToken(email)
+	token, e := jwt.GenerateToken(email)
 	if e != nil {
 		return dto.UserDto{}, "", e
 	}
@@ -63,8 +67,8 @@ func (s *AuthService) CheckUser(email, password string) (dto.UserDto, string, er
 		return dto.UserDto{}, "", err
 	}
 
-	emailKey := utils.UserInfoKey + email
-	idKey := fmt.Sprintf(utils.UserInfoKey+"%d", user.Id)
+	emailKey := redisContent.UserInfoKey + email
+	idKey := fmt.Sprintf(redisContent.UserInfoKey+"%d", user.Id)
 	redisClient := configs.RedisClient
 	redisClient.Set(context.Background(), emailKey, userInfo, 24*time.Hour)
 	redisClient.Set(context.Background(), idKey, userInfo, 24*time.Hour)
@@ -81,7 +85,7 @@ func (s *AuthService) Register(userVo vo.UserVo) error {
 	}
 	// 邮箱已经被注册
 	if user != (models.User{}) {
-		return utils.NewMyError("该邮箱已注册")
+		return myError.NewMyError("该邮箱已注册")
 	}
 
 	// 校验验证码
@@ -91,7 +95,7 @@ func (s *AuthService) Register(userVo vo.UserVo) error {
 	}
 
 	// 密码加密
-	hashPassword, err := utils.HashPassword(userVo.Password)
+	hash, err := hashPassword.HashPassword(userVo.Password)
 	if err != nil {
 		return err
 	}
@@ -99,7 +103,7 @@ func (s *AuthService) Register(userVo vo.UserVo) error {
 	user = models.User{
 		Email:    userVo.Email,
 		Name:     userVo.Name,
-		Password: hashPassword,
+		Password: hash,
 	}
 	return s.authRepository.InsertUser(user, nil)
 }
@@ -115,7 +119,7 @@ func (s *AuthService) ForgetPassword(userVo vo.UserVo) error {
 
 	// 用户不存在
 	if user == (models.User{}) {
-		return utils.NewMyError("该邮箱尚未注册，请先注册！")
+		return myError.NewMyError("该邮箱尚未注册，请先注册！")
 	}
 
 	// 校验验证码
@@ -125,18 +129,18 @@ func (s *AuthService) ForgetPassword(userVo vo.UserVo) error {
 	}
 
 	// 更新密码
-	hashPassword, err := utils.HashPassword(userVo.Password)
+	hash, err := hashPassword.HashPassword(userVo.Password)
 	if err != nil {
 		return err
 	}
-	user.Password = hashPassword
+	user.Password = hash
 	return s.authRepository.UpdateUser(user, nil)
 }
 
 // Captcha 获取验证码
 func (s *AuthService) Captcha(to []string) error {
 	// 生成验证码
-	code := utils.GenerateCaptcha()
+	code := captcha.GenerateCaptcha()
 	// 封装邮件
 	mail := models.Mail{
 		To:      to,
@@ -155,7 +159,7 @@ func (s *AuthService) Captcha(to []string) error {
 	// 存入redis
 	redisClient := configs.RedisClient
 	ctx := context.Background()
-	err = redisClient.Set(ctx, utils.CaptchaKey+mail.To[0], code, 5*time.Minute).Err()
+	err = redisClient.Set(ctx, redisContent.CaptchaKey+mail.To[0], code, 5*time.Minute).Err()
 	return err
 }
 
@@ -180,18 +184,18 @@ func (s *AuthService) Send163Mail(mail models.Mail) error {
 }
 
 // CheckCaptcha 校验验证码
-func (s *AuthService) CheckCaptcha(email, captcha string) error {
+func (s *AuthService) CheckCaptcha(email, captchaCode string) error {
 	// 从redis获取验证码
 	redisClient := configs.RedisClient
 	ctx := context.Background()
-	val, err := redisClient.Get(ctx, utils.CaptchaKey+email).Result()
+	val, err := redisClient.Get(ctx, redisContent.CaptchaKey+email).Result()
 	if err != nil {
 		return err
 	}
 	// 校验验证码
-	if !utils.VerifyCaptcha(val, captcha) {
-		return utils.NewMyError("验证码错误")
+	if !captcha.VerifyCaptcha(val, captchaCode) {
+		return myError.NewMyError("验证码错误")
 	}
 	// 验证码正确，删除redis中的验证码
-	return redisClient.Del(ctx, utils.CaptchaKey+email).Err()
+	return redisClient.Del(ctx, redisContent.CaptchaKey+email).Err()
 }

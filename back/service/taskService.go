@@ -6,7 +6,8 @@ import (
 	"back/models/dto"
 	"back/models/vo"
 	"back/repository"
-	"back/utils"
+	"back/utils/myError"
+	"back/utils/redisContent"
 	"context"
 	"encoding/json"
 	"errors"
@@ -440,7 +441,7 @@ func (s *TaskService) CompleteTeamTask(teamTask models.TeamTask) error {
 func (s *TaskService) InviteTeamMember(email string, teamTask models.TeamTask) error {
 	// 获取当前用户信息
 	redisClient := configs.RedisClient
-	userInfoKey := utils.UserInfoKey + email
+	userInfoKey := redisContent.UserInfoKey + email
 	var user models.User
 	var err error
 
@@ -470,9 +471,9 @@ func (s *TaskService) InviteTeamMember(email string, teamTask models.TeamTask) e
 	}
 
 	// 查询redis，判断24h内是否已经邀请过
-	key := fmt.Sprintf(utils.InviteTeamMemberKey+"%d:%d:%d", user.Id, teamTask.UserId, teamTask.TaskId)
+	key := fmt.Sprintf(redisContent.InviteTeamMemberKey+"%d:%d:%d", user.Id, teamTask.UserId, teamTask.TaskId)
 	if redisClient.Exists(context.Background(), key).Val() == 1 {
-		return utils.NewMyError("已邀请过该用户，请等待用户同意")
+		return myError.NewMyError("已邀请过该用户，请等待用户同意")
 	}
 
 	// 查询小组任务信息

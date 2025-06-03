@@ -5,7 +5,9 @@ import (
 	"back/models"
 	"back/models/vo"
 	"back/repository"
-	"back/utils"
+	"back/utils/hashPassword"
+	"back/utils/myError"
+	"back/utils/redisContent"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -30,14 +32,14 @@ func (s *UserService) ResetPassword(email, password string) error {
 	}
 	// 用户不存在
 	if user == (models.User{}) {
-		return utils.NewMyError("用户不存在")
+		return myError.NewMyError("用户不存在")
 	}
 	// 更新密码
-	hashPassword, err := utils.HashPassword(password)
+	hash, err := hashPassword.HashPassword(password)
 	if err != nil {
 		return err
 	}
-	user.Password = hashPassword
+	user.Password = hash
 	return s.authRepository.UpdateUser(user, nil)
 }
 
@@ -48,13 +50,13 @@ func (s *UserService) UpdateUserInfo(userVo vo.UserVo) error {
 		return err
 	}
 	if user == (models.User{}) {
-		return utils.NewMyError("用户不存在")
+		return myError.NewMyError("用户不存在")
 	}
 
 	// 先删除缓存
 	redisClient := configs.RedisClient
-	emailKey := utils.UserInfoKey + user.Email
-	idKey := fmt.Sprintf(utils.UserInfoKey+"%d", user.Id)
+	emailKey := redisContent.UserInfoKey + user.Email
+	idKey := fmt.Sprintf(redisContent.UserInfoKey+"%d", user.Id)
 	err = redisClient.Del(context.Background(), emailKey, idKey).Err()
 	if err != nil {
 		return err
@@ -83,7 +85,7 @@ func (s *UserService) UpdateUserInfo(userVo vo.UserVo) error {
 func (s *UserService) GetUserInfo(id int) (vo.UserVo, error) {
 	// 先从缓存中获取
 	redisClient := configs.RedisClient
-	key := fmt.Sprintf(utils.UserInfoKey+"%d", id)
+	key := fmt.Sprintf(redisContent.UserInfoKey+"%d", id)
 	var user models.User
 	var err error
 

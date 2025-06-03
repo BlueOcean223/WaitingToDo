@@ -1,3 +1,3 @@
-package utils
+package minioContent
 
 const ImagesBucket = "images"

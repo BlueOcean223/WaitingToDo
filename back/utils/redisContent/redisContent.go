@@ -1,4 +1,4 @@
-package utils
+package redisContent
 
 const CaptchaKey = "captcha:"
 const UserInfoKey = "userInfo:"
