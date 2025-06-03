@@ -53,17 +53,17 @@ func (s *MessageService) GetMessageList(page, pageSize, userId int) ([]dto.Messa
 
 // UpdateMessage 更新信息
 func (s *MessageService) UpdateMessage(message models.Message) error {
-	return s.MessageRepository.Update(message)
+	return s.MessageRepository.Update(message, nil)
 }
 
 // DeleteMessage 删除信息
 func (s *MessageService) DeleteMessage(messageId int) error {
-	return s.MessageRepository.Delete(messageId)
+	return s.MessageRepository.Delete(messageId, nil)
 }
 
 // ReadAllMessage 全部已读
 func (s *MessageService) ReadAllMessage(userId int) error {
-	return s.MessageRepository.ReadAllMessage(userId)
+	return s.MessageRepository.ReadAllMessage(userId, nil)
 }
 
 // HandleRequest 处理请求
@@ -160,5 +160,5 @@ func (s *MessageService) AddMessage(message models.Message) error {
 	// 填充消息
 	message.SendTime = time.Now().Format("2006-01-02 15:04:05")
 	// 插入数据库
-	return s.MessageRepository.InsertMessage(message)
+	return s.MessageRepository.InsertMessage(message, nil)
 }

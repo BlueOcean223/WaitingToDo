@@ -45,13 +45,20 @@ func (s *AuthRepository) SelectUsersByIds(ids []int) ([]models.User, error) {
 }
 
 // InsertUser 插入用户
-func (s *AuthRepository) InsertUser(user models.User) error {
-	result := s.db.Create(&user)
+func (s *AuthRepository) InsertUser(user models.User, tx *gorm.DB) error {
+	db := s.db
+	if tx != nil {
+		db = tx
+	}
+	result := db.Create(&user)
 	return result.Error
 }
 
 // UpdateUser 更新用户
-func (s *AuthRepository) UpdateUser(user models.User) error {
-	result := s.db.Save(&user)
-	return result.Error
+func (s *AuthRepository) UpdateUser(user models.User, tx *gorm.DB) error {
+	db := s.db
+	if tx != nil {
+		db = tx
+	}
+	return db.Save(&user).Error
 }

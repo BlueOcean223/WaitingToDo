@@ -17,8 +17,12 @@ func NewTaskNoticeHistoryRepository(db *gorm.DB) *TaskNoticeHistoryRepository {
 }
 
 // Insert 插入任务通知历史
-func (s *TaskNoticeHistoryRepository) Insert(taskNoticeHistory models.TaskNoticeHistory) error {
-	return s.Db.Create(&taskNoticeHistory).Error
+func (s *TaskNoticeHistoryRepository) Insert(taskNoticeHistory models.TaskNoticeHistory, tx *gorm.DB) error {
+	db := s.Db
+	if tx != nil {
+		db = tx
+	}
+	return db.Create(&taskNoticeHistory).Error
 }
 
 // GetHistoryByTaskId 根据任务ID获取任务通知历史

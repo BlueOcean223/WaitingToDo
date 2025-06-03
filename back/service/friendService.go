@@ -139,7 +139,7 @@ func (s *FriendService) AddFriend(userId, friendId int) error {
 		FriendId: friendId,
 		Status:   0,
 	}
-	err := s.friendRepository.AddFriendRequest(friend)
+	err := s.friendRepository.AddFriendRequest(friend, tx)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -195,7 +195,7 @@ func (s *FriendService) AddFriend(userId, friendId int) error {
 		OutId:       thisFriend.Id,
 		IsRead:      0,
 	}
-	err = s.messageRepository.InsertMessage(message)
+	err = s.messageRepository.InsertMessage(message, tx)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -220,7 +220,7 @@ func (s *FriendService) AcceptFriendRequest(userId, friendId int) error {
 		return err
 	}
 	friend.Status = 1
-	err = s.friendRepository.UpdateFriend(friend)
+	err = s.friendRepository.UpdateFriend(friend, tx)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -232,7 +232,7 @@ func (s *FriendService) AcceptFriendRequest(userId, friendId int) error {
 		FriendId: friend.UserId,
 		Status:   1,
 	}
-	err = s.friendRepository.AddFriendRequest(newFriend)
+	err = s.friendRepository.AddFriendRequest(newFriend, tx)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -248,7 +248,7 @@ func (s *FriendService) AcceptFriendRequest(userId, friendId int) error {
 
 // RejectFriendRequest 拒绝好友请求
 func (s *FriendService) RejectFriendRequest(id int) error {
-	return s.friendRepository.DeleteFriend(id)
+	return s.friendRepository.DeleteFriend(id, nil)
 }
 
 // StartFriendConsumer 监听消息队列，处理好友请求
@@ -350,13 +350,13 @@ func (s *FriendService) DeleteFriend(userId, friendId int) error {
 	tx := s.friendRepository.Db.Begin()
 
 	// 双向删除好友关系
-	err := s.friendRepository.DeleteByUserIdAndFriendId(userId, friendId)
+	err := s.friendRepository.DeleteByUserIdAndFriendId(userId, friendId, tx)
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	err = s.friendRepository.DeleteByUserIdAndFriendId(friendId, userId)
+	err = s.friendRepository.DeleteByUserIdAndFriendId(friendId, userId, tx)
 	if err != nil {
 		tx.Rollback()
 		return err

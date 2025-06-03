@@ -38,7 +38,7 @@ func (s *UserService) ResetPassword(email, password string) error {
 		return err
 	}
 	user.Password = hashPassword
-	return s.authRepository.UpdateUser(user)
+	return s.authRepository.UpdateUser(user, nil)
 }
 
 // UpdateUserInfo 更新用户信息
@@ -63,7 +63,7 @@ func (s *UserService) UpdateUserInfo(userVo vo.UserVo) error {
 	// 更新个人信息
 	user.Name = userVo.Name
 	user.Description = userVo.Description
-	err = s.authRepository.UpdateUser(user)
+	err = s.authRepository.UpdateUser(user, nil)
 	if err != nil {
 		return err
 	}

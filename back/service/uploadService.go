@@ -3,6 +3,7 @@ package service
 import (
 	"back/configs"
 	"back/models"
+	"back/models/dto"
 	"back/repository"
 	"back/utils"
 	"context"
@@ -56,7 +57,7 @@ func (s *UploadService) UploadImg(email string, fileHeader *multipart.FileHeader
 			return "", err
 		}
 		user.Pic = image.Url
-		err = s.authRepository.UpdateUser(user)
+		err = s.authRepository.UpdateUser(user, nil)
 		if err != nil {
 			return "", err
 		}
@@ -93,47 +94,22 @@ func (s *UploadService) UploadImg(email string, fileHeader *multipart.FileHeader
 		Md5: md5Hash,
 		Url: "/" + utils.ImagesBucket + "/" + objectName,
 	}
-	err = s.imageRepository.InsertImage(image)
+	err = s.imageRepository.InsertImage(image, tx)
 	if err != nil {
 		tx.Rollback() // 回滚事务
 		return "", err
 	}
 
 	// 更新用户表
-	redisClient := configs.RedisClient
-	key := utils.UserInfoKey + email
-	var user models.User
-
-	if redisClient.Exists(context.Background(), key).Val() == 1 {
-		val, err := redisClient.Get(context.Background(), key).Bytes()
-		if err != nil {
-			tx.Rollback()
-			return "", err
-		}
-
-		err = json.Unmarshal(val, &user)
-		if err != nil {
-			tx.Rollback()
-			return "", err
-		}
-	} else {
-		user, err = s.authRepository.SelectUserByEmail(email)
-		if err != nil {
-			tx.Rollback() // 回滚事务
-			return "", err
-		}
-
-		// 将用户信息写入缓存
-		val, err := json.Marshal(user)
-		if err != nil {
-			tx.Rollback()
-			return "", err
-		}
-		redisClient.Set(context.Background(), key, val, 24*time.Hour)
+	user, err := s.authRepository.SelectUserByEmail(email)
+	if err != nil {
+		tx.Rollback() // 回滚事务
+		return "", err
 	}
 
 	// 更新前删除缓存
-	emailKey := key
+	redisClient := configs.RedisClient
+	emailKey := utils.UserInfoKey + email
 	idKey := fmt.Sprintf(utils.UserInfoKey+"%d", user.Id)
 	err = redisClient.Del(context.Background(), emailKey, idKey).Err()
 	if err != nil {
@@ -142,14 +118,21 @@ func (s *UploadService) UploadImg(email string, fileHeader *multipart.FileHeader
 	}
 
 	user.Pic = image.Url
-	err = s.authRepository.UpdateUser(user)
+	err = s.authRepository.UpdateUser(user, tx)
 	if err != nil {
 		tx.Rollback() // 回滚事务
 		return "", err
 	}
 
 	// 更新缓存
-	userJson, err := json.Marshal(user)
+	userDto := dto.UserDto{
+		Id:          user.Id,
+		Email:       user.Email,
+		Name:        user.Name,
+		Pic:         user.Pic,
+		Description: user.Description,
+	}
+	userJson, err := json.Marshal(userDto)
 	if err != nil {
 		tx.Rollback()
 		return "", err

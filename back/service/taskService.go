@@ -86,7 +86,7 @@ func (s *TaskService) AddTask(email string, taskVo vo.TaskVo) error {
 		Status:      0,
 	}
 	// 插入数据库
-	return s.taskRepository.Create(task)
+	return s.taskRepository.Create(task, nil)
 }
 
 // UpdateTask 更新任务
@@ -98,12 +98,12 @@ func (s *TaskService) UpdateTask(taskVo vo.TaskVo) error {
 		Ddl:         taskVo.Ddl,
 		Type:        taskVo.Type,
 		Status:      taskVo.Status,
-	})
+	}, nil)
 }
 
 // DeleteTask 删除任务
 func (s *TaskService) DeleteTask(id int) error {
-	return s.taskRepository.Delete(id)
+	return s.taskRepository.Delete(id, nil)
 }
 
 // GetUrgentTaskList 获取紧急任务列表
@@ -245,7 +245,7 @@ func TickerNotify() {
 				// 记录通知历史
 				if err := taskNoticeHistoryRepo.Insert(models.TaskNoticeHistory{
 					TaskId: task.Id,
-				}); err != nil {
+				}, nil); err != nil {
 					log.Printf("记录通知历史失败: %v", err)
 				}
 			}(task, user)
@@ -493,7 +493,7 @@ func (s *TaskService) InviteTeamMember(email string, teamTask models.TeamTask) e
 		IsRead:      0,
 	}
 	// 写入信息表
-	err = s.messageRepository.InsertMessage(message)
+	err = s.messageRepository.InsertMessage(message, nil)
 	if err != nil {
 		return err
 	}

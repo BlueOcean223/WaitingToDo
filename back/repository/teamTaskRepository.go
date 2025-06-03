@@ -14,13 +14,21 @@ func NewTeamTaskRepository(db *gorm.DB) *TeamTaskRepository {
 }
 
 // Insert 插入
-func (s *TeamTaskRepository) Insert(teamTask models.TeamTask) error {
-	return s.Db.Create(&teamTask).Error
+func (s *TeamTaskRepository) Insert(teamTask models.TeamTask, tx *gorm.DB) error {
+	Db := s.Db
+	if tx != nil {
+		Db = tx
+	}
+	return Db.Create(&teamTask).Error
 }
 
 // Update 更新
-func (s *TeamTaskRepository) Update(teamTask models.TeamTask) error {
-	return s.Db.Save(&teamTask).Error
+func (s *TeamTaskRepository) Update(teamTask models.TeamTask, tx *gorm.DB) error {
+	Db := s.Db
+	if tx != nil {
+		Db = tx
+	}
+	return Db.Save(&teamTask).Error
 }
 
 // GetList 分页查询
@@ -50,6 +58,10 @@ func (s *TeamTaskRepository) GetTeamTaskShipByTaskIds(taskIds []int) ([]models.T
 }
 
 // Delete 删除
-func (s *TeamTaskRepository) Delete(taskId, userId int) error {
-	return s.Db.Where("task_id = ? AND user_id = ?", taskId, userId).Delete(&models.TeamTask{}).Error
+func (s *TeamTaskRepository) Delete(taskId, userId int, tx *gorm.DB) error {
+	Db := s.Db
+	if tx != nil {
+		Db = tx
+	}
+	return Db.Where("task_id = ? AND user_id = ?", taskId, userId).Delete(&models.TeamTask{}).Error
 }

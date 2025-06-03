@@ -101,7 +101,7 @@ func (s *AuthService) Register(userVo vo.UserVo) error {
 		Name:     userVo.Name,
 		Password: hashPassword,
 	}
-	return s.authRepository.InsertUser(user)
+	return s.authRepository.InsertUser(user, nil)
 }
 
 // ForgetPassword 忘记密码
@@ -130,7 +130,7 @@ func (s *AuthService) ForgetPassword(userVo vo.UserVo) error {
 		return err
 	}
 	user.Password = hashPassword
-	return s.authRepository.UpdateUser(user)
+	return s.authRepository.UpdateUser(user, nil)
 }
 
 // Captcha 获取验证码

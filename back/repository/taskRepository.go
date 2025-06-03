@@ -49,19 +49,30 @@ func (s *TaskRepository) GetList(userId, page, pageSize, myType int, status *int
 }
 
 // Create 新增任务
-func (s *TaskRepository) Create(task models.Task) error {
-	err := s.db.Create(&task).Error
-	return err
+func (s *TaskRepository) Create(task models.Task, tx *gorm.DB) error {
+	db := s.db
+	if tx != nil {
+		db = tx
+	}
+	return db.Create(&task).Error
 }
 
 // Update 修改任务
-func (s *TaskRepository) Update(task models.Task) error {
-	return s.db.Model(&task).Updates(task).Error
+func (s *TaskRepository) Update(task models.Task, tx *gorm.DB) error {
+	db := s.db
+	if tx != nil {
+		db = tx
+	}
+	return db.Model(&task).Updates(task).Error
 }
 
 // Delete 删除任务
-func (s *TaskRepository) Delete(id int) error {
-	return s.db.Delete(&models.Task{}, id).Error
+func (s *TaskRepository) Delete(id int, tx *gorm.DB) error {
+	db := s.db
+	if tx != nil {
+		db = tx
+	}
+	return db.Delete(&models.Task{}, id).Error
 }
 
 // GetUrgentList 获取紧急任务

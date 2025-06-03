@@ -28,7 +28,10 @@ func (s *ImageRepository) GetImageByMD5(md5 string) (models.Image, error) {
 }
 
 // InsertImage 插入图片信息
-func (s *ImageRepository) InsertImage(image models.Image) error {
-	err := s.db.Create(&image).Error
-	return err
+func (s *ImageRepository) InsertImage(image models.Image, tx *gorm.DB) error {
+	db := s.db
+	if tx != nil {
+		db = tx
+	}
+	return db.Create(&image).Error
 }

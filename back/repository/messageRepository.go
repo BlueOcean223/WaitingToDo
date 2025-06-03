@@ -14,8 +14,12 @@ func NewMessageRepository(db *gorm.DB) *MessageRepository {
 }
 
 // InsertMessage 插入消息
-func (s *MessageRepository) InsertMessage(message models.Message) error {
-	return s.Db.Create(&message).Error
+func (s *MessageRepository) InsertMessage(message models.Message, tx *gorm.DB) error {
+	db := s.Db
+	if tx != nil {
+		db = tx
+	}
+	return db.Create(&message).Error
 }
 
 // GetUnreadMessageCount GetUnreadMessage 查询用户未读消息数量
@@ -38,16 +42,28 @@ func (s *MessageRepository) GetMessageList(page, pageSize, userId int) ([]models
 }
 
 // Update 更新消息
-func (s *MessageRepository) Update(message models.Message) error {
-	return s.Db.Save(&message).Error
+func (s *MessageRepository) Update(message models.Message, tx *gorm.DB) error {
+	db := s.Db
+	if tx != nil {
+		db = tx
+	}
+	return db.Save(&message).Error
 }
 
 // Delete 删除消息
-func (s *MessageRepository) Delete(id int) error {
-	return s.Db.Delete(&models.Message{}, id).Error
+func (s *MessageRepository) Delete(id int, tx *gorm.DB) error {
+	db := s.Db
+	if tx != nil {
+		db = tx
+	}
+	return db.Delete(&models.Message{}, id).Error
 }
 
 // ReadAllMessage 将全部消息设置为已读
-func (s *MessageRepository) ReadAllMessage(userId int) error {
-	return s.Db.Model(&models.Message{}).Where("to_id = ?", userId).Update("is_read", 1).Error
+func (s *MessageRepository) ReadAllMessage(userId int, tx *gorm.DB) error {
+	db := s.Db
+	if tx != nil {
+		db = tx
+	}
+	return db.Model(&models.Message{}).Where("to_id = ?", userId).Update("is_read", 1).Error
 }
