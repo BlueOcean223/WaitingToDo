@@ -14,7 +14,8 @@ export default defineConfig({
   server: {
     port: 7070,
     open: true,
-    hmr: true // 启用热模块替换
+    hmr: true, // 启用热模块替换
+    host:  '0.0.0.0',// 允许外部访问
   },
   // 构建配置
   build: {

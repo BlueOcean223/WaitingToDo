@@ -15,7 +15,7 @@ func main() {
 
 	// 配置CORS
 	r.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"http://localhost:7070"},
+		AllowOrigins: []string{"http://localhost:7070", "http://192.168.163.129:7070"},
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{"Content-Type", "Authorization", "Origin"},
 	}))
