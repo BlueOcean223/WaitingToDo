@@ -7,6 +7,7 @@ import (
 	"back/models/vo"
 	"back/repository"
 	"encoding/json"
+	"fmt"
 	"github.com/rabbitmq/amqp091-go"
 	"time"
 )
@@ -33,13 +34,39 @@ func (s *MessageService) GetMessageList(page, pageSize, userId int) ([]dto.Messa
 		return nil, err
 	}
 
+	// 收集用户id
+	var userIds []int
+	for _, message := range messages {
+		userIds = append(userIds, message.FromId)
+	}
+
+	// 收集用户信息
+	userInfoMap := make(map[int]models.User)
+	userInfoList, err := s.MessageRepository.SelectUserInfoByIds(userIds)
+	if err != nil {
+		return nil, err
+	}
+	for _, userInfo := range userInfoList {
+		userInfoMap[userInfo.Id] = userInfo
+	}
+
 	// 封装成Dto列表
 	var messageDtoList []dto.MessageDto
 	for _, message := range messages {
+		// 如果为普通消息，则根据用户昵称初始化消息标题
+		title := message.Title
+		if message.Type == 0 {
+			title = fmt.Sprintf(title, userInfoMap[message.FromId].Name)
+		}
+		// 如果是添加好友或小组邀请请求，则根据用户昵称初始化消息内容
+		description := message.Description
+		if message.Type == 1 || message.Type == 2 {
+			description = fmt.Sprintf(description, userInfoMap[message.FromId].Name)
+		}
 		messageDtoList = append(messageDtoList, dto.MessageDto{
 			Id:          message.Id,
-			Title:       message.Title,
-			Description: message.Description,
+			Title:       title,
+			Description: description,
 			SendTime:    message.SendTime,
 			FromId:      message.FromId,
 			ToId:        message.ToId,

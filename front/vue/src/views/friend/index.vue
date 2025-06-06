@@ -197,7 +197,7 @@ const submitAddMessage = async () => {
     ElMessage.error('发送内容不能为空！')
     return
   }
-  const title = `好友${userStore.userInfo.name}给你发来消息`
+  const title = '好友 %s 给你发来消息'
   const data = {
     title: title,
     description: messageContent.value,

@@ -187,7 +187,7 @@ func (s *FriendService) AddFriend(userId, friendId int) error {
 	// 向请求添加对象发送消息
 	message := models.Message{
 		Title:       "好友请求",
-		Description: "你好，我是" + user.Name + "，我想与你成为好友",
+		Description: "你好，我是%s，我想与你成为好友",
 		FromId:      userId,
 		ToId:        friendId,
 		Type:        1,

@@ -67,3 +67,11 @@ func (s *MessageRepository) ReadAllMessage(userId int, tx *gorm.DB) error {
 	}
 	return db.Model(&models.Message{}).Where("to_id = ?", userId).Update("is_read", 1).Error
 }
+
+// SelectUserInfoByIds 根据用户id获取用户信息
+func (s *MessageRepository) SelectUserInfoByIds(ids []int) ([]models.User, error) {
+	var users []models.User
+	err := s.Db.Where("id in ?", ids).Find(&users).Error
+
+	return users, err
+}

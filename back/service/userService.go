@@ -104,6 +104,13 @@ func (s *UserService) GetUserInfo(id int) (vo.UserVo, error) {
 		if err != nil {
 			return vo.UserVo{}, err
 		}
+
+		// 写入缓存
+		val, err := json.Marshal(user)
+		if err != nil {
+			return vo.UserVo{}, err
+		}
+		redisClient.Set(context.Background(), key, val, 24*time.Hour)
 	}
 
 	return vo.UserVo{

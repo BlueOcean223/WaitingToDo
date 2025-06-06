@@ -485,7 +485,7 @@ func (s *TaskService) InviteTeamMember(email string, teamTask models.TeamTask) e
 	// 填写发送信息
 	message := models.Message{
 		Title:       "小组任务邀请",
-		Description: fmt.Sprintf("好友 %s 邀请你加入名为 %s 的小组任务", user.Name, tasks[0].Title),
+		Description: fmt.Sprintf("好友 %%s 邀请你加入名为 %s 的小组任务", tasks[0].Title),
 		FromId:      user.Id,
 		ToId:        teamTask.UserId,
 		Type:        2,
