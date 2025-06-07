@@ -139,17 +139,12 @@ func (s *FriendService) AddFriend(userId, friendId int) error {
 		FriendId: friendId,
 		Status:   0,
 	}
-	err := s.friendRepository.AddFriendRequest(friend, tx)
+	err := s.friendRepository.AddFriendRequest(&friend, tx)
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
-	// 获取当前好友关系主键
-	thisFriend, err := s.friendRepository.GetFriendRelation(userId, friendId)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
+
 	// 获取用户信息
 	redisClient := configs.RedisClient
 	key := fmt.Sprintf(redisContent.UserInfoKey+"%d", userId)
@@ -192,7 +187,7 @@ func (s *FriendService) AddFriend(userId, friendId int) error {
 		ToId:        friendId,
 		Type:        1,
 		SendTime:    time.Now().Format("2006-01-02 15:04:05"),
-		OutId:       thisFriend.Id,
+		OutId:       friend.Id,
 		IsRead:      0,
 	}
 	err = s.messageRepository.InsertMessage(message, tx)
@@ -212,6 +207,17 @@ func (s *FriendService) AddFriend(userId, friendId int) error {
 
 // AcceptFriendRequest 接受好友请求
 func (s *FriendService) AcceptFriendRequest(userId, friendId int) error {
+	// 检查两人是否已经是好友
+	friendShip, err := s.friendRepository.GetFriendRelation(userId, friendId)
+	if err != nil {
+		return err
+	}
+	if friendShip != (models.Friend{}) {
+		// 两人已经是好友，无需重复添加，同时删除好友关系表中的记录
+		err = s.friendRepository.DeleteIsFriend(userId, friendId, nil)
+		return err
+	}
+
 	// 开启事务
 	tx := s.friendRepository.Db.Begin()
 	friend, err := s.friendRepository.GetFriendRelation(userId, friendId)
@@ -232,7 +238,7 @@ func (s *FriendService) AcceptFriendRequest(userId, friendId int) error {
 		FriendId: friend.UserId,
 		Status:   1,
 	}
-	err = s.friendRepository.AddFriendRequest(newFriend, tx)
+	err = s.friendRepository.AddFriendRequest(&newFriend, tx)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -262,6 +268,22 @@ func StartFriendConsumer() {
 			continue
 		}
 		defer channel.Close()
+
+		// 声明交换机
+		err = channel.ExchangeDeclare(
+			"social",
+			"direct",
+			true,
+			false,
+			false,
+			false,
+			nil,
+		)
+		if err != nil {
+			log.Printf("Failed to declare exchange: %v", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
 
 		// 声明队列
 		queue, err := channel.QueueDeclare(

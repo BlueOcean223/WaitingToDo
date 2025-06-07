@@ -35,7 +35,7 @@ func (s *FriendRepository) GetFriendRelation(userId, friendId int) (models.Frien
 }
 
 // AddFriendRequest 添加好友请求
-func (s *FriendRepository) AddFriendRequest(friend models.Friend, tx *gorm.DB) error {
+func (s *FriendRepository) AddFriendRequest(friend *models.Friend, tx *gorm.DB) error {
 	db := s.Db
 	if tx != nil {
 		db = tx
@@ -68,4 +68,13 @@ func (s *FriendRepository) DeleteByUserIdAndFriendId(userId, friendId int, tx *g
 		db = tx
 	}
 	return db.Where("user_id = ? AND friend_id = ?", userId, friendId).Delete(&models.Friend{}).Error
+}
+
+// DeleteIsFriend 删除已经是好友的多余好友关系
+func (s *FriendRepository) DeleteIsFriend(userId, friendId int, tx *gorm.DB) error {
+	db := s.Db
+	if tx != nil {
+		db = tx
+	}
+	return db.Where("user_id = ? AND friend_id = ? AND status = ?", userId, friendId, 0).Delete(&models.Friend{}).Error
 }
