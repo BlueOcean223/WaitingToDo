@@ -47,7 +47,7 @@ func (s *MessageRepository) Update(message models.Message, tx *gorm.DB) error {
 	if tx != nil {
 		db = tx
 	}
-	return db.Save(&message).Error
+	return db.Where("id = ?", message.Id).Updates(&message).Error
 }
 
 // Delete 删除消息

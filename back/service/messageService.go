@@ -97,15 +97,8 @@ func (s *MessageService) ReadAllMessage(userId int) error {
 func (s *MessageService) HandleRequest(messageVo vo.MessageVo) error {
 	// 更新消息状态为已读
 	message := models.Message{
-		Id:          messageVo.Id,
-		Title:       messageVo.Title,
-		Description: messageVo.Description,
-		FromId:      messageVo.FromId,
-		ToId:        messageVo.ToId,
-		Type:        messageVo.Type,
-		SendTime:    messageVo.SendTime,
-		OutId:       messageVo.OutId,
-		IsRead:      1,
+		Id:     messageVo.Id,
+		IsRead: 1,
 	}
 	err := s.UpdateMessage(message)
 	if err != nil {
