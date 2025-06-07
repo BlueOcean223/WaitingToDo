@@ -1,4 +1,4 @@
-# 使用官方 Go 运行时作为父镜像
+# 第一阶段：构建阶段
 FROM golang:1.24-alpine as builder
 
 # 设置 Go Proxy 使用国内代理
@@ -10,17 +10,28 @@ WORKDIR /app
 # 复制 go.mod 和 go.sum 文件
 COPY go.mod go.sum ./
 
-# 下载所有依赖项。如果 go.mod 和 go.sum 没有更改，依赖项将被缓存
+# 下载所有依赖项
 RUN go mod tidy
 
-# 将源代码复制到容器中
+# 复制源代码
 COPY . .
 
-# 构建 Go 应用
+# 构建可执行文件
 RUN go build -o main .
 
-# 暴露 8080 端口
+# 第二阶段：运行阶段
+FROM alpine:3.19
+
+# 设置工作目录
+WORKDIR /app
+
+# 从构建阶段复制可执行文件和配置文件
+COPY --from=builder /app/main .
+COPY --from=builder /app/config.yaml .
+COPY --from=builder /app/config.local.yaml .
+
+# 暴露端口
 EXPOSE 8080
 
-# 运行编译后的二进制文件
+# 运行应用程序
 CMD ["./main"]
