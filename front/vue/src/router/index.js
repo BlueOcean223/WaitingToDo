@@ -6,6 +6,7 @@ import NoticePage from "@/views/notice";
 import TeamPage from "@/views/team";
 import PersonalPage from "@/views/profiles";
 import FriendDetail from "@/views/friend/FriendDetail.vue";
+import NotFound from "@/views/404"
 
 
 const routes = [
@@ -16,7 +17,9 @@ const routes = [
   { path: "/notice", component: NoticePage },
   { path: "/team", component: TeamPage },
   { path: "/profile", component: PersonalPage },
-  { path: "/friendDetail/:id", component: FriendDetail }
+  { path: "/friendDetail/:id", component: FriendDetail },
+  // 捕获所有未匹配的路由
+  { path: '/:pathMatch(.*)', component: NotFound }
 ];
 
 const router = createRouter({
