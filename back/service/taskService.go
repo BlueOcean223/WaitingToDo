@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/rabbitmq/amqp091-go"
 	"gopkg.in/gomail.v2"
 	"log"
 	"sync"
@@ -506,15 +507,35 @@ func (s *TaskService) InviteTeamMember(email string, teamTask models.TeamTask) e
 
 // StartTeamConsumer 监听消息队列，处理同意加入小组任务
 func StartTeamConsumer() {
+	MQConn := configs.RabbitMQConn
+
+	// 监听connection级别的关闭
+	connCloseCh := make(chan *amqp091.Error)
+	MQConn.NotifyClose(connCloseCh)
+	isNeedReconnect := false
+
 	for {
-		MQConn := configs.RabbitMQConn
+		// RabbitMQ连接断开，重新连接
+		if isNeedReconnect {
+			var err error
+			MQConn, err = amqp091.Dial(configs.AppConfigs.RabbitMQConfig.Dsn)
+			if err != nil {
+				log.Printf("TeamConsumer:RabbitMQ重连失败: %v", err)
+				time.Sleep(time.Minute)
+				continue
+			}
+			isNeedReconnect = false
+		}
+
 		channel, err := MQConn.Channel()
 		if err != nil {
 			log.Printf("打开channel失败: %v, 重新尝试...", err)
 			time.Sleep(5 * time.Second)
 			continue
 		}
-		defer channel.Close()
+		// 监听Channel级别的关闭
+		chanCloseCh := make(chan *amqp091.Error)
+		channel.NotifyClose(chanCloseCh)
 
 		// 声明队列
 		queue, err := channel.QueueDeclare(
@@ -560,54 +581,81 @@ func StartTeamConsumer() {
 			time.Sleep(5 * time.Second)
 			continue
 		}
+		log.Println("TeamConsumer start")
 
-		for msg := range msgs {
-			var mqMessage models.MQMessage
-			if err = json.Unmarshal(msg.Body, &mqMessage); err != nil {
-				log.Printf("反序列化消息失败：%v", err)
-				msg.Nack(false, true) // 重新入队
-				continue
-			}
+	loop:
+		for {
+			select {
+			case err = <-connCloseCh:
+				log.Println("TeamConsumer:RabbitMQ连接已断开，正在尝试重新连接...")
+				isNeedReconnect = true
+				break loop
+			case err = <-chanCloseCh:
+				log.Println("TeamConsumer:Channel已关闭，正在尝试重新声明...")
+				time.Sleep(5 * time.Second)
+				break loop
+			case msg, ok := <-msgs:
+				if !ok {
+					log.Println("TeamConsumer:Channel已关闭，正在尝试重新声明...")
+					time.Sleep(5 * time.Second)
+					break loop
+				}
 
-			// 开启事务
-			tx := configs.MysqlDb.Begin()
+				var mqMessage models.MQMessage
+				if err = json.Unmarshal(msg.Body, &mqMessage); err != nil {
+					log.Printf("反序列化消息失败：%v", err)
+					msg.Nack(false, true) // 重新入队
+					continue
+				}
 
-			// 向任务关系表插入数据
-			teamTask := models.TeamTask{
-				TaskId: mqMessage.RelationID,
-				UserId: mqMessage.ReceiverID,
-				Status: 0,
-			}
-			if err = tx.Create(&teamTask).Error; err != nil {
-				tx.Rollback()
-				log.Printf("向任务关系表插入数据异常：%v", err)
-				msg.Nack(false, true) // 处理失败，重新入队
-				continue
-			}
+				// 开启事务
+				tx := configs.MysqlDb.Begin()
 
-			// 将任务表相应任务状态改为未完成
-			if err = tx.Model(&models.Task{}).Where("id = ?", mqMessage.RelationID).
-				Update("status", 0).Error; err != nil {
-				tx.Rollback()
-				log.Printf("更新任务状态异常：%v", err)
-				msg.Nack(false, true) // 处理失败，重新入队
-				continue
-			}
+				// 向任务关系表插入数据
+				teamTask := models.TeamTask{
+					TaskId: mqMessage.RelationID,
+					UserId: mqMessage.ReceiverID,
+					Status: 0,
+				}
+				if err = tx.Create(&teamTask).Error; err != nil {
+					tx.Rollback()
+					log.Printf("向任务关系表插入数据异常：%v", err)
+					msg.Nack(false, true) // 处理失败，重新入队
+					continue
+				}
 
-			// 提交事务
-			if err = tx.Commit().Error; err != nil {
-				tx.Rollback()
-				log.Printf("提交事务异常：%v", err)
-				msg.Nack(false, true) // 处理失败，重新入队
-				continue
-			}
+				// 将任务表相应任务状态改为未完成
+				if err = tx.Model(&models.Task{}).Where("id = ?", mqMessage.RelationID).
+					Update("status", 0).Error; err != nil {
+					tx.Rollback()
+					log.Printf("更新任务状态异常：%v", err)
+					msg.Nack(false, true) // 处理失败，重新入队
+					continue
+				}
 
-			// 消息消费完成
-			if err = msg.Ack(false); err != nil {
-				log.Printf("消息消费确认失败：%v", err)
+				// 提交事务
+				if err = tx.Commit().Error; err != nil {
+					tx.Rollback()
+					log.Printf("提交事务异常：%v", err)
+					msg.Nack(false, true) // 处理失败，重新入队
+					continue
+				}
+
+				// 消息消费完成
+				if err = msg.Ack(false); err != nil {
+					log.Printf("消息消费确认失败：%v", err)
+				}
 			}
 		}
 
+		// 断开连接
+		err = channel.Close()
+		if err != nil {
+			log.Printf("关闭channel失败：%v", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+		log.Println("TeamConsumer:Channel已手动关闭，正在尝试重新声明...")
 		time.Sleep(5 * time.Second)
 	}
 }
