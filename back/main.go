@@ -8,6 +8,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"log"
+	"os"
 )
 
 func main() {
@@ -15,7 +16,7 @@ func main() {
 
 	// 配置CORS
 	r.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"http://localhost:7070", "http://192.168.163.129:7070"},
+		AllowOrigins: []string{"http://localhost:7070", "http://192.168.163.129:7070", "http://101.34.246.32:7070"},
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{"Content-Type", "Authorization", "Origin"},
 	}))
@@ -28,10 +29,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("加载配置文件失败: %v", err)
 	}
-	// 本地配置文件覆盖
-	err = configs.InitConfig("config.local.yaml")
-	if err != nil {
-		log.Fatalf("加载本地配置文件失败: %v", err)
+	// 如果有本地配置文件，则覆盖本地配置
+	if _, err := os.Stat("config.local.yaml"); err == nil {
+		err = configs.InitConfig("config.local.yaml")
+		if err != nil {
+			log.Fatalf("加载本地配置文件失败: %v", err)
+		}
 	}
 
 	// 连接mysql
