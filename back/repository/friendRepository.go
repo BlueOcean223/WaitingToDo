@@ -70,6 +70,13 @@ func (s *FriendRepository) DeleteByUserIdAndFriendId(userId, friendId int, tx *g
 	return db.Where("user_id = ? AND friend_id = ?", userId, friendId).Delete(&models.Friend{}).Error
 }
 
+// GetIsFriend 查询是否已经是好友关系
+func (s *FriendRepository) GetIsFriend(userId, friendId int) ([]models.Friend, error) {
+	var friends []models.Friend
+	err := s.Db.Where("user_id = ? AND friend_id = ?", userId, friendId).Find(&friends).Error
+	return friends, err
+}
+
 // DeleteIsFriend 删除已经是好友的多余好友关系
 func (s *FriendRepository) DeleteIsFriend(userId, friendId int, tx *gorm.DB) error {
 	db := s.Db

@@ -209,11 +209,11 @@ func (s *FriendService) AddFriend(userId, friendId int) error {
 // AcceptFriendRequest 接受好友请求
 func (s *FriendService) AcceptFriendRequest(userId, friendId int) error {
 	// 检查两人是否已经是好友
-	friendShip, err := s.friendRepository.GetFriendRelation(userId, friendId)
+	friendShip, err := s.friendRepository.GetIsFriend(userId, friendId)
 	if err != nil {
 		return err
 	}
-	if friendShip != (models.Friend{}) {
+	if len(friendShip) > 1 {
 		// 两人已经是好友，无需重复添加，同时删除好友关系表中的记录
 		err = s.friendRepository.DeleteIsFriend(userId, friendId, nil)
 		return err
@@ -260,29 +260,22 @@ func (s *FriendService) RejectFriendRequest(id int) error {
 
 // StartFriendConsumer 监听消息队列，处理好友请求
 func StartFriendConsumer() {
-	MQConn := configs.RabbitMQConn
-
-	// 监听connection级别的关闭
-	connCloseCh := make(chan *amqp091.Error)
-	MQConn.NotifyClose(connCloseCh)
-	isNeedReconnect := false
-
 	for {
-		// RabbitMQ连接断开，重新连接
-		if isNeedReconnect {
-			var err error
-			MQConn, err = amqp091.Dial(configs.AppConfigs.RabbitMQConfig.Dsn)
-			if err != nil {
-				log.Printf("Failed to reconnect to RabbitMQ: %v", err)
-				time.Sleep(time.Minute)
-				continue
-			}
-			isNeedReconnect = false
+		// 建立连接
+		MQConn, err := amqp091.Dial(configs.AppConfigs.RabbitMQConfig.Dsn)
+		if err != nil {
+			log.Printf("FriendConsumer:Failed to connect to RabbitMQ: %v", err)
+			time.Sleep(time.Minute)
+			continue
 		}
+		// 注册 connection 级别关闭通知
+		connCloseCh := make(chan *amqp091.Error)
+		MQConn.NotifyClose(connCloseCh)
 
+		// 打开 channel
 		channel, err := MQConn.Channel()
 		if err != nil {
-			log.Printf("Failed to open channel: %v, retrying...", err)
+			log.Printf("FriendConsumer:Failed to open channel: %v, retrying...", err)
 			time.Sleep(5 * time.Second)
 			continue
 		}
@@ -302,7 +295,7 @@ func StartFriendConsumer() {
 			nil,
 		)
 		if err != nil {
-			log.Printf("Failed to declare exchange: %v", err)
+			log.Printf("FriendConsumer:Failed to declare exchange: %v", err)
 			channel.Close()
 			time.Sleep(5 * time.Second)
 			continue
@@ -318,7 +311,7 @@ func StartFriendConsumer() {
 			nil,
 		)
 		if err != nil {
-			log.Printf("Failed to declare queue: %v", err)
+			log.Printf("FriendConsumer:Failed to declare queue: %v", err)
 			channel.Close()
 			time.Sleep(5 * time.Second)
 			continue
@@ -333,7 +326,7 @@ func StartFriendConsumer() {
 			nil,
 		)
 		if err != nil {
-			log.Printf("Failed to bind queue: %v", err)
+			log.Printf("FriendConsumer:Failed to bind queue: %v", err)
 			channel.Close()
 			time.Sleep(5 * time.Second)
 			continue
@@ -350,8 +343,9 @@ func StartFriendConsumer() {
 			nil,
 		)
 		if err != nil {
-			log.Printf("Failed to register consumer: %v", err)
+			log.Printf("FriendConsumer:Failed to register consumer: %v", err)
 			channel.Close()
+			MQConn.Close()
 			time.Sleep(5 * time.Second)
 			continue
 		}
@@ -361,20 +355,19 @@ func StartFriendConsumer() {
 		for {
 			select {
 			case err = <-connCloseCh:
-				log.Printf("Connection closed: %v", err)
-				isNeedReconnect = true
+				log.Printf("FriendConsumer:Connection closed: %v", err)
 				break loop
 			case err = <-chanCloseCh:
-				log.Printf("Channel closed: %v", err)
+				log.Printf("FriendConsumer:Channel closed: %v", err)
 				break loop
 			case msg, ok := <-msgs:
 				if !ok {
-					log.Printf("Channel closed")
+					log.Printf("FriendConsumer:Channel closed")
 					break loop
 				}
 				var mqMessage models.MQMessage
 				if err := json.Unmarshal(msg.Body, &mqMessage); err != nil {
-					log.Printf("Failed to unmarshal message: %v", err)
+					log.Printf("FriendConsumer:Failed to unmarshal message: %v", err)
 					msg.Nack(false, true) // 重新入队
 					continue
 				}
@@ -391,11 +384,11 @@ func StartFriendConsumer() {
 				}
 
 				if processErr != nil {
-					log.Printf("Failed to process message: %v", processErr)
+					log.Printf("FriendConsumer:Failed to process message: %v", processErr)
 					msg.Nack(false, true) // 处理失败，重新入队
 				} else {
 					if err := msg.Ack(false); err != nil {
-						log.Printf("Failed to ack message: %v", err)
+						log.Printf("FriendConsumer:Failed to ack message: %v", err)
 					}
 				}
 			}
@@ -404,7 +397,13 @@ func StartFriendConsumer() {
 		// 断开连接
 		err = channel.Close()
 		if err != nil {
-			log.Printf("Failed to close channel: %v", err)
+			log.Printf("FriendConsumer:Failed to close channel: %v", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+		err = MQConn.Close()
+		if err != nil {
+			log.Printf("FriendConsumer:Failed to close connection: %v", err)
 			time.Sleep(5 * time.Second)
 			continue
 		}

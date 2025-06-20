@@ -507,29 +507,23 @@ func (s *TaskService) InviteTeamMember(email string, teamTask models.TeamTask) e
 
 // StartTeamConsumer 监听消息队列，处理同意加入小组任务
 func StartTeamConsumer() {
-	MQConn := configs.RabbitMQConn
-
-	// 监听connection级别的关闭
-	connCloseCh := make(chan *amqp091.Error)
-	MQConn.NotifyClose(connCloseCh)
-	isNeedReconnect := false
-
 	for {
-		// RabbitMQ连接断开，重新连接
-		if isNeedReconnect {
-			var err error
-			MQConn, err = amqp091.Dial(configs.AppConfigs.RabbitMQConfig.Dsn)
-			if err != nil {
-				log.Printf("TeamConsumer:RabbitMQ重连失败: %v", err)
-				time.Sleep(time.Minute)
-				continue
-			}
-			isNeedReconnect = false
+		// 建立连接
+		MQConn, err := amqp091.Dial(configs.AppConfigs.RabbitMQConfig.Dsn)
+		if err != nil {
+			log.Printf("TeamConsumer:Failed to connect to RabbitMQ: %v", err)
+			time.Sleep(time.Minute)
+			continue
 		}
 
+		// 注册 connection 级别关闭通知
+		connCloseCh := make(chan *amqp091.Error)
+		MQConn.NotifyClose(connCloseCh)
+
+		// 打开 channel
 		channel, err := MQConn.Channel()
 		if err != nil {
-			log.Printf("打开channel失败: %v, 重新尝试...", err)
+			log.Printf("TeamConsumer:打开channel失败: %v, 重新尝试...", err)
 			time.Sleep(5 * time.Second)
 			continue
 		}
@@ -547,7 +541,7 @@ func StartTeamConsumer() {
 			nil,
 		)
 		if err != nil {
-			log.Printf("声明队列失败：%v", err)
+			log.Printf("TeamConsumer:声明队列失败：%v", err)
 			time.Sleep(5 * time.Second)
 			continue
 		}
@@ -561,7 +555,7 @@ func StartTeamConsumer() {
 			nil,
 		)
 		if err != nil {
-			log.Printf("绑定队列失败：%v", err)
+			log.Printf("TeamConsumer:绑定队列失败：%v", err)
 			time.Sleep(5 * time.Second)
 			continue
 		}
@@ -577,7 +571,9 @@ func StartTeamConsumer() {
 			nil,
 		)
 		if err != nil {
-			log.Printf("消费信息失败：%v", err)
+			log.Printf("TeamConsumer:消费信息失败：%v", err)
+			channel.Close()
+			MQConn.Close()
 			time.Sleep(5 * time.Second)
 			continue
 		}
@@ -588,7 +584,6 @@ func StartTeamConsumer() {
 			select {
 			case err = <-connCloseCh:
 				log.Println("TeamConsumer:RabbitMQ连接已断开，正在尝试重新连接...")
-				isNeedReconnect = true
 				break loop
 			case err = <-chanCloseCh:
 				log.Println("TeamConsumer:Channel已关闭，正在尝试重新声明...")
@@ -619,7 +614,7 @@ func StartTeamConsumer() {
 				}
 				if err = tx.Create(&teamTask).Error; err != nil {
 					tx.Rollback()
-					log.Printf("向任务关系表插入数据异常：%v", err)
+					log.Printf("TeamConsumer:向任务关系表插入数据异常：%v", err)
 					msg.Nack(false, true) // 处理失败，重新入队
 					continue
 				}
@@ -628,7 +623,7 @@ func StartTeamConsumer() {
 				if err = tx.Model(&models.Task{}).Where("id = ?", mqMessage.RelationID).
 					Update("status", 0).Error; err != nil {
 					tx.Rollback()
-					log.Printf("更新任务状态异常：%v", err)
+					log.Printf("TeamConsumer:更新任务状态异常：%v", err)
 					msg.Nack(false, true) // 处理失败，重新入队
 					continue
 				}
@@ -636,14 +631,14 @@ func StartTeamConsumer() {
 				// 提交事务
 				if err = tx.Commit().Error; err != nil {
 					tx.Rollback()
-					log.Printf("提交事务异常：%v", err)
+					log.Printf("TeamConsumer:提交事务异常：%v", err)
 					msg.Nack(false, true) // 处理失败，重新入队
 					continue
 				}
 
 				// 消息消费完成
 				if err = msg.Ack(false); err != nil {
-					log.Printf("消息消费确认失败：%v", err)
+					log.Printf("TeamConsumer:消息消费确认失败：%v", err)
 				}
 			}
 		}
@@ -651,7 +646,13 @@ func StartTeamConsumer() {
 		// 断开连接
 		err = channel.Close()
 		if err != nil {
-			log.Printf("关闭channel失败：%v", err)
+			log.Printf("TeamConsumer:关闭channel失败：%v", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+		err = MQConn.Close()
+		if err != nil {
+			log.Printf("TeamConsumer:关闭连接失败：%v", err)
 			time.Sleep(5 * time.Second)
 			continue
 		}
