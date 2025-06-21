@@ -258,7 +258,7 @@ export default{
           { required: true, message: '请输入邮箱', trigger: 'blur' },
           { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
         ],
-        captcha: [
+        code: [
           { required: true, message: '请输入验证码', trigger: 'blur' },
           { len: 6, message: '验证码长度为6位', trigger: 'blur' }
         ],
@@ -288,7 +288,7 @@ export default{
           { required: true, message: '请输入邮箱', trigger: 'blur' },
           { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
         ],
-        captcha: [
+        code: [
           { required: true, message: '请输入验证码', trigger: 'blur' },
           { len: 6, message: '验证码长度为6位', trigger: 'blur' }
         ],
@@ -514,7 +514,7 @@ export default{
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  min-height: 97.8vh;
   background-image: url('@/assets/sysuBackground.png');
   background-size: cover;
   background-position: center;
