@@ -22,6 +22,10 @@ RUN go build -o main .
 # 第二阶段：运行阶段
 FROM alpine:3.19
 
+# 设置上海时区
+COPY zoneinfo /etc/localtime
+RUN echo "Asia/Shanghai" > /etc/timezone
+
 # 设置工作目录
 WORKDIR /app
 
