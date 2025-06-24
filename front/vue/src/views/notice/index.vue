@@ -3,9 +3,17 @@
   <div class="message-container">
     <div class="message-header">
       <h2>消息通知</h2>
-      <el-button type="primary" @click="markAllAsRead" :disabled="unreadCount === 0">
-        一键已读
-      </el-button>
+      <div class="header-buttons">
+        <el-switch
+          v-model="showFriendInfo"
+          active-text="显示好友信息"
+          inactive-text="关闭"
+          class="friend-info-switch"
+        />
+        <el-button type="primary" @click="markAllAsRead" :disabled="unreadCount === 0">
+          一键已读
+        </el-button>
+      </div>
     </div>
     
     <div class="message-list">
@@ -72,6 +80,7 @@
     title="是这位用户给你发送的消息" 
     width="500px"
     :close-on-click-modal="false"
+    v-if="showFriendInfo"
   >
     <div class="sender-info-container">
       <div class="sender-avatar">
@@ -130,6 +139,9 @@ const messages = ref([])
 const confirmDialog = ref({})
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
+
+// 是否显示好友信息
+const showFriendInfo = ref(true)
 
 // 滚动事件监听
 const handleScroll = () => {
@@ -306,6 +318,8 @@ const isShowFromUser = ref(false)
 const sendMessageUser = ref({})
 // 点击时展示发送该消息的用户信息
 const showSendMessageUser = async (from_id) => {
+  if (!showFriendInfo.value) return
+  
   isShowFromUser.value = true
 
   const res = await getUserById(from_id)
@@ -347,6 +361,15 @@ const emit = defineEmits(['update-unread'])
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+}
+
+.header-buttons {
+  display: flex;
+  align-items: center;
+}
+
+.friend-info-switch {
+  margin-right: 15px; 
 }
 
 .message-list {
