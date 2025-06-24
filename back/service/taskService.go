@@ -349,12 +349,33 @@ func (s *TaskService) DeleteTeamTask(taskId, userId int) error {
 		tx.Rollback()
 		return err
 	}
-	// 如果小组成员全部删除，则删除任务表数据
+	// 查询小组任务成员情况
 	teamTaskList, err := s.teamTaskRepository.GetTeamTaskShipByTaskIds([]int{taskId})
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
+	// 如果小组任务组长为自己且还有其它组员，则转交给其它小组成员
+	tasks, err := s.taskRepository.GetTaskListByIds([]int{taskId})
+	task := tasks[0]
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if len(teamTaskList) > 1 && task.UserId == userId {
+		for _, teamTask := range teamTaskList {
+			if teamTask.UserId != userId {
+				task.UserId = teamTask.UserId
+				break
+			}
+		}
+		err = s.taskRepository.Update(task, tx)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	// 如果小组成员全部删除，则删除任务表数据
 	if len(teamTaskList) == 1 {
 		err = tx.Delete(&models.Task{}, taskId).Error
 		if err != nil {
