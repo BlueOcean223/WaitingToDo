@@ -57,7 +57,7 @@ export default {
       return this.user.name || '未登录'
     },
     avatarUrl() {
-      const baseUrl = import.meta.env.VITE_PIC_BASE_URL || 'http://192.168.163.129:9000'
+      const baseUrl = import.meta.env.VITE_PIC_BASE_URL
       return `${baseUrl}${this.user.pic || ''}`
     },
     unreadCount() {
