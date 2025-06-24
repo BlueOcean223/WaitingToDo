@@ -142,10 +142,12 @@ func (s *TaskService) GetUrgentTaskList(email string) ([]dto.TaskDto, error) {
 
 // TickerNotify 定时任务，当用户的任务结束时间小于一天时，发邮件提醒用户
 func TickerNotify() {
+	db := configs.MysqlDb
 	// 初始化时创建所有repository
-	taskNoticeHistoryRepo := repository.NewTaskNoticeHistoryRepository(configs.MysqlDb)
-	taskRepo := repository.NewTaskRepository(configs.MysqlDb)
-	authRepo := repository.NewAuthRepository(configs.MysqlDb)
+	taskNoticeHistoryRepo := repository.NewTaskNoticeHistoryRepository(db)
+	taskRepo := repository.NewTaskRepository(db)
+	teamTaskRepo := repository.NewTeamTaskRepository(db)
+	authRepo := repository.NewAuthRepository(db)
 
 	// 初始化邮件dialer
 	mailConfig := configs.AppConfigs.MailConfig
@@ -157,9 +159,9 @@ func TickerNotify() {
 	)
 
 	// 测试使用一分钟
-	//ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(1 * time.Minute)
 	// 使用一小时的定时器
-	ticker := time.NewTicker(1 * time.Hour)
+	//ticker := time.NewTicker(1 * time.Hour)
 	defer ticker.Stop()
 
 	for range ticker.C {
@@ -194,10 +196,41 @@ func TickerNotify() {
 		// 3. 批量获取用户信息
 		userIds := make([]int, 0, len(tasks))
 		tasksToNotify := make([]models.Task, 0, len(tasks))
+		var teamTaskIds []int
+		leaderIds := make(map[int]int)
+		teamTaskMap := make(map[int]models.Task)
+
 		for _, task := range tasks {
 			if !notifiedMap[task.Id] {
 				userIds = append(userIds, task.UserId)
 				tasksToNotify = append(tasksToNotify, task)
+				// 小组任务
+				if task.Type == 1 {
+					teamTaskIds = append(teamTaskIds, task.Id)
+					leaderIds[task.UserId] = 1
+					teamTaskMap[task.Id] = task
+				}
+			}
+		}
+
+		// 查询小组任务成员
+		var teamMembers []models.TeamTask
+		if len(teamTaskIds) > 0 {
+			teamMembers, err = teamTaskRepo.GetTeamTaskShipByTaskIds(teamTaskIds)
+			if err != nil {
+				log.Printf("获取小组任务成员失败: %v", err)
+				continue
+			}
+		}
+
+		// 添加小组成员的id到用户id列表中，并向要通知的任务列表中添加给小组成员的通知
+		for _, teamTask := range teamMembers {
+			userIds = append(userIds, teamTask.UserId)
+			// 如果不是小组组长，则添加通知（小组组长的通知已经包含在了通知任务列表中）
+			if _, exist := leaderIds[teamTask.UserId]; !exist {
+				newTask := teamTaskMap[teamTask.TaskId]
+				newTask.UserId = teamTask.UserId
+				tasksToNotify = append(tasksToNotify, newTask)
 			}
 		}
 
