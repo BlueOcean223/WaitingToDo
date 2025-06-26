@@ -29,7 +29,17 @@ service.interceptors.request.use(
 
 // 响应拦截器
 service.interceptors.response.use(
-    response => response,
+    response => {
+        // 检查响应头是否有新令牌
+        const newToken = response.headers['new-access-token'];
+        if(newToken) {
+            // 存储新令牌
+            localStorage.setItem('token', newToken);
+            // 更新请求头
+            service.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+        }
+        return response
+    },
     error => {
         // token过期
         if (error.response && error.response.status === 401){

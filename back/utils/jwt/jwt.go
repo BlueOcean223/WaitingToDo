@@ -1,8 +1,10 @@
 package jwt
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -63,11 +65,30 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		}
 
 		// 解析Token
-		_, err := ParseToken(tokenString)
+		claims, err := ParseToken(tokenString)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "无效的Token"})
-			c.Abort()
+			// 区分过期错误和其它错误
+			if errors.Is(err, jwt.ErrTokenExpired) {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token已过期"})
+			} else {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "无效Token"})
+			}
 			return
+		}
+
+		// 检查token剩余时间(12小时)
+		remaining := time.Until(claims.ExpiresAt.Time)
+		refresh := 12 * time.Hour
+
+		// 令牌即将过期时生成新令牌
+		if remaining < refresh {
+			newToken, err := GenerateToken(claims.Name)
+			if err != nil {
+				log.Printf("令牌刷新失败: %v", err)
+			} else {
+				// 设置新令牌到响应头
+				c.Header("New-Access-Token", newToken)
+			}
 		}
 
 		// 放行
