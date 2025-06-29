@@ -59,7 +59,7 @@
               size="small"
               @click="handleComplete"
             >
-              {{ user.status === 1 ? '已完成' : '完成' }}
+              {{ user.status === 1 ? '已完成' : '未完成' }}
             </el-button>
           </div>
         </div>
