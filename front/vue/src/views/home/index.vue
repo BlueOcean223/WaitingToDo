@@ -213,14 +213,12 @@ export default {
         const res = await getList(this.currentPage,5,status)
 
         if(res.data.status === 1){
-          // 如果是第一页，直接赋值
-          if (this.currentPage === 1){
-            this.tasks = res.data.data
-          }else{// 否则追加数据
-            this.tasks = [...this.tasks, ...res.data.data]
+          if(res.data.data == null){
+            // 没有更多数据
+            this.hasMore = false
+            return;
           }
-          
-          this.hasMore = this.tasks != null && this.tasks.length < res.data.data[0].count
+          this.tasks = [...this.tasks, ...res.data.data]
           this.currentPage++
         }else{
           ElMessage.error(res.data.message)
@@ -362,7 +360,6 @@ export default {
     },
     // 删除任务
     async handleDelete(id){
-      console.log(id)
       this.dialogTitle = '确定要删除该任务吗？'
       this.dialogVisible = true
       const isConfirmed = await this.$refs.confirmDialog.confirm()

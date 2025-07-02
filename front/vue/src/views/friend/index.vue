@@ -157,7 +157,6 @@ const handleSearch = async() => {
   isSearch.value = true
   if(res.data.status === 1){
     searchNull.value = (res.data.data === null)
-    console.log(searchNull.value)
     searchResult.value = res.data.data
   }else{
     ElMessage.error(res.data.message)
