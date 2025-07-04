@@ -14,8 +14,9 @@ func SetTaskRoutes(r *gin.Engine) {
 	messageRepository := repository.NewMessageRepository(configs.MysqlDb)
 	taskRepository := repository.NewTaskRepository(configs.MysqlDb)
 	teamTaskRepo := repository.NewTeamTaskRepository(configs.MysqlDb)
+	fileRepository := repository.NewFileRepository(configs.MysqlDb)
 
-	taskService := service.NewTaskService(authRepository, messageRepository, taskRepository, teamTaskRepo)
+	taskService := service.NewTaskService(authRepository, messageRepository, taskRepository, teamTaskRepo, fileRepository)
 
 	taskController := controllers.NewTaskController(taskService)
 

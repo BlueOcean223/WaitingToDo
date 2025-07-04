@@ -14,6 +14,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"io"
 	"mime/multipart"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -21,17 +22,20 @@ import (
 type UploadService struct {
 	authRepository  *repository.AuthRepository
 	imageRepository *repository.ImageRepository
+	fileRepository  *repository.FileRepository
 }
 
 func NewUploadService(authRepository *repository.AuthRepository,
-	imageRepository *repository.ImageRepository) *UploadService {
+	imageRepository *repository.ImageRepository,
+	fileRepository *repository.FileRepository) *UploadService {
 	return &UploadService{
 		authRepository:  authRepository,
 		imageRepository: imageRepository,
+		fileRepository:  fileRepository,
 	}
 }
 
-// UploadImg 上传图片
+// UploadImg 上传图片服务
 func (s *UploadService) UploadImg(email string, fileHeader *multipart.FileHeader) (string, error) {
 	// 读取文件
 	file, err := fileHeader.Open()
@@ -80,7 +84,7 @@ func (s *UploadService) UploadImg(email string, fileHeader *multipart.FileHeader
 	objectName := date + "/" + md5Hash + extensionName
 
 	contentType := fileHeader.Header.Get("Content-Type")
-	err = s.UploadImgToMinio(minioContent.ImagesBucket, objectName, file, fileHeader.Size, contentType)
+	err = s.UploadToMinio(minioContent.ImagesBucket, objectName, file, fileHeader.Size, contentType)
 	if err != nil {
 		return "", err
 	}
@@ -152,7 +156,8 @@ func (s *UploadService) UploadImg(email string, fileHeader *multipart.FileHeader
 	return image.Url, nil
 }
 
-func (s *UploadService) UploadImgToMinio(bucketName, objectName string, file io.Reader, size int64, contentType string) error {
+// UploadToMinio 上传到minio
+func (s *UploadService) UploadToMinio(bucketName, objectName string, file io.Reader, size int64, contentType string) error {
 	// 获取Minio客户端
 	minioClient := configs.MinioClient
 
@@ -168,4 +173,94 @@ func (s *UploadService) UploadImgToMinio(bucketName, objectName string, file io.
 	)
 
 	return err
+}
+
+// UploadFile 上传文件
+func (s *UploadService) UploadFile(id int, files []*multipart.FileHeader) error {
+	for _, fileHeader := range files {
+		// 读文件
+		file, err := fileHeader.Open()
+		if err != nil {
+			return err
+		}
+
+		// 上传到minio
+		objectName := strconv.Itoa(id) + "/" + fileHeader.Filename
+		err = s.UploadToMinio(minioContent.FilesBucket, objectName, file, fileHeader.Size, fileHeader.Header.Get("Content-Type"))
+		if err != nil {
+			return err
+		}
+
+		// 插入数据库
+		fileDb := models.File{
+			TaskId:     id,
+			Name:       fileHeader.Filename,
+			Url:        "/" + minioContent.FilesBucket + "/" + objectName,
+			CreateTime: time.Now().Format("2006-01-02 15:04:05"),
+			UpdateTime: time.Now().Format("2006-01-02 15:04:05"),
+		}
+		err = s.fileRepository.Insert(fileDb, nil)
+		if err != nil {
+			return err
+		}
+		err = file.Close()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *UploadService) DeleteFile(ids []int) error {
+	// 删除minio中的附件
+	files, err := s.fileRepository.GetFileByIds(ids)
+	if err != nil {
+		return err
+	}
+
+	var objectNames []string
+	for _, file := range files {
+		objectNames = append(objectNames, strconv.Itoa(file.TaskId)+"/"+file.Name)
+	}
+	err = s.BatchDeleteFromMinio(minioContent.FilesBucket, objectNames)
+	if err != nil {
+		return err
+	}
+
+	// 删除数据库中的附件
+	err = s.fileRepository.DeleteByIds(ids, nil)
+
+	return err
+}
+
+// DeleteFromMinio 删除Minio中的附件
+func (s *UploadService) DeleteFromMinio(bucketName, objectName string) error {
+	minioClient := configs.MinioClient
+	ctx := context.Background()
+	return minioClient.RemoveObject(ctx, bucketName, objectName, minio.RemoveObjectOptions{})
+}
+
+// BatchDeleteFromMinio 批量删除Minio中的附件
+func (s *UploadService) BatchDeleteFromMinio(bucketName string, objectNames []string) error {
+	minioClient := configs.MinioClient
+	ctx := context.Background()
+
+	objectsCh := make(chan minio.ObjectInfo)
+	go func() {
+		defer close(objectsCh)
+		for _, objectName := range objectNames {
+			objectsCh <- minio.ObjectInfo{
+				Key: objectName,
+			}
+		}
+	}()
+
+	var errs []error
+	for err := range minioClient.RemoveObjects(ctx, bucketName, objectsCh, minio.RemoveObjectsOptions{}) {
+		errs = append(errs, err.Err)
+	}
+	if len(errs) > 0 {
+		return errs[0]
+	}
+	return nil
 }

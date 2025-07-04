@@ -85,7 +85,7 @@ func (s *TaskController) AddTask(c *gin.Context) {
 		return
 	}
 	// 添加任务
-	err = s.taskService.AddTask(email, taskVo)
+	task, err := s.taskService.AddTask(email, taskVo)
 	if err != nil {
 		if myError.IsMyError(err) {
 			// 自定义错误
@@ -97,7 +97,7 @@ func (s *TaskController) AddTask(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, models.Success("", "添加成功", nil))
+	c.JSON(http.StatusOK, models.Success("", "添加成功", task))
 }
 
 // UpdateTask 修改任务

@@ -49,7 +49,7 @@ func (s *TaskRepository) GetList(userId, page, pageSize, myType int, status *int
 }
 
 // Create 新增任务
-func (s *TaskRepository) Create(task models.Task, tx *gorm.DB) error {
+func (s *TaskRepository) Create(task *models.Task, tx *gorm.DB) error {
 	db := s.db
 	if tx != nil {
 		db = tx

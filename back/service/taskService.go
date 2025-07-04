@@ -6,15 +6,18 @@ import (
 	"back/models/dto"
 	"back/models/vo"
 	"back/repository"
+	"back/utils/minioContent"
 	"back/utils/myError"
 	"back/utils/redisContent"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/minio/minio-go/v7"
 	"github.com/rabbitmq/amqp091-go"
 	"gopkg.in/gomail.v2"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -24,16 +27,20 @@ type TaskService struct {
 	messageRepository  *repository.MessageRepository
 	taskRepository     *repository.TaskRepository
 	teamTaskRepository *repository.TeamTaskRepository
+	fileRepository     *repository.FileRepository
 }
 
 func NewTaskService(authRepository *repository.AuthRepository,
 	messageRepository *repository.MessageRepository,
-	taskRepository *repository.TaskRepository, teamTaskRepository *repository.TeamTaskRepository) *TaskService {
+	taskRepository *repository.TaskRepository,
+	teamTaskRepository *repository.TeamTaskRepository,
+	fileRepository *repository.FileRepository) *TaskService {
 	return &TaskService{
 		authRepository:     authRepository,
 		messageRepository:  messageRepository,
 		taskRepository:     taskRepository,
 		teamTaskRepository: teamTaskRepository,
+		fileRepository:     fileRepository,
 	}
 }
 
@@ -52,6 +59,23 @@ func (s *TaskService) GetTaskList(email string, page, pageSize int, status *int)
 	if err != nil {
 		return nil, err
 	}
+
+	// 查询任务的附件
+	var taskIds []int
+	for _, task := range taskList {
+		taskIds = append(taskIds, task.Id)
+	}
+	attachments, err := s.fileRepository.GetFileByTaskIds(taskIds)
+	if err != nil {
+		return nil, err
+	}
+
+	// 收集任务与附件关系
+	taskAttachments := make(map[int][]models.File)
+	for _, attachment := range attachments {
+		taskAttachments[attachment.TaskId] = append(taskAttachments[attachment.TaskId], attachment)
+	}
+
 	// 封装Dto列表
 	var taskDtoList []dto.TaskDto
 	for _, task := range taskList {
@@ -62,6 +86,7 @@ func (s *TaskService) GetTaskList(email string, page, pageSize int, status *int)
 			Ddl:         task.Ddl,
 			Status:      task.Status,
 			Count:       count,
+			Attachments: taskAttachments[task.Id],
 		})
 	}
 
@@ -69,14 +94,14 @@ func (s *TaskService) GetTaskList(email string, page, pageSize int, status *int)
 }
 
 // AddTask 添加任务
-func (s *TaskService) AddTask(email string, taskVo vo.TaskVo) error {
+func (s *TaskService) AddTask(email string, taskVo vo.TaskVo) (models.Task, error) {
 	// 根据邮箱查询用户ID
 	user, err := s.authRepository.SelectUserByEmail(email)
 	if err != nil {
-		return err
+		return models.Task{}, err
 	}
 	if user == (models.User{}) {
-		return errors.New("用户不存在")
+		return models.Task{}, errors.New("用户不存在")
 	}
 
 	task := models.Task{
@@ -88,7 +113,8 @@ func (s *TaskService) AddTask(email string, taskVo vo.TaskVo) error {
 		Status:      0,
 	}
 	// 插入数据库
-	return s.taskRepository.Create(task, nil)
+	err = s.taskRepository.Create(&task, nil)
+	return task, err
 }
 
 // UpdateTask 更新任务
@@ -105,7 +131,70 @@ func (s *TaskService) UpdateTask(taskVo vo.TaskVo) error {
 
 // DeleteTask 删除任务
 func (s *TaskService) DeleteTask(id int) error {
-	return s.taskRepository.Delete(id, nil)
+	// 删除minio中的附件
+	err := s.DeleteFromMinio(minioContent.FilesBucket, id)
+	if err != nil {
+		return err
+	}
+
+	// 开启事务
+	tx := s.teamTaskRepository.Db.Begin()
+	// 删除任务附件
+	err = s.fileRepository.DeleteByTaskId(id, tx)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	// 删除任务
+	err = s.taskRepository.Delete(id, tx)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// 提交事务
+	err = tx.Commit().Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
+// DeleteFromMinio 删除Minio中的附件
+func (s *TaskService) DeleteFromMinio(bucketName string, taskId int) error {
+	minioClient := configs.MinioClient
+	ctx := context.Background()
+
+	taskFiles, err := s.fileRepository.GetFileByTaskId(taskId)
+	if err != nil {
+		return err
+	}
+
+	var objectNames []string
+	for _, taskFile := range taskFiles {
+		objectNames = append(objectNames, strconv.Itoa(taskId)+"/"+taskFile.Name)
+	}
+
+	objectsCh := make(chan minio.ObjectInfo)
+
+	go func() {
+		defer close(objectsCh)
+		for _, objectName := range objectNames {
+			objectsCh <- minio.ObjectInfo{Key: objectName}
+		}
+	}()
+
+	var errs []error
+	for err := range minioClient.RemoveObjects(ctx, bucketName, objectsCh, minio.RemoveObjectsOptions{}) {
+		errs = append(errs, err.Err)
+	}
+
+	if len(errs) > 0 {
+		return errs[0]
+	}
+	return nil
 }
 
 // GetUrgentTaskList 获取紧急任务列表

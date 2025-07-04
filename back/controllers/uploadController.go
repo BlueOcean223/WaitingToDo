@@ -6,6 +6,7 @@ import (
 	"back/utils/jwt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 type UploadController struct {
@@ -41,4 +42,46 @@ func (s *UploadController) UploadImg(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, models.Success("", "上传成功", url))
+}
+
+// UploadFile 上传文件
+func (s *UploadController) UploadFile(c *gin.Context) {
+	taskId, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", err.Error(), nil))
+		return
+	}
+	form, err := c.MultipartForm()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", err.Error(), nil))
+		return
+	}
+	files := form.File["files"]
+	err = s.uploadService.UploadFile(taskId, files)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Fail("", err.Error(), nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success("", "上传成功", nil))
+}
+
+// DeleteFile 删除文件
+func (s *UploadController) DeleteFile(c *gin.Context) {
+	type temp struct {
+		Ids []int `json:"delete_ids"`
+	}
+	var ids temp
+	if err := c.ShouldBindJSON(&ids); err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", err.Error(), nil))
+		return
+	}
+
+	err := s.uploadService.DeleteFile(ids.Ids)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Fail("", err.Error(), nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success("", "删除成功", nil))
 }

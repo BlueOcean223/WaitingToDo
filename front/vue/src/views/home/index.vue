@@ -37,7 +37,7 @@
           >
             {{ task.title }} - {{ formatDate(task.ddl) }}
           </div>
-          <div v-if="!urgentTasks.length" class="no-more">暂时不用慌</div>
+          <div v-if="urgentTasks==null" class="no-more">暂时不用慌</div>
         </el-scrollbar>
       </div>
     </div>
@@ -53,43 +53,67 @@
     </el-button>
   </div>
 
-<!--  添加任务模态框 -->
-    <el-dialog v-model="showAddTask" title="添加任务" width="500px">
-      <el-form 
-        :model="addTaskForm" 
-        label-width="80px" 
-        label-position="left"
-        :rules="addTaskRules"
-        ref="addTaskForm"
-      >
-        <el-form-item label="标题" prop="title">
-          <el-input v-model="addTaskForm.title" placeholder="请输入标题"/>
-        </el-form-item>
-        <el-form-item label="内容" prop="description">
-          <el-input 
-            v-model="addTaskForm.description" 
-            type="textarea" 
-            :rows="8"
-            placeholder="请输入任务内容"
-            maxlength="500"
-            show-word-limit
-            prefix-icon="Info"
-          />
-        </el-form-item>
-        <el-form-item label="截止时间" prop="ddl">
-          <el-date-picker 
-            v-model="addTaskForm.ddl" 
-            type="datetime" 
-            placeholder="请选择截止时间" 
-            size="large"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="showAddTask = false" size="large">取消</el-button>
-        <el-button type="primary" @click="submitAddTask" size="large">完成</el-button>
-      </template>
-    </el-dialog>
+  <!-- 添加任务模态框 -->
+  <el-dialog v-model="showAddTask" title="添加任务" width="500px">
+    <el-form 
+      :model="addTaskForm" 
+      label-width="80px" 
+      label-position="left"
+      :rules="addTaskRules"
+      ref="addTaskForm"
+    >
+      <el-form-item label="标题" prop="title">
+        <el-input v-model="addTaskForm.title" placeholder="请输入标题"/>
+      </el-form-item>
+      <el-form-item label="内容" prop="description">
+        <el-input 
+          v-model="addTaskForm.description" 
+          type="textarea" 
+          :rows="8"
+          placeholder="请输入任务内容"
+          maxlength="500"
+          show-word-limit
+          prefix-icon="Info"
+        />
+      </el-form-item>
+      <el-form-item label="截止时间" prop="ddl">
+        <el-date-picker 
+          v-model="addTaskForm.ddl" 
+          type="datetime" 
+          placeholder="请选择截止时间" 
+          size="large"
+        />
+      </el-form-item>
+      <el-form-item label="附件">
+        <el-upload
+          :file-list="attachments"
+          class="upload-demo"
+          drag
+          multiple
+          :limit="3"
+          :auto-upload="false"
+          :on-exceed="handleExceed"
+          :on-change="handleFileChange"
+          :on-remove="handleFileRemove"
+          accept=".doc,.docx,.pdf"
+        >
+          <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+          <div class="el-upload__text">
+            拖拽文件到此处或<em>点击上传</em>
+          </div>
+          <template #tip>
+            <div class="el-upload__tip">
+              支持上传 docx/doc/pdf 文件，单个文件不超过30M，最多上传3个文件
+            </div>
+          </template>
+        </el-upload>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="showAddTask = false" size="large">取消</el-button>
+      <el-button type="primary" @click="submitAddTask" size="large">完成</el-button>
+    </template>
+  </el-dialog>
 
   <!-- 修改任务模态框 -->
     <el-dialog v-model="showEditTask" title="修改任务" width="500px">
@@ -122,6 +146,30 @@
             size="large"
           />
         </el-form-item>
+        <el-form-item label="附件">
+          <el-upload
+            :file-list="editTaskForm.attachments"
+            class="upload-demo"
+            drag
+            multiple
+            :limit="3"
+            :auto-upload="false"
+            :on-exceed="handleExceed"
+            :on-change="handleFileChange"
+            :on-remove="handleFileRemove"
+            accept=".doc,.docx,.pdf"
+          >
+            <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+            <div class="el-upload__text">
+              拖拽文件到此处或<em>点击上传</em>
+            </div>
+            <template #tip>
+              <div class="el-upload__tip">
+                支持上传 docx/doc/pdf 文件，单个文件不超过30M，最多上传3个文件
+              </div>
+            </template>
+          </el-upload>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="showEditTask = false" size="large">取消</el-button>
@@ -143,9 +191,10 @@
 import NavBar from '@/components/NavBar.vue'
 import TaskCard from '@/components/TaskCard.vue'
 import ConfirmDialog  from '@/components/ConfirmDialog.vue'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus,UploadFilled,Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getList, add, remove, update, getUrgent } from '@/api/task'
+import { uploadFile,deleteFile } from '@/api/upload'
 
 export default {
   name: 'HomeView',
@@ -153,7 +202,9 @@ export default {
     NavBar,
     TaskCard,
     ConfirmDialog,
-    ElIconPlus: Plus
+    ElIconPlus: Plus,
+    ELIconUploadFilled: UploadFilled,
+    ElIconDelete: Delete
   },
   data() {
     return {
@@ -168,7 +219,7 @@ export default {
       addTaskForm:{
         title: '',
         description: '',
-        ddl: ''
+        ddl: '',
       },
       addTaskRules: { 
         title: [
@@ -185,11 +236,14 @@ export default {
         id: '',
         title: '',
         description: '',
-        ddl: ''
+        ddl: '',
+        attachments: [],  // 包含所有文件（已有+新增）
+        deletedAttachments: [], // 记录被删除的已有文件
       },
       confirmDialog: {},
       dialogVisible: false,
       dialogTitle: '',
+      attachments: [], // 添加任务附件
     }
   },
   mounted() {
@@ -271,19 +325,40 @@ export default {
           ...this.addTaskForm,
           type: 0
         }
+
         const res = await add(data)
         if(res.data.status === 1){
+          // 上传文件
+          if(this.attachments.length > 0){
+            // 构造formdata
+            const formData = new FormData()
+            this.attachments.forEach(file => {
+              formData.append('files',file.raw) // filelist获取的是封装过的file对象
+            })
+            var res0 = await uploadFile(res.data.data.id,formData)
+            // 如果上传失败，则重试三次
+            var cnt = 3
+            if(res0.data.status !== 1 && cnt > 0){
+              // 休眠一分钟再尝试
+              cnt-=1
+              await sleep(60000)
+              res0 = await uploadFile(res.data.data.id,formData)
+            }
+          }
+
           // 添加成功
           ElMessage.success(res.data.message)
           this.showAddTask = false
           this.addTaskForm = {
             title: '',
             description: '',
-            deadline: ''
+            deadline: '',
           }
+          this.attachments = []
           // 刷新任务列表
           this.currentPage = 1
           this.hasMore = true
+          this.tasks = []
           this.fetchTasks()
           // 刷新紧急任务列表
           this.fetchUrgentTasks()
@@ -302,10 +377,42 @@ export default {
       // 检查表格参数是否合法
       try{
         await this.$refs.editTaskForm.validate()
+
+        // 需要删除的旧文件
+        if(this.editTaskForm.deletedAttachments.length > 0){
+          const deletedFileIds = this.editTaskForm.deletedAttachments.map(file => file.id).filter(Boolean)
+          await deleteFile(deletedFileIds)
+          this.editTaskForm.deletedAttachments = [] // 重置删除的旧文件
+        }
+
+        // 需要新上传的文件
+        const formData = new FormData()
+        const needUploadFiles = this.editTaskForm.attachments.filter(file => !file.isExisting)
+        if (needUploadFiles.length > 0) { 
+          needUploadFiles.forEach(file => {
+            formData.append('files', file.raw)
+          })
+          const res1 = await uploadFile(this.editTaskForm.id, formData)
+          if(res1.data.status !== 1) {
+            ElMessage.error("上传文件失败")
+            return
+          }
+          // 添加上传文件的url
+          this.editTaskForm.attachments.forEach(file => {
+            if (!file.isExisting){
+              file.url = "/files/" + this.editTaskForm.id + "/" + file.raw.name
+            }
+          })
+        }
+        
+
         // 将数据发送给后端
         const data = {
           ...this.editTaskForm,
-          type: 0
+          type: 0,
+          // 移除不需要的字段
+          attachments: undefined,
+          deletedAttachments: undefined
         }
         const res = await update(data)
         if(res.data.status === 1){
@@ -318,6 +425,7 @@ export default {
               this.tasks[i].title = data.title
               this.tasks[i].description = data.description
               this.tasks[i].ddl = data.ddl
+              this.tasks[i].attachments = this.editTaskForm.attachments
               break
             }
           }
@@ -356,6 +464,19 @@ export default {
       this.editTaskForm.title = task.title
       this.editTaskForm.description = task.description
       this.editTaskForm.ddl = task.ddl
+      this.editTaskForm.deletedAttachments = []
+
+      // 初始化已有附件，添加标记
+      if(task.attachments != null){
+        this.editTaskForm.attachments = task.attachments.map(file => ({
+          ...file,
+          isExisting: true, // 标记为已有附件
+          uid: file.id // 使用唯一标识
+        }))
+      }else {
+        this.editTaskForm.attachments = []
+      }
+
       this.showEditTask = true
     },
     // 删除任务
@@ -375,6 +496,68 @@ export default {
           // 删除失败
           ElMessage.error(res.data.message)
         }
+      }
+    },
+    // 文件上传相关方法
+    handleExceed(files, fileList) {
+      ElMessage.warning("最多只能上传3个文件");
+    },
+    
+    handleFileChange(file, fileList) {
+      const allowedExt = [".doc", ".docx", ".pdf"]; 
+      const maxSize = 30 * 1024 * 1024; // 30MB
+      // 过滤出合法文件
+      fileList = fileList.filter(f => {
+        const ext = f.name.slice(f.name.lastIndexOf(".")).toLowerCase();
+        if (!allowedExt.includes(ext)) {
+          ElMessage.warning(`文件格式不支持`);
+          return false;
+        }
+        if (f.size > maxSize) {
+          ElMessage.warning(`文件超过 30MB`);
+          return false;
+        }
+        return true;
+      });
+      
+      // 更新附件列表
+      if (this.showAddTask){
+        this.attachments = fileList;
+      }else if (this.showEditTask) {
+        const updatedList = fileList.map(file => {
+          // 如果是已有文件，保留原有标记
+          if(file.isExisting) return file;
+          // 新文件添加标记
+          return {
+            ...file,
+            isExisting: false,
+            uid: Date.now()
+          }
+        })
+
+        this.editTaskForm.attachments = updatedList;
+      }
+    },
+    
+    handleFileRemove(file, fileList) {
+      // 更新附件列表
+      if(this.showAddTask){
+        this.attachments = fileList;
+      }else if(this.showEditTask) {
+        this.editTaskForm.attachments = fileList;
+
+        // 如果删除的是已有文件，则加入删除列表
+        if(file.isExisting) {
+          this.editTaskForm.deletedAttachments.push(file)
+        }
+      }
+    },
+    
+    removeFile(formType, index) {
+      if (formType === 'add') {
+        this.attachments.splice(index, 1);
+      } else {
+        this.editTaskForm.attachments.splice(index, 1);
       }
     },
   }
@@ -427,5 +610,29 @@ export default {
   margin-bottom: 20px;
   display: flex;
   justify-content: flex-end;
+}
+.upload-demo {
+  width: 100%;
+}
+
+.delete-btn {
+  margin-left: 10px;
+}
+/* 缩小上传拖拽区域 */
+:deep(.el-upload-dragger) {
+  padding: 12px 15px; 
+  height: 120px; 
+}
+/* 调整上传图标大小 */
+:deep(.el-icon--upload) {
+  font-size: 40px; 
+  margin: 8px 0;
+}
+
+/* 调整提示文字样式 */
+:deep(.el-upload__text) {
+  font-size: 13px; 
+  line-height: 1.4;
+  margin: 4px 0;
 }
 </style>
