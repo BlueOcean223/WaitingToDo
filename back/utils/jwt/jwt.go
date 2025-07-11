@@ -20,12 +20,12 @@ type CustomClaims struct {
 }
 
 // GenerateToken 生成JWT令牌
-func GenerateToken(name string) (string, error) {
+func GenerateToken(name string, duration time.Duration) (string, error) {
 	claims := CustomClaims{
 		Name: name,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)), // 过期时间
-			Issuer:    "WaitingToDo",                                      // 令牌签发者
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)), // 过期时间
+			Issuer:    "WaitingToDo",                                // 令牌签发者
 		},
 	}
 
@@ -82,7 +82,8 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 
 		// 令牌即将过期时生成新令牌
 		if remaining < refresh {
-			newToken, err := GenerateToken(claims.Name)
+			// 新令牌有效期为三天
+			newToken, err := GenerateToken(claims.Name, 72*time.Hour)
 			if err != nil {
 				log.Printf("令牌刷新失败: %v", err)
 			} else {

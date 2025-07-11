@@ -48,7 +48,7 @@ func (s *AuthService) CheckUser(email, password string) (dto.UserDto, string, er
 	}
 
 	// 校验成功，下发令牌
-	token, e := jwt.GenerateToken(email)
+	token, e := jwt.GenerateToken(email, 24*time.Hour)
 	if e != nil {
 		return dto.UserDto{}, "", e
 	}
