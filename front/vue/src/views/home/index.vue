@@ -165,7 +165,7 @@
             </div>
             <template #tip>
               <div class="el-upload__tip">
-                支持上传 docx/doc/pdf 文件，单个文件不超过30M，最多上传3个文件
+                支持上传 docx/doc/pdf 文件，单个文件不超过20M，最多上传3个文件
               </div>
             </template>
           </el-upload>
@@ -192,7 +192,7 @@ import NavBar from '@/components/NavBar.vue'
 import TaskCard from '@/components/TaskCard.vue'
 import ConfirmDialog  from '@/components/ConfirmDialog.vue'
 import { Plus,UploadFilled,Delete } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage,ElLoading } from 'element-plus'
 import { getList, add, remove, update, getUrgent } from '@/api/task'
 import { uploadFile,deleteFile } from '@/api/upload'
 
@@ -244,6 +244,7 @@ export default {
       dialogVisible: false,
       dialogTitle: '',
       attachments: [], // 添加任务附件
+      loadingInstance: null, // 加载实例
     }
   },
   mounted() {
@@ -320,11 +321,18 @@ export default {
         // 检查表格参数是否合法
         await this.$refs.addTaskForm.validate()
 
+        this.loadingInstance = ElLoading.service({
+          lock: true,
+          text: '正在提交...',
+          background: 'rgba(0, 0, 0, 0.7)'
+        })
+
         // 将数据发送给后端
         const data = {
           ...this.addTaskForm,
           type: 0
         }
+
 
         const res = await add(data)
         if(res.data.status === 1){
@@ -370,6 +378,8 @@ export default {
         if(error instanceof Error){
           ElMessage.error('任务发布失败: ' + error.message)
         }
+      } finally{
+        this.loadingInstance.close()
       }
     },
     // 提交修改任务
@@ -377,6 +387,13 @@ export default {
       // 检查表格参数是否合法
       try{
         await this.$refs.editTaskForm.validate()
+
+        this.loadingInstance = ElLoading.service({
+          lock: true,
+          text: '正在提交...',
+          background: 'rgba(0, 0, 0, 0.7)'
+        })
+
 
         // 需要删除的旧文件
         if(this.editTaskForm.deletedAttachments.length > 0){
@@ -436,6 +453,8 @@ export default {
         if(error instanceof Error){
           ElMessage.error('任务修改失败: ' + error.message)
         }
+      } finally{
+        this.loadingInstance.close()
       }
     },
     // 完成任务
@@ -505,7 +524,7 @@ export default {
     
     handleFileChange(file, fileList) {
       const allowedExt = [".doc", ".docx", ".pdf"]; 
-      const maxSize = 30 * 1024 * 1024; // 30MB
+      const maxSize = 20 * 1024 * 1024; // 20MB
       // 过滤出合法文件
       fileList = fileList.filter(f => {
         const ext = f.name.slice(f.name.lastIndexOf(".")).toLowerCase();
@@ -514,7 +533,7 @@ export default {
           return false;
         }
         if (f.size > maxSize) {
-          ElMessage.warning(`文件超过 30MB`);
+          ElMessage.warning(`文件超过大小20MB`);
           return false;
         }
         return true;
