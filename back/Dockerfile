@@ -23,8 +23,10 @@ RUN go build -o main .
 FROM alpine:3.19
 
 # 设置上海时区
-COPY zoneinfo /etc/localtime
-RUN echo "Asia/Shanghai" > /etc/timezone
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
+    apk add --no-cache tzdata && \
+    ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+    echo "Asia/Shanghai" > /etc/timezone
 
 # 设置工作目录
 WORKDIR /app
