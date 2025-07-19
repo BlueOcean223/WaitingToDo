@@ -2,6 +2,7 @@ package configs
 
 import (
 	"gopkg.in/yaml.v3"
+	"log"
 	"os"
 )
 
@@ -29,4 +30,43 @@ func InitConfig(configPath string) error {
 	}
 
 	return nil
+}
+
+func init() {
+	// 加载配置文件
+	err := InitConfig("config.yaml")
+	if err != nil {
+		log.Fatalf("加载配置文件失败: %v", err)
+	}
+	// 如果有本地配置文件，则覆盖
+	if _, err := os.Stat("config.local.yaml"); err == nil {
+		err = InitConfig("config.local.yaml")
+		if err != nil {
+			log.Fatalf("加载本地配置文件失败: %v", err)
+		}
+	}
+
+	// 连接mysql
+	err = InitMysqlConnection()
+	if err != nil {
+		log.Fatalf("数据库连接异常: %v", err)
+	}
+
+	// 连接Redis
+	err = InitRedisClient()
+	if err != nil {
+		log.Fatalf("Redis连接异常: %v", err)
+	}
+
+	// 连接Minio
+	err = InitMinioClient()
+	if err != nil {
+		log.Fatalf("Minio连接异常: %v", err)
+	}
+
+	// 连接RabbitMQ
+	err = InitRabbitMQ()
+	if err != nil {
+		log.Fatalf("RabbitMQ连接异常: %v", err)
+	}
 }
