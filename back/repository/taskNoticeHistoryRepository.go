@@ -44,3 +44,12 @@ func (s *TaskNoticeHistoryRepository) GetHistoriesByTaskIds(taskIds []int) ([]mo
 
 	return taskNoticeHistories, err
 }
+
+// DeleteHistoryByTaskId 根据任务ID删除任务通知历史
+func (s *TaskNoticeHistoryRepository) DeleteHistoryByTaskId(taskId int, tx *gorm.DB) error {
+	db := s.Db
+	if tx != nil {
+		db = tx
+	}
+	return db.Where("task_id = ?", taskId).Delete(&models.TaskNoticeHistory{}).Error
+}

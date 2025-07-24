@@ -119,14 +119,58 @@ func (s *TaskService) AddTask(email string, taskVo vo.TaskVo) (models.Task, erro
 
 // UpdateTask 更新任务
 func (s *TaskService) UpdateTask(taskVo vo.TaskVo) error {
-	return s.taskRepository.Update(models.Task{
+	// 开启事务
+	tx := configs.MysqlDb.Begin()
+
+	// 更新任务
+	err := s.taskRepository.Update(models.Task{
 		Id:          taskVo.Id,
 		Title:       taskVo.Title,
 		Description: taskVo.Description,
 		Ddl:         taskVo.Ddl,
 		Type:        taskVo.Type,
 		Status:      taskVo.Status,
-	}, nil)
+	}, tx)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// 更新任务通知表
+	layout := "2006-01-02T15:04:05.000Z"
+	ddl, err := time.Parse(layout, taskVo.Ddl)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	now := time.Now()
+
+	// 如果ddl比当前时间大于等于一天，则删除通知历史,需要重新通知
+	if ddl.Sub(now).Hours() >= 24 {
+		// 查询该任务是否有通知过
+		taskNoticeHistoryRepo := repository.NewTaskNoticeHistoryRepository(configs.MysqlDb)
+		history, err := taskNoticeHistoryRepo.GetHistoryByTaskId(taskVo.Id)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+		// 如果有通知历史，则删除
+		if history != (models.TaskNoticeHistory{}) {
+			err = taskNoticeHistoryRepo.DeleteHistoryByTaskId(taskVo.Id, tx)
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+		}
+	}
+
+	// 提交事务
+	if err = tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
 }
 
 // DeleteTask 删除任务
@@ -248,9 +292,9 @@ func TickerNotify() {
 	)
 
 	// 测试使用一分钟
-	ticker := time.NewTicker(1 * time.Minute)
+	// ticker := time.NewTicker(1 * time.Minute)
 	// 使用一小时的定时器
-	//ticker := time.NewTicker(1 * time.Hour)
+	ticker := time.NewTicker(1 * time.Hour)
 	defer ticker.Stop()
 
 	for range ticker.C {
