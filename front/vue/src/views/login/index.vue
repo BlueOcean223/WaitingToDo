@@ -514,10 +514,9 @@ export default{
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 97.8vh;
-  background-image: url('@/assets/sysuBackground.png');
-  background-size: cover;
-  background-position: center;
+  position: fixed;
+  inset: 0;
+  background: url('@/assets/sysuBackground.png')  center/cover no-repeat fixed;
 }
 
 .login-box {
@@ -568,4 +567,5 @@ export default{
   margin-left: 10px;
   width: 120px;
 }
+
 </style>

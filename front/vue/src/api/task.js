@@ -70,3 +70,19 @@ export function completeTeamTask(data){
 export function inviteMember(data){
     return api.post('/task/team/invite', data)
 }
+
+// 获取小组任务邀请码
+export function getTeamTaskInviteCode(taskId) {
+    return api.get('/task/team/inviteCode', {
+        params: {
+            taskId: taskId
+        }
+    })
+}
+
+// 根据邀请码加入小组
+export function joinTeamByCode(inviteCode) {
+    return api.post('/task/team/codejoin', {
+        inviteCode: inviteCode
+    })
+}

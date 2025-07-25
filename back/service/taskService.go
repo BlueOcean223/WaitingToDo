@@ -6,6 +6,7 @@ import (
 	"back/models/dto"
 	"back/models/vo"
 	"back/repository"
+	"back/utils/captcha"
 	"back/utils/minioContent"
 	"back/utils/myError"
 	"back/utils/redisContent"
@@ -28,19 +29,22 @@ type TaskService struct {
 	taskRepository     *repository.TaskRepository
 	teamTaskRepository *repository.TeamTaskRepository
 	fileRepository     *repository.FileRepository
+	inviteCodeRepo     *repository.InviteCodeRepository
 }
 
 func NewTaskService(authRepository *repository.AuthRepository,
 	messageRepository *repository.MessageRepository,
 	taskRepository *repository.TaskRepository,
 	teamTaskRepository *repository.TeamTaskRepository,
-	fileRepository *repository.FileRepository) *TaskService {
+	fileRepository *repository.FileRepository,
+	inviteCodeRepo *repository.InviteCodeRepository) *TaskService {
 	return &TaskService{
 		authRepository:     authRepository,
 		messageRepository:  messageRepository,
 		taskRepository:     taskRepository,
 		teamTaskRepository: teamTaskRepository,
 		fileRepository:     fileRepository,
+		inviteCodeRepo:     inviteCodeRepo,
 	}
 }
 
@@ -548,6 +552,13 @@ func (s *TaskService) DeleteTeamTask(taskId, userId int) error {
 			tx.Rollback()
 			return err
 		}
+
+		// 删除小组的邀请码
+		err = s.inviteCodeRepo.DeleteByTaskId(taskId, tx)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
 	}
 
 	if err = tx.Commit().Error; err != nil {
@@ -581,6 +592,107 @@ func (s *TaskService) AddTeamTask(task models.Task) error {
 	// 提交事务
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
+		return err
+	}
+
+	// 生成邀请码，使用goroutine完成
+	go s.GenerateInviteCode(task.Id)
+
+	return nil
+}
+
+// GenerateInviteCode 生成邀请码
+func (s *TaskService) GenerateInviteCode(taskId int) {
+	// 邀请码
+	code := captcha.GenerateInviteCode()
+
+retry:
+	for {
+		// 检查邀请码是否已存在
+		inviteCode, err := s.inviteCodeRepo.GetByInviteCode(code)
+		if err != nil {
+			log.Println("检查验证码失败:", err)
+			continue
+		}
+
+		// 验证码不存在，则结束循环
+		if inviteCode == (models.InviteCode{}) {
+			break
+		} else {
+			// 验证码存在，重新生成
+			code = captcha.GenerateInviteCode()
+		}
+	}
+
+	// 插入数据库
+	inviteCode := models.NewInviteCode(taskId, code)
+	err := s.inviteCodeRepo.Insert(inviteCode, nil)
+	if err != nil {
+		log.Println("插入邀请码失败:", err)
+
+		// 休眠，然后重新尝试
+		time.Sleep(30 * time.Second)
+		goto retry
+	}
+}
+
+// GetInviteCodeByTaskId 根据任务ID获取邀请码
+func (s *TaskService) GetInviteCodeByTaskId(taskId int) (string, error) {
+	// 查询邀请码
+	inviteCode, err := s.inviteCodeRepo.GetByTaskId(taskId)
+	if err != nil {
+		return "", err
+	}
+
+	// 如果没有邀请码
+	if inviteCode == (models.InviteCode{}) {
+		return "暂无邀请码", nil
+	}
+
+	return inviteCode.InviteCode, nil
+}
+
+// JoinTeamTaskByInviteCode 根据邀请码加入小组任务
+func (s *TaskService) JoinTeamTaskByInviteCode(email, inviteCode string) error {
+	// 根据邮箱查询用户
+	user, err := s.authRepository.SelectUserByEmail(email)
+	if err != nil {
+		log.Println("加入小组任务失败: ", err)
+		return err
+	}
+
+	// 根据邀请码查询小组任务ID
+	inviteCodeRecord, err := s.inviteCodeRepo.GetByInviteCode(inviteCode)
+	if err != nil {
+		log.Println("查询邀请码失败: ", err)
+		return err
+	}
+	// 如果没有查询到邀请码
+	if inviteCodeRecord == (models.InviteCode{}) {
+		return myError.NewMyError("邀请码不存在")
+	}
+
+	// 检查该用户是否已经加入了该小组任务
+	teamTaskMembers, err := s.teamTaskRepository.GetTeamMembers(inviteCodeRecord.TaskId)
+	if err != nil {
+		log.Println("检查用户是否加入小组失败: ", err)
+		return err
+	}
+	for _, member := range teamTaskMembers {
+		if member.Id == user.Id {
+			return myError.NewMyError("您已经加入了该小组任务")
+		}
+	}
+
+	// 插入小组任务关系表
+	teamTask := models.TeamTask{
+		TaskId: inviteCodeRecord.TaskId,
+		UserId: user.Id,
+		Status: 0,
+	}
+	err = s.teamTaskRepository.Insert(teamTask, nil)
+	if err != nil {
+		log.Println("插入小组任务关系失败: ", err)
 		return err
 	}
 

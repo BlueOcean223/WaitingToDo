@@ -1,6 +1,11 @@
 <template>
   <Navbar :activeIndex="$route.path" />
   <div class="team-page">
+    <div class="header">
+      <div></div>
+      <el-button type="primary" @click="showJoinGroup = true">加入小组</el-button>
+    </div>
+
     <div class="task-list">
       <TeamTask 
         v-for="task in tasks" 
@@ -23,7 +28,6 @@
     >
       <el-icon><Plus /></el-icon>
     </el-button>
-    
     <!-- 添加任务模态框 -->
     <el-dialog v-model="showAddTask" title="添加任务" width="500px">
       <el-form 
@@ -63,6 +67,19 @@
 
     <!-- 邀请成员对话框 -->
     <el-dialog v-model="inviteVisible" title="邀请好友加入小组任务" width="35%" @close="handleInviteClear">
+      <!-- 邀请码部分 -->
+      <div class="invite-code-section">
+        <div class="invite-code-display">
+          <span>小组邀请码：</span>
+          <span class="invite-code">{{ currentInviteCode }}</span>
+          <el-button type="primary" size="small" @click="copyInviteCode">
+            复制
+          </el-button>
+        </div>
+      </div>
+      
+      <el-divider>或者直接邀请好友</el-divider>
+      
       <div class="invite-results">
         <div class="invite-card" v-for="friend in friends" :key="friend.id">
           <el-avatar :size="50" :src="picBaseUrl + friend.pic" />
@@ -82,6 +99,28 @@
       <div class="friends-null" v-if="friendsNull">您暂时没有好友可以邀请！</div>
     </el-dialog>
 
+    <!-- 加入小组对话框 -->
+    <el-dialog v-model="showJoinGroup" title="加入小组" width="400px">
+      <el-form :model="joinGroupForm" ref="joinGroupFormRef" :rules="joinGroupRules">
+        <el-form-item 
+          label="邀请码" 
+          prop="inviteCode"
+        >
+          <el-input 
+            v-model="joinGroupForm.inviteCode" 
+            placeholder="请输入邀请码"
+            maxlength="6"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showJoinGroup = false">取消</el-button>
+          <el-button type="primary" @click="handleJoinGroup">加入</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
   </div>
 
   <!-- 确认操作弹窗 -->
@@ -94,14 +133,13 @@
 
 <script setup name="TeamPage">
 import { ref,onMounted,onBeforeUnmount } from 'vue'
-import { Plus } from '@element-plus/icons-vue'
 import TeamTask from '@/components/TeamTask.vue'
 import Navbar from '@/components/Navbar.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { getFriendList } from '@/api/friend'
-import { getTeamTaskList, removeTeamTask, addTeamTask, completeTeamTask, inviteMember } from '@/api/task'
+import { getTeamTaskList, removeTeamTask, addTeamTask, completeTeamTask, inviteMember,getTeamTaskInviteCode,joinTeamByCode } from '@/api/task'
 
 // 分页相关数据
 const loading = ref(false)
@@ -150,6 +188,22 @@ const inviteVisible = ref(false)
 const friends = ref([])
 const friendsNull = ref(false)
 const inviteTaskId = ref(0)
+const currentInviteCode = ref('')
+
+// 加入小组相关数据
+const showJoinGroup = ref(false)
+const joinGroupForm = ref({
+  inviteCode: ''
+})
+const joinGroupFormRef = ref(null)
+
+// 加入小组表单验证规则
+const joinGroupRules = {
+  inviteCode: [
+    { required: true, message: '请输入邀请码', trigger: 'blur' },
+    { pattern: /^[A-Za-z0-9]{6}$/, message: '邀请码必须是6位字母数字组合', trigger: 'blur' }
+  ]
+}
 
 // 滚动事件监听
 const handleScroll = () => {
@@ -158,6 +212,7 @@ const handleScroll = () => {
     fetchTasks()
   }
 }
+
 
 // 获取任务列表
 const fetchTasks = async () => {
@@ -185,10 +240,59 @@ const fetchTasks = async () => {
   }
 }
 
+
+// 复制邀请码
+const copyInviteCode = () => {
+  navigator.clipboard.writeText(currentInviteCode.value)
+    .then(() => {
+      ElMessage.success('邀请码已复制到剪贴板')
+    })
+    .catch(() => {
+      ElMessage.error('复制失败，请手动复制')
+    })
+}
+
+// 处理加入小组
+const handleJoinGroup = async () => {
+  if (!joinGroupForm.value.inviteCode) {
+    ElMessage.warning('请输入邀请码')
+    return
+  }
+  
+  try{
+    // 验证邀请码格式
+    await joinGroupFormRef.value.validateField('inviteCode')
+
+    // 加入小组
+    const res = await joinTeamByCode(joinGroupForm.value.inviteCode)
+    if (res.data.status === 1) {
+      ElMessage.success('成功加入小组')
+      showJoinGroup.value = false
+      joinGroupForm.value.inviteCode = ''
+      // 重新加载任务列表
+      currentPage.value = 1
+      tasks.value = []
+      fetchTasks()
+    } else {
+      ElMessage.error(res.data.message || '加入失败')
+    }
+  } catch (error) {
+    ElMessage.error('表单填写格式不正确')
+  }
+}
+
 // 显示邀请对话框
 const handleInviteMember = async (taskId) => {
   inviteVisible.value = true
   inviteTaskId.value = taskId
+
+  // 获取当前任务的邀请码
+  const res0 = await getTeamTaskInviteCode(taskId)
+  if(res0.data.status === 1) {
+    currentInviteCode.value = res0.data.data
+  } else {
+    currentInviteCode.value = '加载邀请码失败'
+  }
 
   // 加载好友数据
   const res = await getFriendList(userStore.userInfo.id)
@@ -378,6 +482,38 @@ onBeforeUnmount(() => {
   padding: 20px;
   color: #999;
   font-size: 14px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.invite-code-section {
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 20px;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+}
+
+.invite-code-display {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.invite-code {
+  font-size: 18px;
+  font-weight: bold;
+  color: #409eff;
+  padding: 8px 16px;
+  background-color: #ecf5ff;
+  border-radius: 4px;
 }
 
 .invite-results {

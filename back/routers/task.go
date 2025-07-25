@@ -15,8 +15,10 @@ func SetTaskRoutes(r *gin.Engine) {
 	taskRepository := repository.NewTaskRepository(configs.MysqlDb)
 	teamTaskRepo := repository.NewTeamTaskRepository(configs.MysqlDb)
 	fileRepository := repository.NewFileRepository(configs.MysqlDb)
+	inviteCodeRepository := repository.NewInviteCodeRepository(configs.MysqlDb)
 
-	taskService := service.NewTaskService(authRepository, messageRepository, taskRepository, teamTaskRepo, fileRepository)
+	taskService := service.NewTaskService(authRepository, messageRepository, taskRepository,
+		teamTaskRepo, fileRepository, inviteCodeRepository)
 
 	taskController := controllers.NewTaskController(taskService)
 
@@ -42,5 +44,9 @@ func SetTaskRoutes(r *gin.Engine) {
 		task.PUT("/team/complete", taskController.CompleteTeamTask)
 		// 邀请成员
 		task.POST("/team/invite", taskController.InviteTeamMember)
+		// 获取小组任务邀请码
+		task.GET("/team/inviteCode", taskController.GetInviteCode)
+		// 通过邀请码加入小组任务
+		task.POST("/team/codejoin", taskController.JoinTeamByInviteCode)
 	}
 }

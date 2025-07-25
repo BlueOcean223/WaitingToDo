@@ -254,3 +254,46 @@ func (s *TaskController) InviteTeamMember(c *gin.Context) {
 
 	c.JSON(http.StatusOK, models.Success("", "发送邀请成功", nil))
 }
+
+// GetInviteCode 获取小组任务邀请码
+func (s *TaskController) GetInviteCode(c *gin.Context) {
+	taskId, err := strconv.Atoi(c.Query("taskId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
+		return
+	}
+
+	inviteCode, err := s.taskService.GetInviteCodeByTaskId(taskId)
+	if err != nil {
+		c.JSON(http.StatusOK, models.Fail("", err.Error(), nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success("", "查询成功", inviteCode))
+}
+
+// JoinTeamByInviteCode 通过邀请码加入小组任务
+func (s *TaskController) JoinTeamByInviteCode(c *gin.Context) {
+	type temp struct {
+		InviteCode string `json:"inviteCode"`
+	}
+	var inviteCodeVo temp
+	if err := c.ShouldBind(&inviteCodeVo); err != nil {
+		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
+		return
+	}
+
+	email, err := jwt.GetUserFromToken(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, models.Fail("", "令牌无效", nil))
+		return
+	}
+
+	err = s.taskService.JoinTeamTaskByInviteCode(email, inviteCodeVo.InviteCode)
+	if err != nil {
+		c.JSON(http.StatusOK, models.Fail("", err.Error(), nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success("", "加入小组任务成功", nil))
+}
