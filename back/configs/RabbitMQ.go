@@ -2,6 +2,11 @@ package configs
 
 import "github.com/rabbitmq/amqp091-go"
 
+const (
+	FriendRequestQueue = "friend_request"
+	TeamRequestQueue   = "team_request"
+)
+
 type RabbitMQQueueConfig struct {
 	Name       string `yaml:"name"`
 	RoutingKey string `yaml:"routing_key"`
