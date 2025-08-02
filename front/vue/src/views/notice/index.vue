@@ -17,8 +17,6 @@
     </div>
     
     <div class="message-list">
-      <div class="loading" v-if="loading">加载中...</div>
-      <div class="no-more" v-if="!hasMore">没有更多消息了</div>
       <el-card
         v-for="message in messages"
         :key="message.id"
@@ -64,6 +62,8 @@
           </template>
         </div>
       </el-card>
+      <div class="loading" v-if="loading">加载中...</div>
+      <div class="no-more" v-if="!hasMore">没有更多消息了</div>
     </div>
   </div>
 
@@ -146,7 +146,7 @@ const showFriendInfo = ref(true)
 // 滚动事件监听
 const handleScroll = () => {
   const { scrollTop, scrollHeight, clientHeight } = document.documentElement
-  if (scrollTop + clientHeight >= scrollHeight - 100 && !loading && hasMore) {
+  if (scrollTop + clientHeight >= scrollHeight - 100 && !loading.value && hasMore.value) {
     fetchMessages()
   }
 }
