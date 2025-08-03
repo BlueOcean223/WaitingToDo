@@ -295,9 +295,9 @@ func TickerNotify() {
 	)
 
 	// 测试使用一分钟
-	// ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(1 * time.Minute)
 	// 使用一小时的定时器
-	ticker := time.NewTicker(1 * time.Hour)
+	// ticker := time.NewTicker(1 * time.Hour)
 	defer ticker.Stop()
 
 	for range ticker.C {
@@ -313,9 +313,9 @@ func TickerNotify() {
 		}
 
 		// 2. 批量获取需要通知的任务(过滤已通知的)
-		taskIds := make([]int, 0, len(tasks))
-		for _, task := range tasks {
-			taskIds = append(taskIds, task.Id)
+		taskIds := make([]int, len(tasks))
+		for i, task := range tasks {
+			taskIds[i] = task.Id
 		}
 
 		notifiedTasks, err := taskNoticeHistoryRepo.GetHistoriesByTaskIds(taskIds)
@@ -381,8 +381,12 @@ func TickerNotify() {
 			userMap[user.Id] = user
 		}
 
+		// 记录已经通知的任务
+		var notifiedTaskIds []int
+
 		// 4. 并发发送邮件并记录历史
 		var wg sync.WaitGroup
+		var mu sync.Mutex
 		for _, task := range tasksToNotify {
 			user, ok := userMap[task.UserId]
 			if !ok {
@@ -413,16 +417,30 @@ func TickerNotify() {
 					return
 				}
 
-				// 记录通知历史
-				if err := taskNoticeHistoryRepo.Insert(models.TaskNoticeHistory{
-					TaskId: task.Id,
-				}, nil); err != nil {
-					log.Printf("记录通知历史失败: %v", err)
-				}
+				mu.Lock()
+				// 记录已经通知的任务
+				notifiedTaskIds = append(notifiedTaskIds, task.Id)
+				mu.Unlock()
 			}(task, user)
 		}
 		// 等待所有任务完成
 		wg.Wait()
+
+		// 批量插入已经通知的任务记录，避免 N+1 问题
+		if len(notifiedTaskIds) > 0 {
+			histories := make([]models.TaskNoticeHistory, len(notifiedTaskIds))
+			for i, taskId := range notifiedTaskIds {
+				histories[i] = models.TaskNoticeHistory{
+					TaskId:     taskId,
+					CreateTime: time.Now().Format("2006-01-02 15:04:05"),
+					UpdateTime: time.Now().Format("2006-01-02 15:04:05"),
+				}
+			}
+
+			if err := taskNoticeHistoryRepo.BatchInsert(histories, nil); err != nil {
+				log.Printf("记录通知历史失败：%v", err)
+			}
+		}
 	}
 }
 
@@ -433,9 +451,10 @@ func (s *TaskService) GetTeamTaskList(userId, page, pageSize int) ([]dto.TeamTas
 	if err != nil {
 		return nil, err
 	}
-	var taskIds []int
-	for _, teamTask := range teamTaskList {
-		taskIds = append(taskIds, teamTask.TaskId)
+
+	taskIds := make([]int, len(teamTaskList))
+	for i, teamTask := range teamTaskList {
+		taskIds[i] = teamTask.TaskId
 	}
 
 	// 查询任务列表

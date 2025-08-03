@@ -53,3 +53,14 @@ func (s *TaskNoticeHistoryRepository) DeleteHistoryByTaskId(taskId int, tx *gorm
 	}
 	return db.Where("task_id = ?", taskId).Delete(&models.TaskNoticeHistory{}).Error
 }
+
+// BatchInsert 批量插入任务通知历史
+func (s *TaskNoticeHistoryRepository) BatchInsert(taskNoticeHistories []models.TaskNoticeHistory, tx *gorm.DB) error {
+	db := s.Db
+	if tx != nil {
+		db = tx
+	}
+
+	// 批量插入，每次最大一百条
+	return db.CreateInBatches(taskNoticeHistories, 100).Error
+}

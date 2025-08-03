@@ -2,8 +2,9 @@ package repository
 
 import (
 	"back/models"
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type TaskRepository struct {
@@ -16,36 +17,30 @@ func NewTaskRepository(db *gorm.DB) *TaskRepository {
 
 // GetList 分页查询
 func (s *TaskRepository) GetList(userId, page, pageSize, myType int, status *int) ([]models.Task, int64, error) {
+	// 构建基础查询
+	query := s.db.Model(&models.Task{}).Where("user_id = ? and type = ?", userId, myType)
+
 	if status != nil {
-		// 计算偏移量
-		offset := (page - 1) * pageSize
-		// 查询总数
-		var count int64
-		err := s.db.Model(&models.Task{}).Where("user_id = ? and type = ? and status = ?", userId, myType, *status).
-			Count(&count).Error
-
-		var taskList []models.Task
-		// 分页查询
-		err = s.db.Where("user_id = ? and type = ? and status = ?", userId, myType, *status).
-			Order("ddl desc").Offset(offset).Limit(pageSize).Find(&taskList).Error
-		if err != nil {
-			return nil, 0, err
-		}
-		return taskList, count, nil
+		query = query.Where("status = ?", *status)
 	}
-	// 计算偏移量
-	offset := (page - 1) * pageSize
-	// 查询总数
-	var count int64
-	err := s.db.Model(&models.Task{}).Where("user_id = ? and type = ?", userId, myType).Count(&count).Error
 
-	var taskList []models.Task
-	// 分页查询
-	err = s.db.Where("user_id = ? and type = ?", userId, myType).Order("ddl desc").Offset(offset).Limit(pageSize).Find(&taskList).Error
+	// 先获取总数
+	var count int64
+	err := query.Count(&count).Error
 	if err != nil {
 		return nil, 0, err
 	}
-	return taskList, count, nil
+
+	// 如果没有数据，直接返回
+	if count == 0 {
+		return []models.Task{}, 0, nil
+	}
+
+	// 分页查询
+	offset := (page - 1) * pageSize
+	var taskList []models.Task
+	err = query.Order("ddl desc").Offset(offset).Limit(pageSize).Find(&taskList).Error
+	return taskList, count, err
 }
 
 // Create 新增任务

@@ -1,13 +1,13 @@
 package models
 
 type Message struct {
-	Id          int    `json:"id"`
+	Id          int    `json:"id" gorm:"primaryKey"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
-	FromId      int    `json:"from_id"`
-	ToId        int    `json:"to_id"`
-	Type        int    `json:"type"` // 0普通消息，1好友请求，2组队邀请
-	SendTime    string `json:"send_time"`
+	FromId      int    `json:"from_id" gorm:"index"`
+	ToId        int    `json:"to_id" gorm:"index:idx_to_read;index:idx_to_time"`
+	Type        int    `json:"type"`
+	SendTime    string `json:"send_time" gorm:"index:idx_to_time,priority:2"`
 	OutId       int    `json:"out_id"`
-	IsRead      int    `json:"is_read"` //0为未读，1为已读
+	IsRead      int    `json:"is_read" gorm:"index:idx_to_read,priority:2"`
 }
