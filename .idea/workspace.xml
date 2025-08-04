@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="4022ab68-4cae-4e7f-96d6-9f5f5a5cc1cd" name="更改" comment="update" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Dockerfile" />
+        <option value="Go File" />
+      </list>
+    </option>
+  </component>
+  <component name="GOROOT" url="file://$PROJECT_DIR$/../../../Go" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;BlueOcean223&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;git@github.com:BlueOcean223/WaitingToDo.git&quot;,
+    &quot;accountId&quot;: &quot;a216f061-2f79-415a-bd05-0ac6d560977a&quot;
+  }
+}</component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7
+}</component>
+  <component name="ProjectId" id="2wxLI7UJLMMXT7JQGtWCmMANVtO" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultGoTemplateProperty&quot;: &quot;Go File&quot;,
+    &quot;Go 构建.go build back.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.back/utils/captcha 中的 TestGenerateCaptcha.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.back/utils/captcha 中的 TestGenerateInviteCode.executor&quot;: &quot;Debug&quot;,
+    &quot;Go 测试.back/utils/fileUtil 中的 TestGetFileMD5.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.back/utils/hashPassword 中的 TestHashPassword.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.GoLinterPluginOnboarding&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.GoLinterPluginStorageMigration&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
+    &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/code/GithubProject/WaitingToDo&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\code\GithubProject\WaitingToDo\back\utils\redisContent" />
+      <recent name="D:\code\GithubProject\WaitingToDo\back\utils\myError" />
+      <recent name="D:\code\GithubProject\WaitingToDo\back\utils\minioContent" />
+      <recent name="D:\code\GithubProject\WaitingToDo\back\utils\jwt" />
+      <recent name="D:\code\GithubProject\WaitingToDo\back\utils\hashPassword" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Go 构建.go build back">
+    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
+      <module name="WaitingToDo" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="FILE" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go build back" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+      <module name="WaitingToDo" />
+      <working_directory value="$PROJECT_DIR$/back" />
+      <kind value="PACKAGE" />
+      <package value="back" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/back/main.go" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
+      <module name="WaitingToDo" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="DIRECTORY" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
+    <configuration name="back/utils/captcha 中的 TestGenerateCaptcha" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="WaitingToDo" />
+      <working_directory value="$PROJECT_DIR$/back/utils/captcha" />
+      <root_directory value="$PROJECT_DIR$/back" />
+      <kind value="PACKAGE" />
+      <package value="back/utils/captcha" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestGenerateCaptcha\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="back/utils/captcha 中的 TestGenerateInviteCode" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="WaitingToDo" />
+      <working_directory value="$PROJECT_DIR$/back/utils/captcha" />
+      <root_directory value="$PROJECT_DIR$/back" />
+      <kind value="PACKAGE" />
+      <package value="back/utils/captcha" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestGenerateInviteCode\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="back/utils/fileUtil 中的 TestGetFileMD5" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="WaitingToDo" />
+      <working_directory value="$PROJECT_DIR$/back/utils/fileUtil" />
+      <root_directory value="$PROJECT_DIR$/back" />
+      <kind value="PACKAGE" />
+      <package value="back/utils/fileUtil" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestGetFileMD5\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="back/utils/hashPassword 中的 TestHashPassword" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="WaitingToDo" />
+      <working_directory value="$PROJECT_DIR$/back/utils/hashPassword" />
+      <root_directory value="$PROJECT_DIR$/back" />
+      <kind value="PACKAGE" />
+      <package value="back/utils/hashPassword" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestHashPassword\E$" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go 构建.go build back" />
+        <item itemvalue="Go 测试.back/utils/captcha 中的 TestGenerateInviteCode" />
+        <item itemvalue="Go 测试.back/utils/hashPassword 中的 TestHashPassword" />
+        <item itemvalue="Go 测试.back/utils/fileUtil 中的 TestGetFileMD5" />
+        <item itemvalue="Go 测试.back/utils/captcha 中的 TestGenerateCaptcha" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-gosdk-3b128438d3f6-07d2d2d66b1e-org.jetbrains.plugins.go.sharedIndexes.bundled-GO-251.27812.54" />
+        <option value="bundled-js-predefined-d6986cc7102b-09060db00ec0-JavaScript-GO-251.27812.54" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="应用程序级" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="默认任务">
+      <changelist id="4022ab68-4cae-4e7f-96d6-9f5f5a5cc1cd" name="更改" comment="修复消息加载bug" />
+      <created>1754149695198</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1754149695198</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="nginx.conf" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="修改配置文件的覆盖逻辑" />
+    <MESSAGE value="修复添加好友的bug" />
+    <MESSAGE value="为docker容器设置上海时区" />
+    <MESSAGE value="修改验证码检测规则bug" />
+    <MESSAGE value="修复小组任务组长退出后仍有提示的bug" />
+    <MESSAGE value="补充小组任务通知即将到ddl功能" />
+    <MESSAGE value="修改配置" />
+    <MESSAGE value="添加临时关闭展示好友信息功能" />
+    <MESSAGE value="添加刷新令牌功能" />
+    <MESSAGE value="添加预览好友头像功能" />
+    <MESSAGE value="添加查看任务详情，修改小组任务详情显示" />
+    <MESSAGE value="固定截止提醒区的长度" />
+    <MESSAGE value="部分修改" />
+    <MESSAGE value="新增任务添加附件功能" />
+    <MESSAGE value="修改文件上传限制" />
+    <MESSAGE value="延长新令牌时间" />
+    <MESSAGE value="增加数据库表自动迁移" />
+    <MESSAGE value="修改时区设置" />
+    <MESSAGE value="修改配置初始化" />
+    <MESSAGE value="修复推迟任务时间后，不再通知ddl到期的bug" />
+    <MESSAGE value="添加使用邀请码加入小组功能" />
+    <MESSAGE value="统一管理消费者" />
+    <MESSAGE value="修复消息加载bug" />
+    <MESSAGE value="优化mysql相关部分" />
+    <MESSAGE value="update" />
+    <option name="LAST_COMMIT_MESSAGE" value="update" />
+  </component>
+  <component name="VgoProject">
+    <settings-migrated>true</settings-migrated>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <default-breakpoints>
+        <breakpoint type="DlvErrorBreakpoint" />
+      </default-breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>
