@@ -28,7 +28,7 @@ func (s *TeamTaskRepository) Update(teamTask models.TeamTask, tx *gorm.DB) error
 	if tx != nil {
 		Db = tx
 	}
-	return Db.Save(&teamTask).Error
+	return Db.Model(&teamTask).Updates(teamTask).Error
 }
 
 // GetList 分页查询

@@ -430,11 +430,7 @@ func TickerNotify() {
 		if len(notifiedTaskIds) > 0 {
 			histories := make([]models.TaskNoticeHistory, len(notifiedTaskIds))
 			for i, taskId := range notifiedTaskIds {
-				histories[i] = models.TaskNoticeHistory{
-					TaskId:     taskId,
-					CreateTime: time.Now().Format("2006-01-02 15:04:05"),
-					UpdateTime: time.Now().Format("2006-01-02 15:04:05"),
-				}
+				histories[i] = models.TaskNoticeHistory{TaskId: taskId}
 			}
 
 			if err := taskNoticeHistoryRepo.BatchInsert(histories, nil); err != nil {

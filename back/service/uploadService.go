@@ -193,11 +193,9 @@ func (s *UploadService) UploadFile(id int, files []*multipart.FileHeader) error 
 
 		// 插入数据库
 		fileDb := models.File{
-			TaskId:     id,
-			Name:       fileHeader.Filename,
-			Url:        "/" + minioContent.FilesBucket + "/" + objectName,
-			CreateTime: time.Now().Format("2006-01-02 15:04:05"),
-			UpdateTime: time.Now().Format("2006-01-02 15:04:05"),
+			TaskId: id,
+			Name:   fileHeader.Filename,
+			Url:    "/" + minioContent.FilesBucket + "/" + objectName,
 		}
 		err = s.fileRepository.Insert(fileDb, nil)
 		if err != nil {

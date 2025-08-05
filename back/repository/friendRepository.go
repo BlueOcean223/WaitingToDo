@@ -49,7 +49,7 @@ func (s *FriendRepository) UpdateFriend(friend models.Friend, tx *gorm.DB) error
 	if tx != nil {
 		db = tx
 	}
-	return db.Save(&friend).Error
+	return db.Model(&friend).Updates(&friend).Error
 }
 
 // DeleteFriend 删除好友关系

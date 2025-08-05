@@ -60,5 +60,5 @@ func (s *AuthRepository) UpdateUser(user models.User, tx *gorm.DB) error {
 	if tx != nil {
 		db = tx
 	}
-	return db.Save(&user).Error
+	return db.Model(&user).Updates(user).Error
 }

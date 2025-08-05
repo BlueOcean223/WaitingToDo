@@ -3,11 +3,11 @@ package models
 import "time"
 
 type InviteCode struct {
-	Id         int    `json:"id"`
-	TaskId     int    `json:"task_id"`
-	InviteCode string `json:"invite_code"`
-	CreateTime string `json:"create_time"`
-	UpdateTime string `json:"update_time"`
+	Id         int       `json:"id"`
+	TaskId     int       `json:"task_id"`
+	InviteCode string    `json:"invite_code"`
+	CreateTime time.Time `json:"create_time" gorm:"autoCreateTime"`
+	UpdateTime time.Time `json:"update_time" gorm:"autoUpdateTime"`
 }
 
 func (ic *InviteCode) TableName() string {
@@ -18,7 +18,5 @@ func NewInviteCode(taskId int, inviteCode string) *InviteCode {
 	return &InviteCode{
 		TaskId:     taskId,
 		InviteCode: inviteCode,
-		CreateTime: time.Now().Format(time.DateTime),
-		UpdateTime: time.Now().Format(time.DateTime),
 	}
 }
