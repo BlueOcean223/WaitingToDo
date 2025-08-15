@@ -2,13 +2,13 @@ package service
 
 import (
 	"back/configs"
+	"back/middlewares/jwt"
 	"back/models"
 	"back/models/dto"
 	"back/models/vo"
 	"back/repository"
 	"back/utils/captcha"
 	"back/utils/hashPassword"
-	"back/utils/jwt"
 	"back/utils/myError"
 	"back/utils/redisContent"
 	"context"

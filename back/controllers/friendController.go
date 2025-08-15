@@ -5,7 +5,6 @@ import (
 	"back/models/dto"
 	"back/models/vo"
 	"back/service"
-	"back/utils/jwt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -61,11 +60,7 @@ func (s *FriendController) GetFriendList(c *gin.Context) {
 func (s *FriendController) SearchUserByEmail(c *gin.Context) {
 	searchEmail := c.Query("email")
 	// 获取用户邮箱
-	userEmail, err := jwt.GetUserFromToken(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, models.Fail("", "令牌无效", nil))
-		return
-	}
+	userEmail := c.GetString("user")
 
 	user, err := s.friendService.SearchUserByEmail(userEmail, searchEmail)
 	if err != nil {

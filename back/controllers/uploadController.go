@@ -3,7 +3,6 @@ package controllers
 import (
 	"back/models"
 	"back/service"
-	"back/utils/jwt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -28,11 +27,7 @@ func (s *UploadController) UploadImg(c *gin.Context) {
 		return
 	}
 
-	email, err := jwt.GetUserFromToken(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, models.Fail("", err.Error(), nil))
-		return
-	}
+	email := c.GetString("user")
 
 	// 上传文件，并获取url
 	url, err := s.uploadService.UploadImg(email, file)

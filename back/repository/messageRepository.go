@@ -36,7 +36,7 @@ func (s *MessageRepository) GetMessageList(page, pageSize, userId int) ([]models
 
 	var messages []models.Message
 	// 分页查询
-	err := s.Db.Where("to_id = ?", userId).Order("send_time desc").
+	err := s.Db.Where("to_id = ?", userId).Order("send_time desc, id").
 		Offset(offset).Limit(pageSize).Find(&messages).Error
 	return messages, err
 }

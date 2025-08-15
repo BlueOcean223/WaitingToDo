@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"log"
@@ -35,28 +36,43 @@ func GenerateToken(name string, duration time.Duration) (string, error) {
 
 // ParseToken 解析并验证JWT令牌
 func ParseToken(tokenString string) (*CustomClaims, error) {
+	if tokenString == "" {
+		return nil, errors.New("token不能为空")
+	}
 	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+		// 校验签名方法是否正确
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("意外的签名方法: %v", token.Header["alg"])
+		}
 		return JWTKey, nil
 	})
+
+	if err != nil {
+		return nil, err
+	}
+	// 防止token为空，触发panic
+	if token == nil {
+		return nil, errors.New("无效的token")
+	}
 
 	if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
 		return claims, nil
 	} else {
-		return nil, err
+		return nil, errors.New("无效的token")
 	}
 }
 
 // JWTAuthMiddleware JWT认证中间件
 func JWTAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 放行/auth/*路由
-		if strings.Contains(c.Request.URL.Path, "/auth") {
-			c.Next()
-			return
-		}
-
 		// 从Header获取JWT
 		tokenString := c.GetHeader("Authorization")
+		// 校验Token格式
+		if !strings.HasPrefix(tokenString, "Bearer ") {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token格式错误"})
+			c.Abort()
+			return
+		}
 		tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
 		if tokenString == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "未提供Token"})
@@ -92,20 +108,9 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			}
 		}
 
+		// 将用户信息存入上下文
+		c.Set("user", claims.Name)
 		// 放行
 		c.Next()
 	}
-}
-
-// GetUserFromToken 根据Token获取用户名
-func GetUserFromToken(c *gin.Context) (string, error) {
-	// 获取token
-	tokenString := c.GetHeader("Authorization")
-	tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
-	// 解析token
-	claims, err := ParseToken(tokenString)
-	if err != nil {
-		return "", err
-	}
-	return claims.Name, nil
 }

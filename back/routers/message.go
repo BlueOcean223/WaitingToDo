@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetMessageRoutes(r *gin.Engine) {
+func SetMessageRoutes(r *gin.RouterGroup) {
 	// 初始化依赖
 	messageRepository := repository.NewMessageRepository(configs.MysqlDb)
 	messageService := service.NewMessageService(messageRepository)

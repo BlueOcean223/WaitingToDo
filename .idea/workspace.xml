@@ -4,23 +4,16 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4022ab68-4cae-4e7f-96d6-9f5f5a5cc1cd" name="更改" comment="update">
+    <list default="true" id="4022ab68-4cae-4e7f-96d6-9f5f5a5cc1cd" name="更改" comment="更新gorm标签">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/File.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/models/File.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/Friend.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/models/Friend.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/Image.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/models/Image.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/InviteCode.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/models/InviteCode.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/Message.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/models/Message.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/Task.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/models/Task.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/TaskNoticeHistory.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/models/TaskNoticeHistory.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/TeamTask.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/models/TeamTask.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/User.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/models/User.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/repository/authRepository.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/repository/authRepository.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/repository/friendRepository.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/repository/friendRepository.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/repository/messageRepository.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/repository/messageRepository.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/repository/teamTaskRepository.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/repository/teamTaskRepository.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/service/taskService.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/service/taskService.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/service/uploadService.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/service/uploadService.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/controllers/friendController.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/controllers/friendController.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/controllers/taskController.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/controllers/taskController.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/controllers/uploadController.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/controllers/uploadController.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/controllers/userController.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/controllers/userController.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/repository/taskRepository.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/repository/taskRepository.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/routers/routes.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/routers/routes.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/utils/jwt/jwt.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/utils/jwt/jwt.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -65,33 +58,33 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "DefaultGoTemplateProperty": "Go File",
-    "Go 构建.go build back.executor": "Run",
-    "Go 测试.back/utils/captcha 中的 TestGenerateCaptcha.executor": "Run",
-    "Go 测试.back/utils/captcha 中的 TestGenerateInviteCode.executor": "Debug",
-    "Go 测试.back/utils/fileUtil 中的 TestGetFileMD5.executor": "Run",
-    "Go 测试.back/utils/hashPassword 中的 TestHashPassword.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.GoLinterPluginOnboarding": "true",
-    "RunOnceActivity.GoLinterPluginStorageMigration": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.go.formatter.settings.were.checked": "true",
-    "RunOnceActivity.go.migrated.go.modules.settings": "true",
-    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
-    "git-widget-placeholder": "main",
-    "go.import.settings.migrated": "true",
-    "go.sdk.automatically.set": "true",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "D:/code/GithubProject/WaitingToDo",
-    "node.js.detected.package.eslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.pluginManager"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultGoTemplateProperty&quot;: &quot;Go File&quot;,
+    &quot;Go 构建.go build back.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.back/utils/captcha 中的 TestGenerateCaptcha.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.back/utils/captcha 中的 TestGenerateInviteCode.executor&quot;: &quot;Debug&quot;,
+    &quot;Go 测试.back/utils/fileUtil 中的 TestGetFileMD5.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.back/utils/hashPassword 中的 TestHashPassword.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.GoLinterPluginOnboarding&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.GoLinterPluginStorageMigration&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
+    &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/code/GithubProject/WaitingToDo&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;goland.project.structure&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="D:\code\GithubProject\WaitingToDo\back\utils\redisContent" />
@@ -223,7 +216,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="修改配置文件的覆盖逻辑" />
     <MESSAGE value="修复添加好友的bug" />
     <MESSAGE value="为docker容器设置上海时区" />
     <MESSAGE value="修改验证码检测规则bug" />
@@ -248,7 +240,8 @@
     <MESSAGE value="修复消息加载bug" />
     <MESSAGE value="优化mysql相关部分" />
     <MESSAGE value="update" />
-    <option name="LAST_COMMIT_MESSAGE" value="update" />
+    <MESSAGE value="更新gorm标签" />
+    <option name="LAST_COMMIT_MESSAGE" value="更新gorm标签" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>

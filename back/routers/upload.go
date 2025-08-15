@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetLoadRoutes(r *gin.Engine) {
+func SetLoadRoutes(r *gin.RouterGroup) {
 	// 初始化依赖
 	authRepository := repository.NewAuthRepository(configs.MysqlDb)
 	imageRepository := repository.NewImageRepository(configs.MysqlDb)

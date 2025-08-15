@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetTaskRoutes(r *gin.Engine) {
+func SetTaskRoutes(r *gin.RouterGroup) {
 	// 初始化依赖
 	authRepository := repository.NewAuthRepository(configs.MysqlDb)
 	messageRepository := repository.NewMessageRepository(configs.MysqlDb)

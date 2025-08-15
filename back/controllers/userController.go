@@ -4,7 +4,6 @@ import (
 	"back/models"
 	"back/models/vo"
 	"back/service"
-	"back/utils/jwt"
 	"back/utils/myError"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -33,13 +32,9 @@ func (s *UserController) CheckCaptcha(c *gin.Context) {
 	}
 
 	// 从token获取用户email
-	email, err := jwt.GetUserFromToken(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, models.Fail("", "令牌无效", nil))
-		return
-	}
+	email := c.GetString("user")
 
-	err = s.authService.CheckCaptcha(email, userVo.Captcha)
+	err := s.authService.CheckCaptcha(email, userVo.Captcha)
 	if err != nil {
 		if myError.IsMyError(err) {
 			// 自定义错误
@@ -63,13 +58,9 @@ func (s *UserController) Reset(c *gin.Context) {
 	}
 
 	// 从token获取用户email
-	email, err := jwt.GetUserFromToken(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, models.Fail("", "令牌无效", nil))
-		return
-	}
+	email := c.GetString("user")
 
-	err = s.userService.ResetPassword(email, userVo.Password)
+	err := s.userService.ResetPassword(email, userVo.Password)
 	if err != nil {
 		if myError.IsMyError(err) {
 			// 自定义错误
@@ -94,14 +85,10 @@ func (s *UserController) UpdateUserInfo(c *gin.Context) {
 	}
 
 	// 从token获取用户email
-	email, err := jwt.GetUserFromToken(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, models.Fail("", "令牌无效", nil))
-		return
-	}
+	email := c.GetString("user")
 
 	userVo.Email = email
-	err = s.userService.UpdateUserInfo(userVo)
+	err := s.userService.UpdateUserInfo(userVo)
 	if err != nil {
 		if myError.IsMyError(err) {
 			// 自定义错误

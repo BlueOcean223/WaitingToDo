@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetUserRoutes(r *gin.Engine) {
+func SetUserRoutes(r *gin.RouterGroup) {
 	// 初始化依赖
 	authRepository := repository.NewAuthRepository(configs.MysqlDb)
 	authService := service.NewAuthService(authRepository)

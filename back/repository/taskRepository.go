@@ -39,7 +39,7 @@ func (s *TaskRepository) GetList(userId, page, pageSize, myType int, status *int
 	// 分页查询
 	offset := (page - 1) * pageSize
 	var taskList []models.Task
-	err = query.Order("ddl desc").Offset(offset).Limit(pageSize).Find(&taskList).Error
+	err = query.Order("ddl desc, id").Offset(offset).Limit(pageSize).Find(&taskList).Error
 	return taskList, count, err
 }
 

@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetFriendRoutes(r *gin.Engine) {
+func SetFriendRoutes(r *gin.RouterGroup) {
 	// 初始化依赖
 	authRepository := repository.NewAuthRepository(configs.MysqlDb)
 	friendRepository := repository.NewFriendRepository(configs.MysqlDb)

@@ -4,7 +4,6 @@ import (
 	"back/models"
 	"back/models/vo"
 	"back/service"
-	"back/utils/jwt"
 	"back/utils/myError"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -50,11 +49,7 @@ func (s *TaskController) GetTaskList(c *gin.Context) {
 	}
 
 	// 获取当前用户的邮箱
-	email, err := jwt.GetUserFromToken(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, models.Fail("", "令牌无效", nil))
-		return
-	}
+	email := c.GetString("user")
 
 	taskList, err := s.taskService.GetTaskList(email, page, pageSize, status)
 	if err != nil {
@@ -79,11 +74,7 @@ func (s *TaskController) AddTask(c *gin.Context) {
 		return
 	}
 	// 获取用户邮箱
-	email, err := jwt.GetUserFromToken(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, models.Fail("", "令牌无效", nil))
-		return
-	}
+	email := c.GetString("user")
 	// 添加任务
 	task, err := s.taskService.AddTask(email, taskVo)
 	if err != nil {
@@ -137,11 +128,7 @@ func (s *TaskController) DeleteTask(c *gin.Context) {
 // GetUrgentTaskList 获取紧急任务列表
 func (s *TaskController) GetUrgentTaskList(c *gin.Context) {
 	// 获取用户邮箱
-	email, err := jwt.GetUserFromToken(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, models.Fail("", "令牌无效", nil))
-		return
-	}
+	email := c.GetString("user")
 	// 获取紧急任务列表
 	taskList, err := s.taskService.GetUrgentTaskList(email)
 	if err != nil {
@@ -236,13 +223,9 @@ func (s *TaskController) InviteTeamMember(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, models.Fail("", "参数错误", nil))
 		return
 	}
-	email, err := jwt.GetUserFromToken(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, models.Fail("", "无效令牌", nil))
-		return
-	}
+	email := c.GetString("user")
 
-	err = s.taskService.InviteTeamMember(email, teamTask)
+	err := s.taskService.InviteTeamMember(email, teamTask)
 	if err != nil {
 		if myError.IsMyError(err) {
 			c.JSON(http.StatusOK, models.Success("", err.Error(), nil))
@@ -283,13 +266,9 @@ func (s *TaskController) JoinTeamByInviteCode(c *gin.Context) {
 		return
 	}
 
-	email, err := jwt.GetUserFromToken(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, models.Fail("", "令牌无效", nil))
-		return
-	}
+	email := c.GetString("user")
 
-	err = s.taskService.JoinTeamTaskByInviteCode(email, inviteCodeVo.InviteCode)
+	err := s.taskService.JoinTeamTaskByInviteCode(email, inviteCodeVo.InviteCode)
 	if err != nil {
 		c.JSON(http.StatusOK, models.Fail("", err.Error(), nil))
 		return
