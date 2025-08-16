@@ -1,11 +1,11 @@
 package jwt
 
 import (
+	"back/utils/logger"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -101,10 +101,18 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			// 新令牌有效期为三天
 			newToken, err := GenerateToken(claims.Name, 72*time.Hour)
 			if err != nil {
-				log.Printf("令牌刷新失败: %v", err)
+				logger.Error("令牌刷新失败",
+					logger.String("user", claims.Name),
+					logger.Err(err),
+					logger.String("ip", c.ClientIP()),
+					logger.String("path", c.Request.URL.Path))
 			} else {
 				// 设置新令牌到响应头
 				c.Header("New-Access-Token", newToken)
+				logger.Info("令牌刷新成功",
+					logger.String("user", claims.Name),
+					logger.String("ip", c.ClientIP()),
+					logger.String("path", c.Request.URL.Path))
 			}
 		}
 

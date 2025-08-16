@@ -33,3 +33,13 @@ rabbitmq:
     team_request:
       name: "team_requests"
       routing_key: "team.request"
+
+# 日志配置
+log:
+  level: "info"          # 日志级别: debug, info, warn, error
+  filename: "logs/app.log" # 日志文件路径
+  max_size: 100          # 单个日志文件最大大小(MB)
+  max_backups: 10        # 保留的日志文件数量
+  max_age: 30            # 日志文件保留天数
+  compress: true         # 是否压缩
+  console: true          # 是否输出到控制台

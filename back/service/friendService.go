@@ -5,6 +5,7 @@ import (
 	"back/models"
 	"back/models/dto"
 	"back/repository"
+	"back/utils/logger"
 	"back/utils/redisContent"
 	"context"
 	"encoding/json"
@@ -30,9 +31,18 @@ func NewFriendService(authRepository *repository.AuthRepository,
 // GetFriendInfo 根据好友id获取好友信息
 func (s *FriendService) GetFriendInfo(friendId int) (dto.FriendInfoDto, error) {
 	user, err := s.authRepository.SelectUserById(friendId)
-	if user == (models.User{}) {
+	if err != nil {
+		logger.Error("查询好友信息失败",
+			logger.String("friend_id", fmt.Sprintf("%d", friendId)),
+			logger.Err(err))
 		return dto.FriendInfoDto{}, err
 	}
+	if user == (models.User{}) {
+		logger.Warn("好友不存在",
+			logger.String("friend_id", fmt.Sprintf("%d", friendId)))
+		return dto.FriendInfoDto{}, err
+	}
+
 	friendInfoDto := dto.FriendInfoDto{
 		Id:          user.Id,
 		Name:        user.Name,
@@ -48,8 +58,12 @@ func (s *FriendService) GetFriendInfo(friendId int) (dto.FriendInfoDto, error) {
 func (s *FriendService) GetFriendList(userId int) ([]dto.FriendInfoDto, error) {
 	friendList, err := s.friendRepository.GetFriendList(userId)
 	if err != nil {
+		logger.Error("查询好友列表失败",
+			logger.Int("user_id", userId),
+			logger.Err(err))
 		return nil, err
 	}
+
 	var friends []dto.FriendInfoDto
 	for _, friend := range friendList {
 		friendInfoDto := dto.FriendInfoDto{
@@ -70,6 +84,9 @@ func (s *FriendService) GetFriendList(userId int) ([]dto.FriendInfoDto, error) {
 func (s *FriendService) SearchUserByEmail(userEmail, searchEmail string) (dto.FriendInfoDto, error) {
 	searchUser, err := s.authRepository.SelectUserByEmail(searchEmail)
 	if searchUser == (models.User{}) || err != nil {
+		logger.Warn("搜索用户不存在",
+			logger.String("search_email", searchEmail),
+			logger.Err(err))
 		return dto.FriendInfoDto{}, err
 	}
 
@@ -81,22 +98,34 @@ func (s *FriendService) SearchUserByEmail(userEmail, searchEmail string) (dto.Fr
 	if redisClient.Exists(context.Background(), key).Val() == 1 {
 		val, err := redisClient.Get(context.Background(), key).Bytes()
 		if err != nil {
+			logger.Error("从Redis获取用户信息失败",
+				logger.String("user_email", userEmail),
+				logger.Err(err))
 			return dto.FriendInfoDto{}, err
 		}
 
 		err = json.Unmarshal(val, &user)
 		if err != nil {
+			logger.Error("反序列化用户信息失败",
+				logger.String("user_email", userEmail),
+				logger.Err(err))
 			return dto.FriendInfoDto{}, err
 		}
 	} else {
 		user, err = s.authRepository.SelectUserByEmail(userEmail)
 		if err != nil {
+			logger.Error("查询用户信息失败",
+				logger.String("user_email", userEmail),
+				logger.Err(err))
 			return dto.FriendInfoDto{}, err
 		}
 
 		// 将用户信息写入缓存
 		val, err := json.Marshal(user)
 		if err != nil {
+			logger.Error("序列化用户信息失败",
+				logger.String("user_email", userEmail),
+				logger.Err(err))
 			return dto.FriendInfoDto{}, err
 		}
 		redisClient.Set(context.Background(), key, val, 24*time.Hour)
@@ -105,6 +134,10 @@ func (s *FriendService) SearchUserByEmail(userEmail, searchEmail string) (dto.Fr
 	// 查询关系
 	relation, err := s.friendRepository.GetFriendRelation(user.Id, searchUser.Id)
 	if err != nil {
+		logger.Error("查询好友关系失败",
+			logger.String("user_id", fmt.Sprintf("%d", user.Id)),
+			logger.String("friend_id", fmt.Sprintf("%d", searchUser.Id)),
+			logger.Err(err))
 		return dto.FriendInfoDto{}, err
 	}
 
@@ -141,6 +174,10 @@ func (s *FriendService) AddFriend(userId, friendId int) error {
 	err := s.friendRepository.AddFriendRequest(&friend, tx)
 	if err != nil {
 		tx.Rollback()
+		logger.Error("添加好友关系失败",
+			logger.Int("user_id", userId),
+			logger.Int("friend_id", friendId),
+			logger.Err(err))
 		return err
 	}
 
@@ -153,18 +190,27 @@ func (s *FriendService) AddFriend(userId, friendId int) error {
 		val, err := redisClient.Get(context.Background(), key).Bytes()
 		if err != nil {
 			tx.Rollback()
+			logger.Error("从Redis获取用户信息失败",
+				logger.Int("user_id", userId),
+				logger.Err(err))
 			return err
 		}
 
 		err = json.Unmarshal(val, &user)
 		if err != nil {
 			tx.Rollback()
+			logger.Error("反序列化用户信息失败",
+				logger.Int("user_id", userId),
+				logger.Err(err))
 			return err
 		}
 	} else {
 		user, err = s.authRepository.SelectUserById(userId)
 		if err != nil {
 			tx.Rollback()
+			logger.Error("查询用户信息失败",
+				logger.Int("user_id", userId),
+				logger.Err(err))
 			return err
 		}
 
@@ -172,6 +218,9 @@ func (s *FriendService) AddFriend(userId, friendId int) error {
 		val, err := json.Marshal(user)
 		if err != nil {
 			tx.Rollback()
+			logger.Error("序列化用户信息失败",
+				logger.Int("user_id", userId),
+				logger.Err(err))
 			return err
 		}
 
@@ -192,6 +241,10 @@ func (s *FriendService) AddFriend(userId, friendId int) error {
 	err = s.messageRepository.InsertMessage(message, tx)
 	if err != nil {
 		tx.Rollback()
+		logger.Error("发送好友请求消息失败",
+			logger.Int("user_id", userId),
+			logger.Int("friend_id", friendId),
+			logger.Err(err))
 		return err
 	}
 
@@ -199,6 +252,10 @@ func (s *FriendService) AddFriend(userId, friendId int) error {
 	err = tx.Commit().Error
 	if err != nil {
 		tx.Rollback()
+		logger.Error("提交好友请求事务失败",
+			logger.Int("user_id", userId),
+			logger.Int("friend_id", friendId),
+			logger.Err(err))
 		return err
 	}
 	return nil
@@ -209,11 +266,25 @@ func (s *FriendService) AcceptFriendRequest(userId, friendId int) error {
 	// 检查两人是否已经是好友
 	friendShip, err := s.friendRepository.GetIsFriend(userId, friendId)
 	if err != nil {
+		logger.Error("查询好友关系失败",
+			logger.String("user_id", fmt.Sprintf("%d", userId)),
+			logger.String("friend_id", fmt.Sprintf("%d", friendId)),
+			logger.Err(err))
 		return err
 	}
 	if len(friendShip) > 1 {
 		// 两人已经是好友，无需重复添加，同时删除好友关系表中的记录
 		err = s.friendRepository.DeleteIsFriend(userId, friendId, nil)
+		if err != nil {
+			logger.Error("删除重复好友关系失败",
+				logger.String("user_id", fmt.Sprintf("%d", userId)),
+				logger.String("friend_id", fmt.Sprintf("%d", friendId)),
+				logger.Err(err))
+			return err
+		}
+		logger.Info("好友关系已存在，删除重复记录",
+			logger.String("user_id", fmt.Sprintf("%d", userId)),
+			logger.String("friend_id", fmt.Sprintf("%d", friendId)))
 		return err
 	}
 
@@ -222,12 +293,20 @@ func (s *FriendService) AcceptFriendRequest(userId, friendId int) error {
 	friend, err := s.friendRepository.GetFriendRelation(userId, friendId)
 	if err != nil {
 		tx.Rollback()
+		logger.Error("获取好友关系失败",
+			logger.String("user_id", fmt.Sprintf("%d", userId)),
+			logger.String("friend_id", fmt.Sprintf("%d", friendId)),
+			logger.Err(err))
 		return err
 	}
 	friend.Status = 1
 	err = s.friendRepository.UpdateFriend(friend, tx)
 	if err != nil {
 		tx.Rollback()
+		logger.Error("更新好友关系失败",
+			logger.String("user_id", fmt.Sprintf("%d", userId)),
+			logger.String("friend_id", fmt.Sprintf("%d", friendId)),
+			logger.Err(err))
 		return err
 	}
 
@@ -240,12 +319,20 @@ func (s *FriendService) AcceptFriendRequest(userId, friendId int) error {
 	err = s.friendRepository.AddFriendRequest(&newFriend, tx)
 	if err != nil {
 		tx.Rollback()
+		logger.Error("反向添加好友关系失败",
+			logger.String("user_id", fmt.Sprintf("%d", userId)),
+			logger.String("friend_id", fmt.Sprintf("%d", friendId)),
+			logger.Err(err))
 		return err
 	}
 
 	err = tx.Commit().Error
 	if err != nil {
 		tx.Rollback()
+		logger.Error("提交好友关系事务失败",
+			logger.String("user_id", fmt.Sprintf("%d", userId)),
+			logger.String("friend_id", fmt.Sprintf("%d", friendId)),
+			logger.Err(err))
 		return err
 	}
 	return nil
@@ -253,7 +340,15 @@ func (s *FriendService) AcceptFriendRequest(userId, friendId int) error {
 
 // RejectFriendRequest 拒绝好友请求
 func (s *FriendService) RejectFriendRequest(id int) error {
-	return s.friendRepository.DeleteFriend(id, nil)
+	err := s.friendRepository.DeleteFriend(id, nil)
+	if err != nil {
+		logger.Error("拒绝好友请求失败",
+			logger.String("friend_request_id", fmt.Sprintf("%d", id)),
+			logger.Err(err))
+		return err
+	}
+
+	return nil
 }
 
 // DeleteFriend 删除好友
@@ -265,12 +360,20 @@ func (s *FriendService) DeleteFriend(userId, friendId int) error {
 	err := s.friendRepository.DeleteByUserIdAndFriendId(userId, friendId, tx)
 	if err != nil {
 		tx.Rollback()
+		logger.Error("删除好友关系失败(1)",
+			logger.String("user_id", fmt.Sprintf("%d", userId)),
+			logger.String("friend_id", fmt.Sprintf("%d", friendId)),
+			logger.Err(err))
 		return err
 	}
 
 	err = s.friendRepository.DeleteByUserIdAndFriendId(friendId, userId, tx)
 	if err != nil {
 		tx.Rollback()
+		logger.Error("删除好友关系失败(2)",
+			logger.String("user_id", fmt.Sprintf("%d", userId)),
+			logger.String("friend_id", fmt.Sprintf("%d", friendId)),
+			logger.Err(err))
 		return err
 	}
 
@@ -278,6 +381,10 @@ func (s *FriendService) DeleteFriend(userId, friendId int) error {
 	if err = tx.Commit().Error; err != nil {
 		// 提交事务异常
 		tx.Rollback()
+		logger.Error("提交删除好友事务失败",
+			logger.String("user_id", fmt.Sprintf("%d", userId)),
+			logger.String("friend_id", fmt.Sprintf("%d", friendId)),
+			logger.Err(err))
 		return err
 	}
 	return nil

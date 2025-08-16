@@ -6,6 +6,7 @@ import (
 	"back/models/dto"
 	"back/models/vo"
 	"back/repository"
+	"back/utils/logger"
 	"encoding/json"
 	"fmt"
 	"github.com/rabbitmq/amqp091-go"
@@ -24,13 +25,23 @@ func NewMessageService(messageRepository *repository.MessageRepository) *Message
 
 // GetUnreadMessageCount 查询用户未读消息数量
 func (s *MessageService) GetUnreadMessageCount(userId int) (int64, error) {
-	return s.MessageRepository.GetUnreadMessageCount(userId)
+	count, err := s.MessageRepository.GetUnreadMessageCount(userId)
+	if err != nil {
+		logger.Error("查询用户未读消息数量失败",
+			logger.Int("userId", userId),
+			logger.Err(err))
+		return 0, err
+	}
+	return count, nil
 }
 
 // GetMessageList 获取用户消息列表
 func (s *MessageService) GetMessageList(page, pageSize, userId int) ([]dto.MessageDto, error) {
 	messages, err := s.MessageRepository.GetMessageList(page, pageSize, userId)
 	if err != nil {
+		logger.Error("获取用户消息列表失败",
+			logger.Int("userId", userId),
+			logger.Err(err))
 		return nil, err
 	}
 
@@ -44,6 +55,8 @@ func (s *MessageService) GetMessageList(page, pageSize, userId int) ([]dto.Messa
 	userInfoMap := make(map[int]models.User)
 	userInfoList, err := s.MessageRepository.SelectUserInfoByIds(userIds)
 	if err != nil {
+		logger.Error("查询用户信息列表失败",
+			logger.Err(err))
 		return nil, err
 	}
 	for _, userInfo := range userInfoList {
@@ -80,17 +93,35 @@ func (s *MessageService) GetMessageList(page, pageSize, userId int) ([]dto.Messa
 
 // UpdateMessage 更新信息
 func (s *MessageService) UpdateMessage(message models.Message) error {
-	return s.MessageRepository.Update(message, nil)
+	err := s.MessageRepository.Update(message, nil)
+	if err != nil {
+		logger.Error("更新消息失败",
+			logger.Int("id", message.Id),
+			logger.Err(err))
+	}
+	return err
 }
 
 // DeleteMessage 删除信息
 func (s *MessageService) DeleteMessage(messageId int) error {
-	return s.MessageRepository.Delete(messageId, nil)
+	err := s.MessageRepository.Delete(messageId, nil)
+	if err != nil {
+		logger.Error("删除消息失败",
+			logger.Int("id", messageId),
+			logger.Err(err))
+	}
+	return err
 }
 
 // ReadAllMessage 全部已读
 func (s *MessageService) ReadAllMessage(userId int) error {
-	return s.MessageRepository.ReadAllMessage(userId, nil)
+	err := s.MessageRepository.ReadAllMessage(userId, nil)
+	if err != nil {
+		logger.Error("消息一键已读失败",
+			logger.Int("id", userId),
+			logger.Err(err))
+	}
+	return err
 }
 
 // HandleRequest 处理请求
@@ -134,6 +165,9 @@ func (s *MessageService) SendMQMessage(messageVo vo.MessageVo) error {
 	MQConn := configs.RabbitMQConn
 	channel, err := MQConn.Channel()
 	if err != nil {
+		logger.Error("连接MQ管道失败",
+			logger.Int("id", messageVo.Id),
+			logger.Err(err))
 		return err
 	}
 	defer channel.Close()
@@ -151,6 +185,9 @@ func (s *MessageService) SendMQMessage(messageVo vo.MessageVo) error {
 
 	body, err := json.Marshal(mqMsg)
 	if err != nil {
+		logger.Error("json格式化失败",
+			logger.Int("id", messageVo.Id),
+			logger.Err(err))
 		return err
 	}
 	var routingKey string
@@ -171,7 +208,11 @@ func (s *MessageService) SendMQMessage(messageVo vo.MessageVo) error {
 			ContentType: "application/json",
 			Body:        body,
 		})
-
+	if err != nil {
+		logger.Error("生产者发送消息至MQ失败",
+			logger.Int("id", messageVo.Id),
+			logger.Err(err))
+	}
 	return err
 }
 
@@ -180,5 +221,12 @@ func (s *MessageService) AddMessage(message models.Message) error {
 	// 填充消息
 	message.SendTime = time.Now().Format("2006-01-02 15:04:05")
 	// 插入数据库
-	return s.MessageRepository.InsertMessage(message, nil)
+	err := s.MessageRepository.InsertMessage(message, nil)
+	if err != nil {
+		logger.Error("添加消息失败",
+			logger.Int("from_id", message.FromId),
+			logger.Int("to_id", message.ToId),
+			logger.Err(err))
+	}
+	return err
 }

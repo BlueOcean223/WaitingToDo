@@ -6,6 +6,7 @@ import (
 	"back/models/dto"
 	"back/repository"
 	"back/utils/fileUtil"
+	"back/utils/logger"
 	"back/utils/minioContent"
 	"back/utils/redisContent"
 	"context"
@@ -40,6 +41,7 @@ func (s *UploadService) UploadImg(email string, fileHeader *multipart.FileHeader
 	// 读取文件
 	file, err := fileHeader.Open()
 	if err != nil {
+		logger.Error("读取文件失败", logger.Err(err))
 		return "", err
 	}
 	defer file.Close()
@@ -47,12 +49,14 @@ func (s *UploadService) UploadImg(email string, fileHeader *multipart.FileHeader
 	// 计算文件的md5值
 	md5Hash, err := fileUtil.GetFileMD5(file)
 	if err != nil {
+		logger.Error("计算文件MD5值失败", logger.Err(err))
 		return "", err
 	}
 
 	// 根据MD5值查询数据库中是否已经有该图片
 	image, err := s.imageRepository.GetImageByMD5(md5Hash)
 	if err != nil {
+		logger.Error("根据md5值查询图片失败", logger.String("md5", md5Hash), logger.Err(err))
 		return "", err
 	}
 
@@ -60,11 +64,13 @@ func (s *UploadService) UploadImg(email string, fileHeader *multipart.FileHeader
 		// 数据库中已有该图片，更新用户URL，然后直接返回图片的URL
 		user, err := s.authRepository.SelectUserByEmail(email)
 		if err != nil {
+			logger.Error("获取用户信息失败", logger.String("email", email), logger.Err(err))
 			return "", err
 		}
 		user.Pic = image.Url
 		err = s.authRepository.UpdateUser(user, nil)
 		if err != nil {
+			logger.Error("更新用户信息失败", logger.String("email", email), logger.Err(err))
 			return "", err
 		}
 
@@ -150,6 +156,7 @@ func (s *UploadService) UploadImg(email string, fileHeader *multipart.FileHeader
 	if err = tx.Commit().Error; err != nil {
 		// 提交事务异常
 		tx.Rollback()
+		logger.Error("提交事务异常", logger.Err(err))
 		return "", err
 	}
 
@@ -171,6 +178,13 @@ func (s *UploadService) UploadToMinio(bucketName, objectName string, file io.Rea
 		size,
 		minio.PutObjectOptions{ContentType: contentType},
 	)
+
+	if err != nil {
+		logger.Error("上传Minio失败",
+			logger.String("bucketName", bucketName),
+			logger.String("objectName", objectName),
+			logger.Err(err))
+	}
 
 	return err
 }
@@ -235,7 +249,14 @@ func (s *UploadService) DeleteFile(ids []int) error {
 func (s *UploadService) DeleteFromMinio(bucketName, objectName string) error {
 	minioClient := configs.MinioClient
 	ctx := context.Background()
-	return minioClient.RemoveObject(ctx, bucketName, objectName, minio.RemoveObjectOptions{})
+	err := minioClient.RemoveObject(ctx, bucketName, objectName, minio.RemoveObjectOptions{})
+	if err != nil {
+		logger.Error("从minio中删除附件失败",
+			logger.String("bucketName", bucketName),
+			logger.String("objectName", objectName),
+			logger.Err(err))
+	}
+	return err
 }
 
 // BatchDeleteFromMinio 批量删除Minio中的附件
@@ -258,6 +279,9 @@ func (s *UploadService) BatchDeleteFromMinio(bucketName string, objectNames []st
 		errs = append(errs, err.Err)
 	}
 	if len(errs) > 0 {
+		logger.Warn("从minio中批量删除附件异常",
+			logger.String("bucketName", bucketName),
+			logger.Err(errs[0]))
 		return errs[0]
 	}
 	return nil

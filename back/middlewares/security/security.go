@@ -1,8 +1,8 @@
 package security
 
 import (
+	"back/utils/logger"
 	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -23,8 +23,11 @@ func SecurityMiddleware() gin.HandlerFunc {
 		// 检查可疑路径
 		path := c.Request.URL.Path
 		if isSuspiciousPath(path) {
-			log.Printf("可疑路径访问 - IP: %s, Path: %s, UA: %s",
-				c.ClientIP(), path, c.GetHeader("User-Agent"))
+			logger.Warn("可疑路径访问",
+				logger.String("ip", c.ClientIP()),
+				logger.String("path", path),
+				logger.String("user_agent", c.GetHeader("User-Agent")),
+				logger.String("method", c.Request.Method))
 			c.JSON(http.StatusNotFound, gin.H{"error": "路径不存在"})
 			c.Abort()
 			return
@@ -32,8 +35,11 @@ func SecurityMiddleware() gin.HandlerFunc {
 
 		// 检查XSS攻击
 		if containsXSS(c.Request.URL.RawQuery) {
-			log.Printf("XSS攻击尝试 - IP: %s, Query: %s",
-				c.ClientIP(), c.Request.URL.RawQuery)
+			logger.Warn("XSS攻击尝试",
+				logger.String("ip", c.ClientIP()),
+				logger.String("query", c.Request.URL.RawQuery),
+				logger.String("path", path),
+				logger.String("method", c.Request.Method))
 			c.JSON(http.StatusBadRequest, gin.H{"error": "请求被拒绝"})
 			c.Abort()
 			return
@@ -71,7 +77,11 @@ func RateLimitMiddleware() gin.HandlerFunc {
 		// 检查请求频率
 		if len(ipRequestCount[ip]) >= maxRequests {
 			ipMutex.Unlock()
-			log.Printf("频率限制触发 - IP: %s, 请求数: %d", ip, len(ipRequestCount[ip]))
+			logger.Warn("频率限制触发",
+				logger.String("ip", ip),
+				logger.Int("request_count", len(ipRequestCount[ip])),
+				logger.String("path", c.Request.URL.Path),
+				logger.String("method", c.Request.Method))
 			c.JSON(http.StatusTooManyRequests, gin.H{"error": "请求过于频繁"})
 			c.Abort()
 			return

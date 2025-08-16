@@ -7,6 +7,7 @@ import (
 	"back/models/vo"
 	"back/repository"
 	"back/utils/captcha"
+	"back/utils/logger"
 	"back/utils/minioContent"
 	"back/utils/myError"
 	"back/utils/redisContent"
@@ -52,14 +53,23 @@ func (s *TaskService) GetTaskList(email string, page, pageSize int, status *int)
 	// 根据邮箱查询用户
 	user, err := s.authRepository.SelectUserByEmail(email)
 	if err != nil {
+		logger.Error("查询用户失败",
+			logger.String("email", email),
+			logger.Err(err))
 		return nil, err
 	}
 	if user == (models.User{}) {
+		logger.Warn("用户不存在",
+			logger.String("email", email))
 		return nil, errors.New("用户不存在")
 	}
 
 	taskList, count, err := s.taskRepository.GetList(user.Id, page, pageSize, 0, status)
 	if err != nil {
+		logger.Error("查询任务列表失败",
+			logger.String("email", email),
+			logger.String("user_id", fmt.Sprintf("%d", user.Id)),
+			logger.Err(err))
 		return nil, err
 	}
 
@@ -70,6 +80,10 @@ func (s *TaskService) GetTaskList(email string, page, pageSize int, status *int)
 	}
 	attachments, err := s.fileRepository.GetFileByTaskIds(taskIds)
 	if err != nil {
+		logger.Error("查询任务附件失败",
+			logger.String("email", email),
+			logger.String("user_id", fmt.Sprintf("%d", user.Id)),
+			logger.Err(err))
 		return nil, err
 	}
 
@@ -101,9 +115,14 @@ func (s *TaskService) AddTask(email string, taskVo vo.TaskVo) (models.Task, erro
 	// 根据邮箱查询用户ID
 	user, err := s.authRepository.SelectUserByEmail(email)
 	if err != nil {
+		logger.Error("查询用户失败",
+			logger.String("email", email),
+			logger.Err(err))
 		return models.Task{}, err
 	}
 	if user == (models.User{}) {
+		logger.Warn("用户不存在",
+			logger.String("email", email))
 		return models.Task{}, errors.New("用户不存在")
 	}
 
@@ -115,9 +134,18 @@ func (s *TaskService) AddTask(email string, taskVo vo.TaskVo) (models.Task, erro
 		Type:        taskVo.Type,
 		Status:      0,
 	}
+
 	// 插入数据库
 	err = s.taskRepository.Create(&task, nil)
-	return task, err
+	if err != nil {
+		logger.Error("创建任务失败",
+			logger.String("email", email),
+			logger.String("title", taskVo.Title),
+			logger.Err(err))
+		return task, err
+	}
+
+	return task, nil
 }
 
 // UpdateTask 更新任务
@@ -136,6 +164,9 @@ func (s *TaskService) UpdateTask(taskVo vo.TaskVo) error {
 	}, tx)
 	if err != nil {
 		tx.Rollback()
+		logger.Error("更新任务失败",
+			logger.String("task_id", fmt.Sprintf("%d", taskVo.Id)),
+			logger.Err(err))
 		return err
 	}
 
@@ -144,6 +175,9 @@ func (s *TaskService) UpdateTask(taskVo vo.TaskVo) error {
 	ddl, err := time.Parse(layout, taskVo.Ddl)
 	if err != nil {
 		tx.Rollback()
+		logger.Error("格式化ddl失败",
+			logger.Int("task_id", taskVo.Id),
+			logger.Err(err))
 		return err
 	}
 	now := time.Now()
@@ -155,6 +189,9 @@ func (s *TaskService) UpdateTask(taskVo vo.TaskVo) error {
 		history, err := taskNoticeHistoryRepo.GetHistoryByTaskId(taskVo.Id)
 		if err != nil {
 			tx.Rollback()
+			logger.Error("查询任务通知记录失败",
+				logger.Int("task_id", taskVo.Id),
+				logger.Err(err))
 			return err
 		}
 		// 如果有通知历史，则删除
@@ -162,6 +199,9 @@ func (s *TaskService) UpdateTask(taskVo vo.TaskVo) error {
 			err = taskNoticeHistoryRepo.DeleteHistoryByTaskId(taskVo.Id, tx)
 			if err != nil {
 				tx.Rollback()
+				logger.Error("删除任务通知记录失败",
+					logger.Int("task_id", taskVo.Id),
+					logger.Err(err))
 				return err
 			}
 		}
@@ -170,6 +210,9 @@ func (s *TaskService) UpdateTask(taskVo vo.TaskVo) error {
 	// 提交事务
 	if err = tx.Commit().Error; err != nil {
 		tx.Rollback()
+		logger.Error("提交更新任务事务失败",
+			logger.String("task_id", fmt.Sprintf("%d", taskVo.Id)),
+			logger.Err(err))
 		return err
 	}
 
@@ -181,6 +224,9 @@ func (s *TaskService) DeleteTask(id int) error {
 	// 删除minio中的附件
 	err := s.DeleteFromMinio(minioContent.FilesBucket, id)
 	if err != nil {
+		logger.Error("删除Minio附件失败",
+			logger.String("task_id", fmt.Sprintf("%d", id)),
+			logger.Err(err))
 		return err
 	}
 
@@ -190,12 +236,18 @@ func (s *TaskService) DeleteTask(id int) error {
 	err = s.fileRepository.DeleteByTaskId(id, tx)
 	if err != nil {
 		tx.Rollback()
+		logger.Error("删除任务附件失败",
+			logger.String("task_id", fmt.Sprintf("%d", id)),
+			logger.Err(err))
 		return err
 	}
 	// 删除任务
 	err = s.taskRepository.Delete(id, tx)
 	if err != nil {
 		tx.Rollback()
+		logger.Error("删除任务失败",
+			logger.String("task_id", fmt.Sprintf("%d", id)),
+			logger.Err(err))
 		return err
 	}
 
@@ -203,6 +255,9 @@ func (s *TaskService) DeleteTask(id int) error {
 	err = tx.Commit().Error
 	if err != nil {
 		tx.Rollback()
+		logger.Error("提交删除任务事务失败",
+			logger.String("task_id", fmt.Sprintf("%d", id)),
+			logger.Err(err))
 		return err
 	}
 
@@ -249,9 +304,14 @@ func (s *TaskService) GetUrgentTaskList(email string) ([]dto.TaskDto, error) {
 	// 根据邮箱查询用户
 	user, err := s.authRepository.SelectUserByEmail(email)
 	if err != nil {
+		logger.Error("查询用户失败",
+			logger.String("email", email),
+			logger.Err(err))
 		return nil, err
 	}
 	if user == (models.User{}) {
+		logger.Warn("用户不存在",
+			logger.String("email", email))
 		return nil, errors.New("用户不存在")
 	}
 
@@ -260,6 +320,10 @@ func (s *TaskService) GetUrgentTaskList(email string) ([]dto.TaskDto, error) {
 	// 查询紧急任务列表
 	taskList, err := s.taskRepository.GetUrgentList(userId)
 	if err != nil {
+		logger.Error("查询紧急任务列表失败",
+			logger.String("email", email),
+			logger.String("user_id", fmt.Sprintf("%d", userId)),
+			logger.Err(err))
 		return nil, err
 	}
 	// 封装Dto列表
@@ -295,16 +359,17 @@ func TickerNotify() {
 	)
 
 	// 测试使用一分钟
-	ticker := time.NewTicker(1 * time.Minute)
+	//ticker := time.NewTicker(1 * time.Minute)
 	// 使用一小时的定时器
-	// ticker := time.NewTicker(1 * time.Hour)
+	ticker := time.NewTicker(1 * time.Hour)
 	defer ticker.Stop()
 
 	for range ticker.C {
 		// 1. 获取即将过期的任务列表
 		tasks, err := taskRepo.GetOneDayDDLTaskList()
 		if err != nil {
-			log.Printf("获取任务列表失败: %v", err)
+			logger.Error("获取任务列表失败",
+				logger.Err(err))
 			continue
 		}
 
@@ -320,7 +385,8 @@ func TickerNotify() {
 
 		notifiedTasks, err := taskNoticeHistoryRepo.GetHistoriesByTaskIds(taskIds)
 		if err != nil {
-			log.Printf("获取通知历史失败: %v", err)
+			logger.Error("获取通知历史失败",
+				logger.Err(err))
 			continue
 		}
 
@@ -354,7 +420,7 @@ func TickerNotify() {
 		if len(teamTaskIds) > 0 {
 			teamMembers, err = teamTaskRepo.GetTeamTaskShipByTaskIds(teamTaskIds)
 			if err != nil {
-				log.Printf("获取小组任务成员失败: %v", err)
+				logger.Error("获取小组任务成员失败", logger.Err(err))
 				continue
 			}
 		}
@@ -372,7 +438,7 @@ func TickerNotify() {
 
 		users, err := authRepo.SelectUsersByIds(userIds)
 		if err != nil {
-			log.Printf("获取用户信息失败: %v", err)
+			logger.Error("获取用户信息失败", logger.Err(err))
 			continue
 		}
 
@@ -390,7 +456,7 @@ func TickerNotify() {
 		for _, task := range tasksToNotify {
 			user, ok := userMap[task.UserId]
 			if !ok {
-				log.Printf("用户%d不存在", task.UserId)
+				logger.Warn("用户不存在", logger.Int("id", user.Id))
 				continue
 			}
 
@@ -413,7 +479,7 @@ func TickerNotify() {
 				m.SetBody("text/html", mail.Body)
 
 				if err := d.DialAndSend(m); err != nil {
-					log.Printf("发送邮件失败: %v", err)
+					logger.Error("发送邮件失败", logger.Err(err))
 					return
 				}
 
@@ -434,7 +500,7 @@ func TickerNotify() {
 			}
 
 			if err := taskNoticeHistoryRepo.BatchInsert(histories, nil); err != nil {
-				log.Printf("记录通知历史失败：%v", err)
+				logger.Error("记录通知历史失败", logger.Err(err))
 			}
 		}
 	}
@@ -445,6 +511,9 @@ func (s *TaskService) GetTeamTaskList(userId, page, pageSize int) ([]dto.TeamTas
 	// 分页查询小组任务表中，用户的小组任务id
 	teamTaskList, err := s.teamTaskRepository.GetList(page, pageSize, userId)
 	if err != nil {
+		logger.Error("查询小组任务列表失败",
+			logger.String("user_id", fmt.Sprintf("%d", userId)),
+			logger.Err(err))
 		return nil, err
 	}
 
@@ -456,12 +525,18 @@ func (s *TaskService) GetTeamTaskList(userId, page, pageSize int) ([]dto.TeamTas
 	// 查询任务列表
 	taskList, err := s.taskRepository.GetTaskListByIds(taskIds)
 	if err != nil {
+		logger.Error("查询任务列表失败",
+			logger.String("user_id", fmt.Sprintf("%d", userId)),
+			logger.Err(err))
 		return nil, err
 	}
 
 	// 根据任务id列表获取所有任务关系
 	teamTaskShipList, err := s.teamTaskRepository.GetTeamTaskShipByTaskIds(taskIds)
 	if err != nil {
+		logger.Error("查询任务关系失败",
+			logger.String("user_id", fmt.Sprintf("%d", userId)),
+			logger.Err(err))
 		return nil, err
 	}
 	// 收集用户id，以及任务与用户关联关系
@@ -477,6 +552,9 @@ func (s *TaskService) GetTeamTaskList(userId, page, pageSize int) ([]dto.TeamTas
 	// 根据用户id获取用户信息
 	userInfoList, err := s.authRepository.SelectUsersByIds(userIds)
 	if err != nil {
+		logger.Error("查询用户信息失败",
+			logger.String("user_id", fmt.Sprintf("%d", userId)),
+			logger.Err(err))
 		return nil, err
 	}
 	// 将用户信息根据id映射成map
@@ -577,6 +655,10 @@ func (s *TaskService) DeleteTeamTask(taskId, userId int) error {
 
 	if err = tx.Commit().Error; err != nil {
 		tx.Rollback()
+		logger.Error("提交删除小组任务事务失败",
+			logger.String("task_id", fmt.Sprintf("%d", taskId)),
+			logger.String("user_id", fmt.Sprintf("%d", userId)),
+			logger.Err(err))
 		return err
 	}
 
@@ -590,6 +672,10 @@ func (s *TaskService) AddTeamTask(task models.Task) error {
 	// 向任务表写数据
 	if err := tx.Create(&task).Error; err != nil {
 		tx.Rollback()
+		logger.Error("创建任务失败",
+			logger.String("title", task.Title),
+			logger.String("user_id", fmt.Sprintf("%d", task.UserId)),
+			logger.Err(err))
 		return err
 	}
 	// 向任务关系表写数据
@@ -600,12 +686,20 @@ func (s *TaskService) AddTeamTask(task models.Task) error {
 	}
 	if err := tx.Create(&teamTask).Error; err != nil {
 		tx.Rollback()
+		logger.Error("创建任务关系失败",
+			logger.String("task_id", fmt.Sprintf("%d", task.Id)),
+			logger.String("user_id", fmt.Sprintf("%d", task.UserId)),
+			logger.Err(err))
 		return err
 	}
 
 	// 提交事务
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
+		logger.Error("提交添加小组任务事务失败",
+			logger.String("task_id", fmt.Sprintf("%d", task.Id)),
+			logger.String("user_id", fmt.Sprintf("%d", task.UserId)),
+			logger.Err(err))
 		return err
 	}
 
@@ -671,29 +765,40 @@ func (s *TaskService) JoinTeamTaskByInviteCode(email, inviteCode string) error {
 	// 根据邮箱查询用户
 	user, err := s.authRepository.SelectUserByEmail(email)
 	if err != nil {
-		log.Println("加入小组任务失败: ", err)
+		logger.Error("查询用户失败",
+			logger.String("email", email),
+			logger.String("invite_code", inviteCode),
+			logger.Err(err))
 		return err
 	}
 
 	// 根据邀请码查询小组任务ID
 	inviteCodeRecord, err := s.inviteCodeRepo.GetByInviteCode(inviteCode)
 	if err != nil {
-		log.Println("查询邀请码失败: ", err)
 		return err
 	}
 	// 如果没有查询到邀请码
 	if inviteCodeRecord == (models.InviteCode{}) {
+		logger.Warn("邀请码不存在",
+			logger.String("email", email),
+			logger.String("invite_code", inviteCode))
 		return myError.NewMyError("邀请码不存在")
 	}
 
 	// 检查该用户是否已经加入了该小组任务
 	teamTaskMembers, err := s.teamTaskRepository.GetTeamMembers(inviteCodeRecord.TaskId)
 	if err != nil {
-		log.Println("检查用户是否加入小组失败: ", err)
+		logger.Error("查询小组成员失败",
+			logger.String("email", email),
+			logger.String("task_id", fmt.Sprintf("%d", inviteCodeRecord.TaskId)),
+			logger.Err(err))
 		return err
 	}
 	for _, member := range teamTaskMembers {
 		if member.Id == user.Id {
+			logger.Warn("用户已加入小组",
+				logger.String("email", email),
+				logger.String("task_id", fmt.Sprintf("%d", inviteCodeRecord.TaskId)))
 			return myError.NewMyError("您已经加入了该小组任务")
 		}
 	}
@@ -706,7 +811,10 @@ func (s *TaskService) JoinTeamTaskByInviteCode(email, inviteCode string) error {
 	}
 	err = s.teamTaskRepository.Insert(teamTask, nil)
 	if err != nil {
-		log.Println("插入小组任务关系失败: ", err)
+		logger.Error("插入小组任务关系失败",
+			logger.String("email", email),
+			logger.String("task_id", fmt.Sprintf("%d", inviteCodeRecord.TaskId)),
+			logger.Err(err))
 		return err
 	}
 
@@ -745,9 +853,12 @@ func (s *TaskService) CompleteTeamTask(teamTask models.TeamTask) error {
 	// 提交事务
 	if err = tx.Commit().Error; err != nil {
 		tx.Rollback()
+		logger.Error("提交完成小组任务事务失败",
+			logger.String("task_id", fmt.Sprintf("%d", teamTask.TaskId)),
+			logger.String("user_id", fmt.Sprintf("%d", teamTask.UserId)),
+			logger.Err(err))
 		return err
 	}
-
 	return nil
 }
 
@@ -763,16 +874,25 @@ func (s *TaskService) InviteTeamMember(email string, teamTask models.TeamTask) e
 	if redisClient.Exists(context.Background(), userInfoKey).Val() == 1 {
 		val, err := redisClient.Get(context.Background(), userInfoKey).Bytes()
 		if err != nil {
+			logger.Error("从Redis获取用户信息失败",
+				logger.String("email", email),
+				logger.Err(err))
 			return err
 		}
 		err = json.Unmarshal(val, &user)
 		if err != nil {
+			logger.Error("反序列化用户信息失败",
+				logger.String("email", email),
+				logger.Err(err))
 			return err
 		}
 	} else {
 		// Redis中不存在，查询数据库
 		user, err = s.authRepository.SelectUserByEmail(email)
 		if err != nil {
+			logger.Error("查询用户信息失败",
+				logger.String("email", email),
+				logger.Err(err))
 			return err
 		}
 
@@ -810,6 +930,11 @@ func (s *TaskService) InviteTeamMember(email string, teamTask models.TeamTask) e
 	// 写入信息表
 	err = s.messageRepository.InsertMessage(message, nil)
 	if err != nil {
+		logger.Error("写入邀请消息失败",
+			logger.String("email", email),
+			logger.String("task_id", fmt.Sprintf("%d", teamTask.TaskId)),
+			logger.String("invited_user_id", fmt.Sprintf("%d", teamTask.UserId)),
+			logger.Err(err))
 		return err
 	}
 

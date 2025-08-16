@@ -18,30 +18,35 @@ func NewAuthRepository(db *gorm.DB) *AuthRepository {
 func (s *AuthRepository) SelectUserByEmail(email string) (models.User, error) {
 	// 根据邮箱查询用户
 	var user models.User
-	result := s.db.Where("email = ?", email).First(&user)
+	err := s.db.Where("email = ?", email).First(&user).Error
 
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// 处理未查询到的情况
 		return models.User{}, nil
 	}
 
-	return user, result.Error
+	return user, err
 }
 
 // SelectUserById 根据Id查询用户
 func (s *AuthRepository) SelectUserById(id int) (models.User, error) {
 	var user models.User
-	result := s.db.Where("id = ?", id).First(&user)
+	err := s.db.Where("id = ?", id).First(&user).Error
 
-	return user, result.Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// 处理未查询到的情况
+		return models.User{}, nil
+	}
+
+	return user, err
 }
 
 // SelectUsersByIds 根据Ids批量查询用户
 func (s *AuthRepository) SelectUsersByIds(ids []int) ([]models.User, error) {
 	var users []models.User
-	result := s.db.Where("id in (?)", ids).Find(&users)
+	err := s.db.Where("id in (?)", ids).Find(&users).Error
 
-	return users, result.Error
+	return users, err
 }
 
 // InsertUser 插入用户
@@ -50,8 +55,7 @@ func (s *AuthRepository) InsertUser(user models.User, tx *gorm.DB) error {
 	if tx != nil {
 		db = tx
 	}
-	result := db.Create(&user)
-	return result.Error
+	return db.Create(&user).Error
 }
 
 // UpdateUser 更新用户

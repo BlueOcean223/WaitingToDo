@@ -4,16 +4,21 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4022ab68-4cae-4e7f-96d6-9f5f5a5cc1cd" name="更改" comment="更新gorm标签">
+    <list default="true" id="4022ab68-4cae-4e7f-96d6-9f5f5a5cc1cd" name="更改" comment="添加安全中间件，完善jwt中间件。&#10;更新部分结构。&#10;完善数据库操作的Order by操作">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/controllers/friendController.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/controllers/friendController.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/controllers/taskController.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/controllers/taskController.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/controllers/uploadController.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/controllers/uploadController.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/controllers/userController.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/controllers/userController.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/repository/taskRepository.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/repository/taskRepository.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/routers/routes.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/routers/routes.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/utils/jwt/jwt.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/utils/jwt/jwt.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/back/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/config.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/back/config.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/configs/Config.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/configs/Config.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/back/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/back/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/middlewares/jwt/jwt.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/middlewares/jwt/jwt.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/middlewares/security/security.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/middlewares/security/security.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/repository/authRepository.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/repository/authRepository.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/service/authService.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/service/authService.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/service/friendService.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/service/friendService.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/service/messageService.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/service/messageService.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/service/taskService.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/service/taskService.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back/service/uploadService.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/service/uploadService.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -87,11 +92,11 @@
 }</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\code\GithubProject\WaitingToDo\back\middlewares\jwt" />
       <recent name="D:\code\GithubProject\WaitingToDo\back\utils\redisContent" />
       <recent name="D:\code\GithubProject\WaitingToDo\back\utils\myError" />
       <recent name="D:\code\GithubProject\WaitingToDo\back\utils\minioContent" />
       <recent name="D:\code\GithubProject\WaitingToDo\back\utils\jwt" />
-      <recent name="D:\code\GithubProject\WaitingToDo\back\utils\hashPassword" />
     </key>
   </component>
   <component name="RunManager" selected="Go 构建.go build back">
@@ -216,7 +221,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="修复添加好友的bug" />
     <MESSAGE value="为docker容器设置上海时区" />
     <MESSAGE value="修改验证码检测规则bug" />
     <MESSAGE value="修复小组任务组长退出后仍有提示的bug" />
@@ -241,7 +245,8 @@
     <MESSAGE value="优化mysql相关部分" />
     <MESSAGE value="update" />
     <MESSAGE value="更新gorm标签" />
-    <option name="LAST_COMMIT_MESSAGE" value="更新gorm标签" />
+    <MESSAGE value="添加安全中间件，完善jwt中间件。&#10;更新部分结构。&#10;完善数据库操作的Order by操作" />
+    <option name="LAST_COMMIT_MESSAGE" value="添加安全中间件，完善jwt中间件。&#10;更新部分结构。&#10;完善数据库操作的Order by操作" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
