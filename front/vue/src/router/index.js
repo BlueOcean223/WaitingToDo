@@ -10,9 +10,8 @@ import NotFound from "@/views/404"
 
 
 const routes = [
-  { path: "/" , redirect: "/login"},//默认路由
+  { path: "/" , component: HomePage},//默认路由
   { path: "/login", component: LoginPage },
-  { path: "/home", component: HomePage },
   { path: "/friend", component: FriendsPage },
   { path: "/notice", component: NoticePage },
   { path: "/team", component: TeamPage },
@@ -33,7 +32,7 @@ router.beforeEach((to, from, next) => {
   if (isLogin == null && to.path !== "/login") {
     next("/login");
   } else if(isLogin != null && to.path === "/login") {
-    next("/home");
+    next("/");
   }else{
     next();
   }

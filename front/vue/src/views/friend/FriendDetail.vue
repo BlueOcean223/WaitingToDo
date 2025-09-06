@@ -1,5 +1,5 @@
 <template>
-    <Navbar :activeIndex="navbarIndex"/>
+    <Navbar :activeIndex="$route.path"/>
     <div class="user-profile-container">
         <div class="profile-content">
         <!-- 头像区域 -->
@@ -82,7 +82,6 @@
     const userStore = useUserStore()
     const userId = ref(null);
     const userInfo = ref({});
-    const navbarIndex = '/friend'
     const picBaseUrl = import.meta.env.VITE_PIC_BASE_URL
     const avatarDialogVisible = ref(false) // 控制头像对话框显示
     const dialogVisible = ref(false)

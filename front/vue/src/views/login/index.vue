@@ -329,7 +329,7 @@ export default{
               // 更新全局用户信息
               useUserStore().updateUserInfo(res.data.data)
               // 跳转到首页
-              this.$router.push('/home')
+              this.$router.push('/')
             }else {
               ElMessage.error(res.data.message)
             }

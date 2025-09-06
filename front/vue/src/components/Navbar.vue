@@ -7,7 +7,7 @@
     :router="true"
   >
     <!-- 左侧菜单项 -->
-    <el-menu-item index="/home">主页</el-menu-item>
+    <el-menu-item index="/">主页</el-menu-item>
     <el-menu-item index="/team">小组</el-menu-item>
     <el-menu-item index="/friend">好友</el-menu-item>
     
@@ -46,7 +46,7 @@ export default {
   props: {
     activeIndex: {
       type: String,
-      default: '/home'
+      default: '/'
     }
   },
   computed: {

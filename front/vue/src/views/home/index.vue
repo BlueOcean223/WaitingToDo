@@ -1,6 +1,6 @@
 <template>
   <div class="home-container">
-    <NavBar />
+    <NavBar :activeIndex="$route.path" />
     
     <div class="main-content">
       <!-- 任务列表区域 -->
@@ -34,6 +34,7 @@
             v-for="task in urgentTasks"
             :key="task.id"
             class="urgent-task"
+            @click="openUrgentTask(task)"
           >
             {{ task.title }} - {{ formatDate(task.ddl) }}
           </div>
@@ -177,6 +178,14 @@
       </template>
     </el-dialog>
 
+  <!-- 任务详情（来自截止提醒区，复用 TaskDetail） -->
+  <el-dialog v-model="urgentDetailVisible" :title="detailTask ? detailTask.title : ''" width="550px" class="task-detail-dialog">
+    <TaskDetail v-if="detailTask" :task="detailTask" />
+    <template #footer>
+      <el-button type="primary" @click="urgentDetailVisible = false">关闭</el-button>
+    </template>
+  </el-dialog>
+
   <!-- 确认窗口 -->
   <ConfirmDialog
     ref="confirmDialog"
@@ -190,6 +199,7 @@
 <script>
 import NavBar from '@/components/NavBar.vue'
 import TaskCard from '@/components/TaskCard.vue'
+import TaskDetail from '@/components/TaskDetail.vue'
 import ConfirmDialog  from '@/components/ConfirmDialog.vue'
 import { Plus,UploadFilled,Delete } from '@element-plus/icons-vue'
 import { ElMessage,ElLoading } from 'element-plus'
@@ -201,6 +211,7 @@ export default {
   components: {
     NavBar,
     TaskCard,
+    TaskDetail,
     ConfirmDialog,
     ElIconPlus: Plus,
     ELIconUploadFilled: UploadFilled,
@@ -245,6 +256,9 @@ export default {
       dialogTitle: '',
       attachments: [], // 添加任务附件
       loadingInstance: null, // 加载实例
+      // 新增：截止提醒区的详情弹窗
+      urgentDetailVisible: false,
+      detailTask: null
     }
   },
   mounted() {
@@ -314,6 +328,13 @@ export default {
     handlePublish() {
       // 显示添加任务模态框
       this.showAddTask = true
+    },
+    // 新增：从截止提醒区打开详情
+    openUrgentTask(task){
+      // 若已加载完整任务（含附件等），优先展示完整数据
+      const full = this.tasks.find(t => t.id === task.id)
+      this.detailTask = full || task
+      this.urgentDetailVisible = true
     },
     // 提交新增任务
     async submitAddTask(){
@@ -421,7 +442,6 @@ export default {
             }
           })
         }
-        
 
         // 将数据发送给后端
         const data = {
@@ -623,7 +643,10 @@ export default {
   font-size: 14px;
 }
 .urgent-task {
-  color: red
+  color: red;
+  cursor: pointer;
+  padding: 6px 0;
+  text-align: center;
 }
 .filter-controls {
   margin-bottom: 20px;
@@ -653,5 +676,10 @@ export default {
   font-size: 13px; 
   line-height: 1.4;
   margin: 4px 0;
+}
+
+/* 任务详情弹窗样式（复用 TaskCard） */
+.task-detail-dialog {
+  border-radius: 8px;
 }
 </style>

@@ -4,21 +4,12 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4022ab68-4cae-4e7f-96d6-9f5f5a5cc1cd" name="更改" comment="添加安全中间件，完善jwt中间件。&#10;更新部分结构。&#10;完善数据库操作的Order by操作">
+    <list default="true" id="4022ab68-4cae-4e7f-96d6-9f5f5a5cc1cd" name="更改" comment="添加日志模块">
+      <change beforePath="$PROJECT_DIR$/.idea/WaitingToDo.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/WaitingToDo.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/back/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/config.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/back/config.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/configs/Config.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/configs/Config.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/back/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/back/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/middlewares/jwt/jwt.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/middlewares/jwt/jwt.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/middlewares/security/security.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/middlewares/security/security.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/repository/authRepository.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/repository/authRepository.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/service/authService.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/service/authService.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/service/friendService.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/service/friendService.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/service/messageService.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/service/messageService.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/service/taskService.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/service/taskService.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/service/uploadService.go" beforeDir="false" afterPath="$PROJECT_DIR$/back/service/uploadService.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front/vue/.env.production" beforeDir="false" afterPath="$PROJECT_DIR$/front/vue/.env.production" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front/vue/src/router/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/front/vue/src/router/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front/vue/src/views/login/index.vue" beforeDir="false" afterPath="$PROJECT_DIR$/front/vue/src/views/login/index.vue" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -83,7 +74,7 @@
     &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
     &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/code/GithubProject/WaitingToDo&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/lypyi&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
@@ -221,7 +212,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="为docker容器设置上海时区" />
     <MESSAGE value="修改验证码检测规则bug" />
     <MESSAGE value="修复小组任务组长退出后仍有提示的bug" />
     <MESSAGE value="补充小组任务通知即将到ddl功能" />
@@ -246,7 +236,8 @@
     <MESSAGE value="update" />
     <MESSAGE value="更新gorm标签" />
     <MESSAGE value="添加安全中间件，完善jwt中间件。&#10;更新部分结构。&#10;完善数据库操作的Order by操作" />
-    <option name="LAST_COMMIT_MESSAGE" value="添加安全中间件，完善jwt中间件。&#10;更新部分结构。&#10;完善数据库操作的Order by操作" />
+    <MESSAGE value="添加日志模块" />
+    <option name="LAST_COMMIT_MESSAGE" value="添加日志模块" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
