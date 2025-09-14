@@ -1,0 +1,34 @@
+package routers
+
+import (
+	"backend/internal/configs"
+	"backend/internal/handlers"
+	"backend/internal/repositories"
+	"backend/internal/services"
+	"github.com/gin-gonic/gin"
+)
+
+func SetMessageRoutes(r *gin.RouterGroup) {
+	// 初始化依赖
+	messageRepository := repository.NewMessageRepository(configs.MysqlDb)
+	messageService := services.NewMessageService(messageRepository)
+	messageController := handlers.NewMessageHandler(messageService)
+
+	message := r.Group("/message")
+	{
+		// 获取用户未读消息数量
+		message.GET("/unreadCount", messageController.GetUnreadMessageCount)
+		// 分页查询消息
+		message.GET("/list", messageController.GetMessageList)
+		// 更新消息
+		message.PUT("/update", messageController.UpdateMessage)
+		// 删除消息
+		message.DELETE("/delete", messageController.DeleteMessage)
+		// 一键已读
+		message.PUT("/readAll", messageController.ReadAllMessage)
+		// 处理请求
+		message.POST("/handle", messageController.HandleRequest)
+		// 添加消息
+		message.POST("/add", messageController.AddMessage)
+	}
+}

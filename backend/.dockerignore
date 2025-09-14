@@ -1,0 +1,33 @@
+# IDE 和编辑器
+.idea
+.vscode/
+
+# 版本控制
+.git
+
+# 日志文件
+*.log
+logs/
+
+# 文档
+docs/
+README.md
+
+# 开发工具
+.air.toml
+
+# 测试文件
+*_test.go
+coverage.*
+
+# 构建产物
+*.out
+main
+
+# 临时文件
+tmp/
+*.tmp
+
+# Docker 相关
+Dockerfile*
+.dockerignore
