@@ -8,14 +8,12 @@ import (
 	"backend/internal/repositories"
 	"backend/pkg/captcha"
 	"backend/pkg/logger"
-	"backend/pkg/minioContent"
 	"backend/pkg/myError"
 	"backend/pkg/redisContent"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/minio/minio-go/v7"
 	"log"
 	"strconv"
 	"time"
@@ -31,7 +29,6 @@ type TaskService interface {
 	DeleteTeamTask(taskId, userId int) error
 	AddTeamTask(task models.Task) error
 	GetInviteCodeByTaskId(taskId int) (string, error)
-	DeleteFromMinio(bucketName string, taskId int) error
 	JoinTeamTaskByInviteCode(email, inviteCode string) error
 	GenerateInviteCode(taskId int)
 	CompleteTeamTask(teamTask models.TeamTask) error
@@ -236,8 +233,21 @@ func (s *taskService) UpdateTask(taskVo vo.TaskVo) error {
 
 // DeleteTask 删除任务
 func (s *taskService) DeleteTask(id int) error {
+	// 构建objectName
+	taskFiles, err := s.fileRepository.GetFileByTaskId(id)
+	if err != nil {
+		logger.Error("查询任务附件失败",
+			logger.String("task_id", fmt.Sprintf("%d", id)),
+			logger.Err(err))
+		return err
+	}
+
+	var objectNames []string
+	for _, taskFile := range taskFiles {
+		objectNames = append(objectNames, strconv.Itoa(id)+"/"+taskFile.Name)
+	}
 	// 删除minio中的附件
-	err := s.DeleteFromMinio(minioContent.FilesBucket, id)
+	err = GetMinioService().BatchDeleteFromMinio(context.Background(), FilesBucket, objectNames)
 	if err != nil {
 		logger.Error("删除Minio附件失败",
 			logger.String("task_id", fmt.Sprintf("%d", id)),
@@ -276,41 +286,6 @@ func (s *taskService) DeleteTask(id int) error {
 		return err
 	}
 
-	return nil
-}
-
-// DeleteFromMinio 删除Minio中的附件
-func (s *taskService) DeleteFromMinio(bucketName string, taskId int) error {
-	minioClient := configs.MinioClient
-	ctx := context.Background()
-
-	taskFiles, err := s.fileRepository.GetFileByTaskId(taskId)
-	if err != nil {
-		return err
-	}
-
-	var objectNames []string
-	for _, taskFile := range taskFiles {
-		objectNames = append(objectNames, strconv.Itoa(taskId)+"/"+taskFile.Name)
-	}
-
-	objectsCh := make(chan minio.ObjectInfo)
-
-	go func() {
-		defer close(objectsCh)
-		for _, objectName := range objectNames {
-			objectsCh <- minio.ObjectInfo{Key: objectName}
-		}
-	}()
-
-	var errs []error
-	for err := range minioClient.RemoveObjects(ctx, bucketName, objectsCh, minio.RemoveObjectsOptions{}) {
-		errs = append(errs, err.Err)
-	}
-
-	if len(errs) > 0 {
-		return errs[0]
-	}
 	return nil
 }
 

@@ -3,17 +3,12 @@ package services
 import (
 	"backend/internal/configs"
 	"backend/internal/models"
-	"backend/internal/models/dto"
 	"backend/internal/repositories"
 	"backend/pkg/fileUtil"
 	"backend/pkg/logger"
-	"backend/pkg/minioContent"
 	"backend/pkg/redisContent"
 	"context"
-	"encoding/json"
 	"fmt"
-	"github.com/minio/minio-go/v7"
-	"io"
 	"mime/multipart"
 	"strconv"
 	"strings"
@@ -22,11 +17,8 @@ import (
 
 type UploadService interface {
 	UploadImg(email string, fileHeader *multipart.FileHeader) (string, error)
-	UploadToMinio(bucketName, objectName string, file io.Reader, size int64, contentType string) error
 	UploadFile(id int, files []*multipart.FileHeader) error
 	DeleteFile(ids []int) error
-	DeleteFromMinio(bucketName, objectName string) error
-	BatchDeleteFromMinio(bucketName string, objectNames []string) error
 }
 
 type uploadService struct {
@@ -104,7 +96,7 @@ func (s *uploadService) UploadImg(email string, fileHeader *multipart.FileHeader
 	objectName := date + "/" + md5Hash + extensionName
 
 	contentType := fileHeader.Header.Get("Content-Type")
-	err = s.UploadToMinio(minioContent.ImagesBucket, objectName, file, fileHeader.Size, contentType)
+	err = GetMinioService().UploadToMinio(context.Background(), ImagesBucket, objectName, file, fileHeader.Size, contentType)
 	if err != nil {
 		return "", err
 	}
@@ -118,7 +110,7 @@ func (s *uploadService) UploadImg(email string, fileHeader *multipart.FileHeader
 
 	image = models.Image{
 		Md5: md5Hash,
-		Url: "/" + minioContent.ImagesBucket + "/" + objectName,
+		Url: "/" + ImagesBucket + "/" + objectName,
 	}
 	err = s.imageRepository.InsertImage(image, tx)
 	if err != nil {
@@ -133,38 +125,12 @@ func (s *uploadService) UploadImg(email string, fileHeader *multipart.FileHeader
 		return "", err
 	}
 
-	// 更新前删除缓存
-	redisClient := configs.RedisClient
-	emailKey := redisContent.UserInfoKey + email
-	idKey := fmt.Sprintf(redisContent.UserInfoKey+"%d", user.Id)
-	err = redisClient.Del(context.Background(), emailKey, idKey).Err()
-	if err != nil {
-		tx.Rollback()
-		return "", err
-	}
-
 	user.Pic = image.Url
 	err = s.authRepository.UpdateUser(user, tx)
 	if err != nil {
 		tx.Rollback() // 回滚事务
 		return "", err
 	}
-
-	// 更新缓存
-	userDto := dto.UserDto{
-		Id:          user.Id,
-		Email:       user.Email,
-		Name:        user.Name,
-		Pic:         user.Pic,
-		Description: user.Description,
-	}
-	userJson, err := json.Marshal(userDto)
-	if err != nil {
-		tx.Rollback()
-		return "", err
-	}
-	redisClient.Set(context.Background(), emailKey, userJson, 24*time.Hour)
-	redisClient.Set(context.Background(), idKey, userJson, 24*time.Hour)
 
 	// 提交事务
 	if err = tx.Commit().Error; err != nil {
@@ -174,33 +140,12 @@ func (s *uploadService) UploadImg(email string, fileHeader *multipart.FileHeader
 		return "", err
 	}
 
+	// 删除redis缓存
+	emailKey := redisContent.UserInfoKey + email
+	idKey := fmt.Sprintf(redisContent.UserInfoKey+"%d", user.Id)
+	configs.RedisClient.Del(context.Background(), emailKey, idKey)
+
 	return image.Url, nil
-}
-
-// UploadToMinio 上传到minio
-func (s *uploadService) UploadToMinio(bucketName, objectName string, file io.Reader, size int64, contentType string) error {
-	// 获取Minio客户端
-	minioClient := configs.MinioClient
-
-	ctx := context.Background()
-	// 上传到minio
-	_, err := minioClient.PutObject(
-		ctx,
-		bucketName,
-		objectName,
-		file,
-		size,
-		minio.PutObjectOptions{ContentType: contentType},
-	)
-
-	if err != nil {
-		logger.Error("上传Minio失败",
-			logger.String("bucketName", bucketName),
-			logger.String("objectName", objectName),
-			logger.Err(err))
-	}
-
-	return err
 }
 
 // UploadFile 上传文件
@@ -214,7 +159,7 @@ func (s *uploadService) UploadFile(id int, files []*multipart.FileHeader) error 
 
 		// 上传到minio
 		objectName := strconv.Itoa(id) + "/" + fileHeader.Filename
-		err = s.UploadToMinio(minioContent.FilesBucket, objectName, file, fileHeader.Size, fileHeader.Header.Get("Content-Type"))
+		err = GetMinioService().UploadToMinio(context.Background(), FilesBucket, objectName, file, fileHeader.Size, fileHeader.Header.Get("Content-Type"))
 		if err != nil {
 			return err
 		}
@@ -223,7 +168,7 @@ func (s *uploadService) UploadFile(id int, files []*multipart.FileHeader) error 
 		fileDb := models.File{
 			TaskId: id,
 			Name:   fileHeader.Filename,
-			Url:    "/" + minioContent.FilesBucket + "/" + objectName,
+			Url:    "/" + FilesBucket + "/" + objectName,
 		}
 		err = s.fileRepository.Insert(fileDb, nil)
 		if err != nil {
@@ -248,7 +193,7 @@ func (s *uploadService) DeleteFile(ids []int) error {
 	for _, file := range files {
 		objectNames = append(objectNames, strconv.Itoa(file.TaskId)+"/"+file.Name)
 	}
-	err = s.BatchDeleteFromMinio(minioContent.FilesBucket, objectNames)
+	err = GetMinioService().BatchDeleteFromMinio(context.Background(), FilesBucket, objectNames)
 	if err != nil {
 		return err
 	}
@@ -257,46 +202,4 @@ func (s *uploadService) DeleteFile(ids []int) error {
 	err = s.fileRepository.DeleteByIds(ids, nil)
 
 	return err
-}
-
-// DeleteFromMinio 删除Minio中的附件
-func (s *uploadService) DeleteFromMinio(bucketName, objectName string) error {
-	minioClient := configs.MinioClient
-	ctx := context.Background()
-	err := minioClient.RemoveObject(ctx, bucketName, objectName, minio.RemoveObjectOptions{})
-	if err != nil {
-		logger.Error("从minio中删除附件失败",
-			logger.String("bucketName", bucketName),
-			logger.String("objectName", objectName),
-			logger.Err(err))
-	}
-	return err
-}
-
-// BatchDeleteFromMinio 批量删除Minio中的附件
-func (s *uploadService) BatchDeleteFromMinio(bucketName string, objectNames []string) error {
-	minioClient := configs.MinioClient
-	ctx := context.Background()
-
-	objectsCh := make(chan minio.ObjectInfo)
-	go func() {
-		defer close(objectsCh)
-		for _, objectName := range objectNames {
-			objectsCh <- minio.ObjectInfo{
-				Key: objectName,
-			}
-		}
-	}()
-
-	var errs []error
-	for err := range minioClient.RemoveObjects(ctx, bucketName, objectsCh, minio.RemoveObjectsOptions{}) {
-		errs = append(errs, err.Err)
-	}
-	if len(errs) > 0 {
-		logger.Warn("从minio中批量删除附件异常",
-			logger.String("bucketName", bucketName),
-			logger.Err(errs[0]))
-		return errs[0]
-	}
-	return nil
 }

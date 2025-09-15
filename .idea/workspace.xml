@@ -5,202 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4022ab68-4cae-4e7f-96d6-9f5f5a5cc1cd" name="更改" comment="refactor: 重构目录结构">
-      <change afterPath="$PROJECT_DIR$/backend/cmd/main.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/config/config.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/docs/README_EN.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/docs/api-guide.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/docs/deployment-guide.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/docs/development-guide.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/configs/Config.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/configs/Mail.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/configs/Minio.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/configs/MySQL.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/configs/RabbitMQ.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/configs/Redis.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/handlers/auth_handler.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/handlers/friend_handler.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/handlers/message_handler.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/handlers/task_handler.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/handlers/upload_handler.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/handlers/user_handler.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/middlewares/jwt/jwt.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/middlewares/security/security.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/File.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/Friend.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/Image.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/InviteCode.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/Mail.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/Message.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/Task.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/TaskNoticeHistory.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/TeamTask.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/User.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/dto/FriendInfoDto.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/dto/MessageDto.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/dto/UserDto.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/dto/taskDto.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/dto/teamTaskDto.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/mqMessage.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/vo/MessageVo.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/vo/TaskVo.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/vo/UserVo.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/models/vo/friendVo.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/repositories/authRepository.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/repositories/fileRepository.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/repositories/friendRepository.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/repositories/imageRepository.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/repositories/inviteCodeRepository.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/repositories/messageRepository.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/repositories/taskNoticeHistoryRepository.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/repositories/taskRepository.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/repositories/teamTaskRepository.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/routers/auth.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/routers/friend.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/routers/message.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/routers/routes.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/routers/task.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/routers/upload.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/routers/user.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/services/authService.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/services/consumer/baseConsumer.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/services/consumer/consumerManager.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/services/consumer/friendConsumer.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/services/consumer/teamConsumer.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/services/friendService.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/services/messageService.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/services/taskService.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/services/ticker/ticker.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/services/uploadService.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/services/userService.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/captcha/captcha.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/response/response.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/vue/src/views/home/index.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/vue/src/views/login/index.vue" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.github/workflow/go-build.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/internal/services/minioService.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/.air.toml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.air.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/.dockerignore" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.dockerignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/backend/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/config.yaml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/configs/Config.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/configs/Mail.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/configs/Minio.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/configs/MySQL.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/configs/RabbitMQ.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/configs/Redis.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/controllers/authController.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/controllers/friendController.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/controllers/messageController.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/controllers/taskController.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/controllers/uploadController.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/controllers/userController.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/main.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/middlewares/jwt/jwt.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/middlewares/security/security.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/File.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/Friend.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/Image.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/InviteCode.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/Mail.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/Message.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/Result.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/Task.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/TaskNoticeHistory.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/TeamTask.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/User.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/dto/FriendInfoDto.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/dto/MessageDto.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/dto/UserDto.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/dto/taskDto.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/dto/teamTaskDto.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/mqMessage.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/vo/MessageVo.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/vo/TaskVo.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/vo/UserVo.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/models/vo/friendVo.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/repository/authRepository.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/repository/fileRepository.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/repository/friendRepository.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/repository/imgeRepository.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/repository/inviteCodeRepository.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/repository/messageRepository.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/repository/taskNoticeHistoryRepository.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/repository/taskRepository.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/repository/teamTaskRepository.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/routers/auth.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/routers/friend.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/routers/message.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/routers/routes.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/routers/task.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/routers/upload.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/routers/user.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/service/authService.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/service/consumer/baseConsumer.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/service/consumer/consumerManager.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/service/consumer/friendConsumer.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/service/consumer/teamConsumer.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/service/friendService.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/service/messageService.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/service/taskService.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/service/uploadService.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/service/userService.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/utils/captcha/captcha.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/utils/captcha/captcha_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/captcha/captcha_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/utils/fileUtil/FileUtil.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/fileUtil/fileutil.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/utils/fileUtil/fileUtil_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/fileUtil/fileUtil_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/utils/hashPassword/HashPassword.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/hashPassword/HashPassword.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/utils/hashPassword/hashPassword_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/hashPassword/hashPassword_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/utils/logger/logger.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/logger/logger.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/utils/minioContent/minioContent.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/minioContent/minioContent.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/utils/myError/MyError.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/myError/myerror.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back/utils/redisContent/redisContent.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/redisContent/redisContent.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/.env.development" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/.env.development" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/.env.production" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/.env.production" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/.vscode/extensions.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/.vscode/extensions.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/nginx.conf" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/nginx.conf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/public/vite.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/public/vite.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/public/wait.ico" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/public/wait.ico" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/App.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/App.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/api/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/api/auth.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/api/friend.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/api/friend.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/api/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/api/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/api/message.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/api/message.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/api/task.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/api/task.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/api/upload.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/api/upload.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/api/user.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/api/user.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/assets/404syz.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/assets/404syz.jpg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/assets/sysuBackground.png" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/assets/sysuBackground.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/assets/vue.svg" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/assets/vue.svg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/components/ConfirmDialog.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/components/ConfirmDialog.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/components/FriendCard.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/components/FriendCard.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/components/HelloWorld.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/components/HelloWorld.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/components/Navbar.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/components/Navbar.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/components/TaskCard.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/components/TaskCard.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/components/TaskDetail.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/components/TaskDetail.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/components/TeamTask.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/components/TeamTask.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/main.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/main.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/router/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/router/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/stores/message.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/stores/message.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/stores/user.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/stores/user.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/style.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/views/404/index.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/views/404/index.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/views/friend/FriendDetail.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/views/friend/FriendDetail.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/views/friend/index.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/views/friend/index.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/views/home/index.vue" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/views/login/index.vue" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/views/notice/index.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/views/notice/index.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/views/profiles/index.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/views/profiles/index.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/src/views/team/index.vue" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/src/views/team/index.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front/vue/vite.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/vue/vite.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/internal/services/taskService.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/internal/services/taskService.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/internal/services/uploadService.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/internal/services/uploadService.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/minioContent/minioContent.go" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -245,37 +57,38 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;DefaultGoTemplateProperty&quot;: &quot;Go File&quot;,
-    &quot;Go 构建.go build back.executor&quot;: &quot;Run&quot;,
-    &quot;Go 构建.go build backend/cmd.executor&quot;: &quot;Run&quot;,
-    &quot;Go 测试.back/utils/captcha 中的 TestGenerateCaptcha.executor&quot;: &quot;Run&quot;,
-    &quot;Go 测试.back/utils/captcha 中的 TestGenerateInviteCode.executor&quot;: &quot;Debug&quot;,
-    &quot;Go 测试.back/utils/fileUtil 中的 TestGetFileMD5.executor&quot;: &quot;Run&quot;,
-    &quot;Go 测试.back/utils/hashPassword 中的 TestHashPassword.executor&quot;: &quot;Run&quot;,
-    &quot;Go 测试.backend/internal/services 中的 TestAuthService_CheckUser.executor&quot;: &quot;Run&quot;,
-    &quot;Go 测试.backend/internal/services 中的 TestAuthService_CheckUser/User_Not_Found.executor&quot;: &quot;Run&quot;,
-    &quot;Go 测试.backend/internal/services 中的 TestTaskService_GetTaskList.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.GoLinterPluginOnboarding&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.GoLinterPluginStorageMigration&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
-    &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/code/GithubProject/WaitingToDo/backend/internal/middlewares&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;go&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultGoTemplateProperty": "Go File",
+    "Go 构建.go build back.executor": "Run",
+    "Go 构建.go build backend/cmd.executor": "Run",
+    "Go 测试.back/utils/captcha 中的 TestGenerateCaptcha.executor": "Run",
+    "Go 测试.back/utils/captcha 中的 TestGenerateInviteCode.executor": "Debug",
+    "Go 测试.back/utils/fileUtil 中的 TestGetFileMD5.executor": "Run",
+    "Go 测试.back/utils/hashPassword 中的 TestHashPassword.executor": "Run",
+    "Go 测试.backend/internal/repositories 中的 TestAuthRepository_SelectUserByEmail.executor": "Run",
+    "Go 测试.backend/internal/services 中的 TestAuthService_CheckUser.executor": "Run",
+    "Go 测试.backend/internal/services 中的 TestAuthService_CheckUser/User_Not_Found.executor": "Run",
+    "Go 测试.backend/internal/services 中的 TestTaskService_GetTaskList.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.GoLinterPluginOnboarding": "true",
+    "RunOnceActivity.GoLinterPluginStorageMigration": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.go.formatter.settings.were.checked": "true",
+    "RunOnceActivity.go.migrated.go.modules.settings": "true",
+    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
+    "git-widget-placeholder": "main",
+    "go.import.settings.migrated": "true",
+    "go.sdk.automatically.set": "true",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "D:/code/GithubProject/WaitingToDo/backend/internal/middlewares",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "go"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\code\GithubProject\WaitingToDo\backend\internal\middlewares" />
@@ -288,7 +101,7 @@
       <recent name="D:\code\GithubProject\WaitingToDo\back\middlewares\jwt" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Go 构建.go build backend/cmd">
     <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="WaitingToDo" />
       <working_directory value="$PROJECT_DIR$" />
@@ -315,9 +128,22 @@
       <framework value="gotest" />
       <method v="2" />
     </configuration>
+    <configuration name="backend/internal/repositories 中的 TestAuthRepository_SelectUserByEmail" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="WaitingToDo" />
+      <working_directory value="$PROJECT_DIR$/backend/internal/repositories" />
+      <root_directory value="$PROJECT_DIR$/backend" />
+      <kind value="PACKAGE" />
+      <package value="backend/internal/repositories" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestAuthRepository_SelectUserByEmail\E$" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
         <item itemvalue="Go 构建.go build backend/cmd" />
+        <item itemvalue="Go 测试.backend/internal/repositories 中的 TestAuthRepository_SelectUserByEmail" />
       </list>
     </recent_temporary>
   </component>
