@@ -38,7 +38,7 @@ func (s *taskNoticeHistoryRepository) GetHistoryByTaskId(taskId int) (models.Tas
 	var taskNoticeHistory models.TaskNoticeHistory
 	err := s.Db.Where("task_id = ?", taskId).First(&taskNoticeHistory).Error
 
-	if errors.As(err, &gorm.ErrRecordNotFound) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return models.TaskNoticeHistory{}, nil
 	}
 
