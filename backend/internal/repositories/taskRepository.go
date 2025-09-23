@@ -109,6 +109,6 @@ func (s *taskRepository) GetOneDayDDLTaskList() ([]models.Task, error) {
 // GetTaskListByIds 根据任务id列表批量获取任务
 func (s *taskRepository) GetTaskListByIds(ids []int) ([]models.Task, error) {
 	var tasks []models.Task
-	err := s.db.Where("id IN (?)", ids).Order("ddl desc").Find(&tasks).Error
+	err := s.db.Where("id IN (?)", ids).Order("ddl desc, id").Find(&tasks).Error
 	return tasks, err
 }
