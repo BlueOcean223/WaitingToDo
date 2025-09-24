@@ -43,3 +43,16 @@ log:
   max_age: 30            # 日志文件保留天数
   compress: true         # 是否压缩
   console: true          # 是否输出到控制台
+
+# 日志分析器配置
+log_analyzer:
+  enabled: false                    # 是否启用日志分析
+  model: "gpt-3.5-turbo"           # 使用的模型
+  url: "https://api.openai.com/v1" # API地址
+  api_key: "your-api-key-here"     # API密钥
+  max_tokens: 4000                 # 最大令牌数
+  timeout: 300                     # 超时时间(秒)
+  analysis_level: "simplified"     # 分析级别: simplified, detailed, quick, trend
+  report_path: "logs/analyze"      # 报告存放路径
+  analysis_hours: 24               # 分析时间范围(小时)
+  max_log_size: 100000            # 最大日志大小(字节)，默认100KB

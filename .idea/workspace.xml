@@ -4,15 +4,14 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4022ab68-4cae-4e7f-96d6-9f5f5a5cc1cd" name="更改" comment="refactor: 重构目录结构">
-      <change afterPath="$PROJECT_DIR$/.github/workflow/go-build.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/internal/services/minioService.go" afterDir="false" />
+    <list default="true" id="4022ab68-4cae-4e7f-96d6-9f5f5a5cc1cd" name="更改" comment="feat: 新增智能日志分析器">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/cmd/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/cmd/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/config/config.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/config/config.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.mod" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/internal/services/taskService.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/internal/services/taskService.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/internal/services/uploadService.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/internal/services/uploadService.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/minioContent/minioContent.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/internal/configs/Config.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/internal/configs/Config.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/internal/services/ticker/ticker.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/internal/services/ticker/ticker.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,7 +38,7 @@
 }</component>
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;git@github.com:BlueOcean223/WaitingToDo.git&quot;,
+    &quot;url&quot;: &quot;https://github.com/BlueOcean223/WaitingToDo.git&quot;,
     &quot;accountId&quot;: &quot;a216f061-2f79-415a-bd05-0ac6d560977a&quot;
   }
 }</component>
@@ -57,38 +56,84 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "DefaultGoTemplateProperty": "Go File",
-    "Go 构建.go build back.executor": "Run",
-    "Go 构建.go build backend/cmd.executor": "Run",
-    "Go 测试.back/utils/captcha 中的 TestGenerateCaptcha.executor": "Run",
-    "Go 测试.back/utils/captcha 中的 TestGenerateInviteCode.executor": "Debug",
-    "Go 测试.back/utils/fileUtil 中的 TestGetFileMD5.executor": "Run",
-    "Go 测试.back/utils/hashPassword 中的 TestHashPassword.executor": "Run",
-    "Go 测试.backend/internal/repositories 中的 TestAuthRepository_SelectUserByEmail.executor": "Run",
-    "Go 测试.backend/internal/services 中的 TestAuthService_CheckUser.executor": "Run",
-    "Go 测试.backend/internal/services 中的 TestAuthService_CheckUser/User_Not_Found.executor": "Run",
-    "Go 测试.backend/internal/services 中的 TestTaskService_GetTaskList.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.GoLinterPluginOnboarding": "true",
-    "RunOnceActivity.GoLinterPluginStorageMigration": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.go.formatter.settings.were.checked": "true",
-    "RunOnceActivity.go.migrated.go.modules.settings": "true",
-    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
-    "git-widget-placeholder": "main",
-    "go.import.settings.migrated": "true",
-    "go.sdk.automatically.set": "true",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "D:/code/GithubProject/WaitingToDo/backend/internal/middlewares",
-    "node.js.detected.package.eslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "go"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultGoTemplateProperty&quot;: &quot;Go File&quot;,
+    &quot;Go 构建.go build back.executor&quot;: &quot;Run&quot;,
+    &quot;Go 构建.go build backend/cmd.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.back/utils/captcha 中的 TestGenerateCaptcha.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.back/utils/captcha 中的 TestGenerateInviteCode.executor&quot;: &quot;Debug&quot;,
+    &quot;Go 测试.back/utils/fileUtil 中的 TestGetFileMD5.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.back/utils/hashPassword 中的 TestHashPassword.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestAuthRepository_InsertUser.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestAuthRepository_SelectUserByEmail (1).executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestAuthRepository_SelectUserByEmail.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestAuthRepository_SelectUserById.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestAuthRepository_SelectUsersByIds.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestAuthRepository_UpdateUser.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestFileRepository_DeleteByIds/success.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestFriendRepository_GetFriendList.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestFriendRepository_GetFriendList/found.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestFriendRepository_UpdateFriend.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestFriendRepository_UpdateFriend/success.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestImageRepository_InsertImage/成功插入图片.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestInviteCodeRepository_Insert.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestInviteCodeRepository_Insert/创建邀请码失败.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestInviteCodeRepository_Insert/成功创建邀请码.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestMessageRepository_Delete.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestMessageRepository_GetMessageList.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestMessageRepository_GetUnreadMessageCount.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestMessageRepository_InsertMessage.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestMessageRepository_ReadAllMessage.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestMessageRepository_Update.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTaskNoticeHistoryRepository_BatchInsert.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTaskNoticeHistoryRepository_BatchInsert/success.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTaskNoticeHistoryRepository_DeleteHistoryByTaskId.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTaskNoticeHistoryRepository_GetHistoriesByTaskIds.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTaskNoticeHistoryRepository_GetHistoryByTaskId.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTaskNoticeHistoryRepository_GetHistoryByTaskId/found.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTaskNoticeHistoryRepository_GetHistoryByTaskId/not_found.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTaskNoticeHistoryRepository_Insert.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTaskNoticeHistoryRepository_Insert/success.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTaskRepository_GetList.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTaskRepository_GetList/empty_result.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTaskRepository_GetList/found_with_status.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTaskRepository_GetList/found_without_status.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTaskRepository_Update.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTaskRepository_Update/success.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTeamTaskRepository_GetList.executor&quot;: &quot;Coverage&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTeamTaskRepository_GetList/成功获取团队任务列表.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTeamTaskRepository_GetList/数据库查询失败.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTeamTaskRepository_GetTeamMembers.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTeamTaskRepository_GetTeamTaskShipByTaskIds.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTeamTaskRepository_Insert.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/repositories 中的 TestTeamTaskRepository_Update.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/services 中的 TestAuthService_CheckUser.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/services 中的 TestAuthService_CheckUser/User_Not_Found.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/services 中的 TestTaskService_GetTaskList.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/services/logAnalyzer 中的 TestParsePromptType.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.backend/internal/services/logAnalyzer 中的 TestPromptTemplateBasic.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.go test backend/internal/repositories.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.go test backend/internal/services/logAnalyzer.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.GoLinterPluginOnboarding&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.GoLinterPluginStorageMigration&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
+    &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/code/GithubProject/WaitingToDo/backend/internal/middlewares&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;go&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\code\GithubProject\WaitingToDo\backend\internal\middlewares" />
@@ -101,7 +146,7 @@
       <recent name="D:\code\GithubProject\WaitingToDo\back\middlewares\jwt" />
     </key>
   </component>
-  <component name="RunManager" selected="Go 构建.go build backend/cmd">
+  <component name="RunManager" selected="Go 测试.go test backend/internal/repositories (1)">
     <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="WaitingToDo" />
       <working_directory value="$PROJECT_DIR$" />
@@ -128,7 +173,19 @@
       <framework value="gotest" />
       <method v="2" />
     </configuration>
-    <configuration name="backend/internal/repositories 中的 TestAuthRepository_SelectUserByEmail" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="backend/internal/services/logAnalyzer 中的 TestParsePromptType" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="WaitingToDo" />
+      <working_directory value="$PROJECT_DIR$/backend/internal/services/logAnalyzer" />
+      <root_directory value="$PROJECT_DIR$/backend" />
+      <kind value="PACKAGE" />
+      <package value="backend/internal/services/logAnalyzer" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestParsePromptType\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go test backend/internal/repositories (1)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="WaitingToDo" />
       <working_directory value="$PROJECT_DIR$/backend/internal/repositories" />
       <root_directory value="$PROJECT_DIR$/backend" />
@@ -137,13 +194,37 @@
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
-      <pattern value="^\QTestAuthRepository_SelectUserByEmail\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go test backend/internal/repositories" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="WaitingToDo" />
+      <working_directory value="$PROJECT_DIR$/backend/internal/repositories" />
+      <root_directory value="$PROJECT_DIR$/backend" />
+      <kind value="PACKAGE" />
+      <package value="backend/internal/repositories" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go test backend/internal/services/logAnalyzer" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="WaitingToDo" />
+      <working_directory value="$PROJECT_DIR$/backend/internal/services/logAnalyzer" />
+      <root_directory value="$PROJECT_DIR$/backend" />
+      <kind value="PACKAGE" />
+      <package value="backend/internal/services/logAnalyzer" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
       <method v="2" />
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Go 测试.go test backend/internal/repositories (1)" />
+        <item itemvalue="Go 测试.go test backend/internal/repositories" />
         <item itemvalue="Go 构建.go build backend/cmd" />
-        <item itemvalue="Go 测试.backend/internal/repositories 中的 TestAuthRepository_SelectUserByEmail" />
+        <item itemvalue="Go 测试.go test backend/internal/services/logAnalyzer" />
+        <item itemvalue="Go 测试.backend/internal/services/logAnalyzer 中的 TestParsePromptType" />
       </list>
     </recent_temporary>
   </component>
@@ -184,7 +265,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="补充小组任务通知即将到ddl功能" />
     <MESSAGE value="修改配置" />
     <MESSAGE value="添加临时关闭展示好友信息功能" />
     <MESSAGE value="添加刷新令牌功能" />
@@ -209,7 +289,8 @@
     <MESSAGE value="添加日志模块" />
     <MESSAGE value="添加截止任务提醒区展示任务详情功能" />
     <MESSAGE value="refactor: 重构目录结构" />
-    <option name="LAST_COMMIT_MESSAGE" value="refactor: 重构目录结构" />
+    <MESSAGE value="test: 添加repo测试用例覆盖" />
+    <option name="LAST_COMMIT_MESSAGE" value="test: 添加repo测试用例覆盖" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
@@ -220,5 +301,9 @@
         <breakpoint type="DlvErrorBreakpoint" />
       </default-breakpoints>
     </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/WaitingToDo$backend_internal_repositories__TestTeamTaskRepository_GetList.out" NAME="backend/internal/repositories 中的 TestTeamTaskRepository_GetList 覆盖结果" MODIFIED="1758189186007" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
+    <SUITE FILE_PATH="coverage/WaitingToDo$go_test_backend_internal_repositories.out" NAME="go test backend/internal/repositories 覆盖结果" MODIFIED="1758201242441" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
   </component>
 </project>

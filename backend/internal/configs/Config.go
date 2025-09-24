@@ -18,18 +18,33 @@ type LogConfig struct {
 	Console    bool   `yaml:"console"`     // 是否输出到控制台
 }
 
+// LogAnalyzerConfig 日志分析器配置
+type LogAnalyzerConfig struct {
+	Model         string `yaml:"model"`          // 模型名称
+	URL           string `yaml:"url"`            // API地址
+	APIKey        string `yaml:"api_key"`        // API密钥
+	MaxTokens     int    `yaml:"max_tokens"`     // 最大令牌数
+	Timeout       int    `yaml:"timeout"`        // 超时时间(秒)
+	Enabled       bool   `yaml:"enabled"`        // 是否启用
+	AnalysisLevel string `yaml:"analysis_level"` // 分析级别: detailed, quick, trend, custom
+	ReportPath    string `yaml:"report_path"`    // 报告存放路径
+	AnalysisHours int    `yaml:"analysis_hours"` // 分析时间范围(小时)
+	MaxLogSize    int    `yaml:"max_log_size"`   // 最大日志大小(字节)
+}
+
 type Config struct {
-	MySQLConfig    MySQLConfig    `yaml:"mysql"`
-	RedisConfig    RedisConfig    `yaml:"redis"`
-	MailConfig     MailConfig     `yaml:"mail"`
-	MinioConfig    MinioConfig    `yaml:"minio"`
-	RabbitMQConfig RabbitMQConfig `yaml:"rabbitmq"`
-	LogConfig      LogConfig      `yaml:"log"`
+	MySQLConfig       MySQLConfig       `yaml:"mysql"`
+	RedisConfig       RedisConfig       `yaml:"redis"`
+	MailConfig        MailConfig        `yaml:"mail"`
+	MinioConfig       MinioConfig       `yaml:"minio"`
+	RabbitMQConfig    RabbitMQConfig    `yaml:"rabbitmq"`
+	LogConfig         LogConfig         `yaml:"log"`
+	LogAnalyzerConfig LogAnalyzerConfig `yaml:"log_analyzer"`
 }
 
 var AppConfigs Config
 
-func InitConfig(configPath string) error {
+func initConfig(configPath string) error {
 	// 读取yaml文件
 	yamlFile, err := os.ReadFile(configPath)
 	if err != nil {
@@ -50,15 +65,15 @@ func InitLogger() error {
 	return logger.InitLogger(logger.LogConfig(AppConfigs.LogConfig))
 }
 
-func init() {
+func InitConfig() {
 	// 加载配置文件
-	err := InitConfig("./config/config.yaml")
+	err := initConfig("./config/config.yaml")
 	if err != nil {
 		log.Fatalf("加载配置文件失败: %v", err)
 	}
 	// 如果有本地配置文件，则覆盖
 	if _, err := os.Stat("./config/config.local.yaml"); err == nil {
-		err = InitConfig("./config/config.local.yaml")
+		err = initConfig("./config/config.local.yaml")
 		if err != nil {
 			log.Fatalf("加载本地配置文件失败: %v", err)
 		}
