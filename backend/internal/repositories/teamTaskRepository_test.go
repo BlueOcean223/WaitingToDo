@@ -239,14 +239,15 @@ func TestTeamTaskRepository_GetTeamTaskShipByTaskIds(t *testing.T) {
 	taskIds := []int{1, 2}
 
 	t.Run("成功获取团队任务关系", func(t *testing.T) {
+		timing := time.Now()
 		expectedTeamTasks := []models.TeamTask{
-			{Id: 1, TaskId: 1, UserId: 1, CreateTime: time.Now(), UpdateTime: time.Now()},
-			{Id: 2, TaskId: 2, UserId: 2, CreateTime: time.Now(), UpdateTime: time.Now()},
+			{Id: 1, TaskId: 1, UserId: 1, CreateTime: timing, UpdateTime: timing},
+			{Id: 2, TaskId: 2, UserId: 2, CreateTime: timing, UpdateTime: timing},
 		}
 
 		rows := sqlmock.NewRows([]string{"id", "task_id", "user_id", "create_time", "update_time"}).
-			AddRow(1, 1, 1, time.Now(), time.Now()).
-			AddRow(2, 2, 2, time.Now(), time.Now())
+			AddRow(1, 1, 1, timing, timing).
+			AddRow(2, 2, 2, timing, timing)
 
 		mock.ExpectQuery(regexp.QuoteMeta(pattern)).
 			WithArgs(1, 2).

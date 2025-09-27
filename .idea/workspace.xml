@@ -6,12 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="4022ab68-4cae-4e7f-96d6-9f5f5a5cc1cd" name="更改" comment="feat: 新增智能日志分析器">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/cmd/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/cmd/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/config/config.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/config/config.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/internal/configs/Config.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/internal/configs/Config.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/internal/services/ticker/ticker.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/internal/services/ticker/ticker.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -113,6 +107,7 @@
     &quot;Go 测试.backend/internal/services 中的 TestTaskService_GetTaskList.executor&quot;: &quot;Run&quot;,
     &quot;Go 测试.backend/internal/services/logAnalyzer 中的 TestParsePromptType.executor&quot;: &quot;Run&quot;,
     &quot;Go 测试.backend/internal/services/logAnalyzer 中的 TestPromptTemplateBasic.executor&quot;: &quot;Run&quot;,
+    &quot;Go 测试.go test backend/internal/repositories (1).executor&quot;: &quot;Run&quot;,
     &quot;Go 测试.go test backend/internal/repositories.executor&quot;: &quot;Run&quot;,
     &quot;Go 测试.go test backend/internal/services/logAnalyzer.executor&quot;: &quot;Run&quot;,
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
@@ -146,7 +141,7 @@
       <recent name="D:\code\GithubProject\WaitingToDo\back\middlewares\jwt" />
     </key>
   </component>
-  <component name="RunManager" selected="Go 测试.go test backend/internal/repositories (1)">
+  <component name="RunManager" selected="Go 测试.backend/internal/repositories 中的 TestTeamTaskRepository_GetTeamTaskShipByTaskIds">
     <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="WaitingToDo" />
       <working_directory value="$PROJECT_DIR$" />
@@ -173,16 +168,16 @@
       <framework value="gotest" />
       <method v="2" />
     </configuration>
-    <configuration name="backend/internal/services/logAnalyzer 中的 TestParsePromptType" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="backend/internal/repositories 中的 TestTeamTaskRepository_GetTeamTaskShipByTaskIds" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="WaitingToDo" />
-      <working_directory value="$PROJECT_DIR$/backend/internal/services/logAnalyzer" />
+      <working_directory value="$PROJECT_DIR$/backend/internal/repositories" />
       <root_directory value="$PROJECT_DIR$/backend" />
       <kind value="PACKAGE" />
-      <package value="backend/internal/services/logAnalyzer" />
+      <package value="backend/internal/repositories" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
-      <pattern value="^\QTestParsePromptType\E$" />
+      <pattern value="^\QTestTeamTaskRepository_GetTeamTaskShipByTaskIds\E$" />
       <method v="2" />
     </configuration>
     <configuration name="go test backend/internal/repositories (1)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
@@ -220,11 +215,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Go 测试.backend/internal/repositories 中的 TestTeamTaskRepository_GetTeamTaskShipByTaskIds" />
         <item itemvalue="Go 测试.go test backend/internal/repositories (1)" />
         <item itemvalue="Go 测试.go test backend/internal/repositories" />
         <item itemvalue="Go 构建.go build backend/cmd" />
         <item itemvalue="Go 测试.go test backend/internal/services/logAnalyzer" />
-        <item itemvalue="Go 测试.backend/internal/services/logAnalyzer 中的 TestParsePromptType" />
       </list>
     </recent_temporary>
   </component>
@@ -265,7 +260,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="修改配置" />
     <MESSAGE value="添加临时关闭展示好友信息功能" />
     <MESSAGE value="添加刷新令牌功能" />
     <MESSAGE value="添加预览好友头像功能" />
@@ -290,7 +284,8 @@
     <MESSAGE value="添加截止任务提醒区展示任务详情功能" />
     <MESSAGE value="refactor: 重构目录结构" />
     <MESSAGE value="test: 添加repo测试用例覆盖" />
-    <option name="LAST_COMMIT_MESSAGE" value="test: 添加repo测试用例覆盖" />
+    <MESSAGE value="feat: 新增智能日志分析器" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: 新增智能日志分析器" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
