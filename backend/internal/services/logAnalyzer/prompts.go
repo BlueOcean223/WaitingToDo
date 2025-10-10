@@ -1,10 +1,12 @@
 package logAnalyzer
 
 import (
+	"context"
 	"strings"
 	"time"
 
-	"github.com/tmc/langchaingo/prompts"
+	"github.com/cloudwego/eino/components/prompt"
+	"github.com/cloudwego/eino/schema"
 )
 
 // 日志分析提示词模板
@@ -201,9 +203,9 @@ func ParsePromptType(s string) PromptType {
 
 // PromptConfig 提示词配置
 type PromptConfig struct {
-	Type       PromptType             `json:"type"`
-	Parameters map[string]any         `json:"parameters"`
-	Template   prompts.PromptTemplate `json:"-"` // langchaingo 提示词模板
+	Type       PromptType          `json:"type"`
+	Parameters map[string]any      `json:"parameters"`
+	Template   prompt.ChatTemplate `json:"-"` // eino 提示词模板
 }
 
 // GetPromptConfig 获取默认提示词配置
@@ -217,27 +219,35 @@ func GetPromptConfig(promptType PromptType) *PromptConfig {
 	switch promptType {
 	case PromptTypeSimplified:
 		config.Parameters["AnalysisTime"] = time.Now().Format(time.RFC3339)
-		config.Template = prompts.NewPromptTemplate(
-			SimplifiedAnalysisPrompt,
-			[]string{"LogContent", "AnalysisTime"},
+		config.Template = prompt.FromMessages(schema.GoTemplate,
+			&schema.Message{
+				Role:    schema.User,
+				Content: SimplifiedAnalysisPrompt,
+			},
 		)
 	case PromptTypeDetailed:
 		config.Parameters["LogSource"] = "系统应用日志"
 		config.Parameters["AnalysisTime"] = time.Now().Format("2006-01-02 15:04:05")
-		config.Template = prompts.NewPromptTemplate(
-			DetailedAnalysisPrompt,
-			[]string{"LogContent", "LogSource", "AnalysisTime"},
+		config.Template = prompt.FromMessages(schema.GoTemplate,
+			&schema.Message{
+				Role:    schema.User,
+				Content: DetailedAnalysisPrompt,
+			},
 		)
 	case PromptTypeQuick:
-		config.Template = prompts.NewPromptTemplate(
-			QuickAnalysisPrompt,
-			[]string{"LogContent"},
+		config.Template = prompt.FromMessages(schema.GoTemplate,
+			&schema.Message{
+				Role:    schema.User,
+				Content: QuickAnalysisPrompt,
+			},
 		)
 	case PromptTypeTrend:
 		config.Parameters["AnalysisTime"] = time.Now().Format("2006-01-02 15:04:05")
-		config.Template = prompts.NewPromptTemplate(
-			TrendAnalysisPrompt,
-			[]string{"LogContent"},
+		config.Template = prompt.FromMessages(schema.GoTemplate,
+			&schema.Message{
+				Role:    schema.User,
+				Content: TrendAnalysisPrompt,
+			},
 		)
 	}
 
@@ -249,14 +259,18 @@ func BuildPrompt(config *PromptConfig, logContent string) string {
 	// 添加日志内容到参数
 	config.Parameters["LogContent"] = logContent
 
-	// 使用 langchaingo 的 PromptTemplate 格式化提示词
-	if config.Template.Template != "" {
-		result, err := config.Template.Format(config.Parameters)
+	// 使用 eino 的 Template 格式化提示词
+	if config.Template != nil {
+		result, err := config.Template.Format(context.Background(), config.Parameters)
 		if err != nil {
 			// 如果格式化失败，返回错误信息或使用原始模板
 			return "Error formatting prompt: " + err.Error()
 		}
-		return result
+		// 将 []*schema.Message 转换为字符串
+		if len(result) > 0 {
+			return result[0].Content
+		}
+		return ""
 	}
 
 	// 如果没有模板，返回空字符串

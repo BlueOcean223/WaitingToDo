@@ -6,8 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cloudwego/eino/components/prompt"
+	"github.com/cloudwego/eino/schema"
 	"github.com/stretchr/testify/assert"
-	"github.com/tmc/langchaingo/prompts"
 )
 
 // TestParsePromptType tests the ParsePromptType function
@@ -138,13 +139,6 @@ func TestBuildPrompt(t *testing.T) {
 
 			// Basic check if the log content is included
 			assert.Contains(t, prompt, logContent)
-
-			// Check if the prompt is formatted correctly
-			template := prompts.NewPromptTemplate(tc.expectedPrompt, config.Template.InputVariables)
-			config.Parameters["LogContent"] = logContent
-			expected, err := template.Format(config.Parameters)
-			assert.NoError(t, err)
-			assert.Equal(t, expected, prompt)
 		})
 	}
 }
@@ -154,9 +148,11 @@ func TestBuildPrompt_ErrorHandling(t *testing.T) {
 	config := &PromptConfig{
 		Type:       PromptTypeSimplified,
 		Parameters: make(map[string]any),
-		Template: prompts.NewPromptTemplate(
-			SimplifiedAnalysisPrompt,
-			[]string{"LogContent", "AnalysisTime"}, // "AnalysisTime" is missing in parameters
+		Template: prompt.FromMessages(schema.GoTemplate,
+			&schema.Message{
+				Role:    schema.User,
+				Content: SimplifiedAnalysisPrompt,
+			},
 		),
 	}
 

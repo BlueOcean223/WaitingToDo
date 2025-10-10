@@ -12,8 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tmc/langchaingo/llms"
-	"github.com/tmc/langchaingo/llms/openai"
+	"github.com/cloudwego/eino-ext/components/model/openai"
+	"github.com/cloudwego/eino/components/model"
+	"github.com/cloudwego/eino/schema"
 )
 
 // LogEntry 表示JSON格式的日志条目
@@ -26,7 +27,7 @@ type LogEntry struct {
 
 // LogAnalyzer 日志分析器
 type LogAnalyzer struct {
-	llm    *openai.LLM
+	llm    model.BaseChatModel
 	config configs.LogAnalyzerConfig
 }
 
@@ -42,11 +43,11 @@ func NewLogAnalyzer() *LogAnalyzer {
 	}
 
 	// 创建LLM客户端
-	llm, err := openai.New(
-		openai.WithModel(logAnalyzer.config.Model),
-		openai.WithBaseURL(logAnalyzer.config.URL),
-		openai.WithToken(logAnalyzer.config.APIKey),
-	)
+	llm, err := openai.NewChatModel(context.Background(), &openai.ChatModelConfig{
+		Model:   logAnalyzer.config.Model,
+		BaseURL: logAnalyzer.config.URL,
+		APIKey:  logAnalyzer.config.APIKey,
+	})
 	if err != nil {
 		logger.Error("创建LLM客户端失败", logger.Err(err))
 		return logAnalyzer
@@ -274,12 +275,18 @@ func (la *LogAnalyzer) callLLM(prompt string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(la.config.Timeout)*time.Second)
 	defer cancel()
 
-	result, err := llms.GenerateFromSinglePrompt(ctx, la.llm, prompt)
+	// 构建消息
+	messages := []*schema.Message{
+		schema.UserMessage(prompt),
+	}
+
+	// 调用LLM生成响应
+	result, err := la.llm.Generate(ctx, messages, model.WithTemperature(0.7))
 	if err != nil {
 		return "", fmt.Errorf("LLM生成失败: %w", err)
 	}
 
-	return result, nil
+	return result.Content, nil
 }
 
 // saveJSONReport 保存JSON格式的分析报告，返回文件路径
